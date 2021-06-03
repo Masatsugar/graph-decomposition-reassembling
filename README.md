@@ -43,7 +43,8 @@ The calculated samples beforehand are stored in `data/results/tmp` folder.
 ### 2. Reassembling step
 
 ```
-python reassemble.py --data 'zinc_jt_gspan_s1000_l7.csv' --target QED --rollout 100
+python reassemble.py --data 'data/results/zinc_jt_gspan_s1000_l7.csv' --prop PlogP 
+ --rollout 1000 --max_wt 1000
 ```
 
 All the generated molecules along the training process are stored in the `results/generate` folder.

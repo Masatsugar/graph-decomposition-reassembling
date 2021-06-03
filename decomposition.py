@@ -12,9 +12,9 @@ SAVE_DIR_GSPAN = 'data/graph'
 SAVE_DIR_MINING = 'data/results'
 
 
-def run_gspan(args, graph, dataset=None):
+def run_gspan(args, graph_file, dataset=None):
     gspan = gSpan(
-        database_file_name=graph,
+        database_file_name=graph_file,
         min_support=args.minsup,
         min_num_vertices=args.length,
         max_num_vertices=float('inf'),
@@ -39,23 +39,26 @@ def run_gspan(args, graph, dataset=None):
 
 def save_gspan(args):
     dataset = pd.read_table(args.data, header=None)
-    method = 'jt' if args.jt else 'raw'
+    args.method = 'jt' if args.jt else 'raw'
+    gspan_data = os.path.join(SAVE_DIR_GSPAN, f"gspan_{args.method}.data")
     if args.preprocess:
         print("Convert SMILES to MOLECULES")
-        gspan_data = os.path.join(SAVE_DIR_GSPAN, f"gspan_{args.method}.data")
         mols = [get_mol(s[0]) for s in tqdm(dataset.values)]
-        print("Convert MOLECULES to gSpan dataset")
-        preprocess_mols(mols, gspan_data, method=method)
+        print(f"Convert MOLECULES to gSpan dataset ({args.method})")
+        preprocess_mols(mols, gspan_data, method=args.method)
+        print(f"Save to {gspan_data}")
     if not args.gspan:
         print("--gspan False. END.")
         return
     else:
         print("==" * 50)
-        print(f"method={method}: minsup={args.minsup}, length={args.length}")
+        print(f"method={args.method}: minsup={args.minsup}, length={args.length}")
         print("==" * 50)
+
+    if args.gspan_data is not None:
         gspan_data = args.gspan_data
 
-    run_gspan(args, graph=gspan_data, dataset=dataset)
+    run_gspan(args, graph_file=gspan_data, dataset=dataset)
 
 
 if __name__ == '__main__':
@@ -68,4 +71,5 @@ if __name__ == '__main__':
     parser.add_argument('--gspan', action='store_true')
     parser.add_argument('--gspan_data')
     args = parser.parse_args()
+    print(args)
     save_gspan(args)

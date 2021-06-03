@@ -10,15 +10,14 @@ from libs.sasscore import reward_penalized_log_p
 
 
 def scoring_function_plogp(smiles):
-    mols = [get_mol(smi) for smi in smiles]
+    mols = [Chem.MolFromSmiles(smi) for smi in smiles]
     score = [reward_penalized_log_p(mol) for mol in mols]
     return score
 
 
 def scoring_function_logp(smiles):
-    mols = [get_mol(smi) for smi in smiles]
+    mols = [Chem.MolFromSmiles(smi) for smi in smiles]
     score = [Descriptors.MolLogP(mol) for mol in mols]
-    # score = [reward_penalized_log_p(mol) for mol in mols]
     return score
 
 

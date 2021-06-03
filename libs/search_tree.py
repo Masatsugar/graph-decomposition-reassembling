@@ -163,8 +163,10 @@ class MCTS:
 
         sum_count = sum([c.N for c in node.children])
         selected_node = max(node.children, key=lambda x: x.Q() + x.U(n=sum_count))
-        v = self.rollout(node=selected_node, state_map=self.state_map, scoring_function=self.scoring_function)
-
+        try:
+            v = self.rollout(node=selected_node, state_map=self.state_map, scoring_function=self.scoring_function)
+        except:
+            v = 0
         # Backward pass
         selected_node.W += v
         selected_node.N += 1
