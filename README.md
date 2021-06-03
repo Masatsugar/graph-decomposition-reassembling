@@ -25,19 +25,18 @@ Mined molecules are saved to the `'results/mining/name.csv`.
 - preprocessing + gSpan
 
 ```
-python decomposition.py \
-  --data data/zinc/all.txt --method jt --minsup 1000 --length 7
+python decomposition.py --gspan --jt --preprocess \
+  --data data/zinc/all.txt --minsup 1000 --length 7
 ```
 
 - only applying gSpan
 ```
-python decomposition.py \
-  --data data/zinc/all.txt --method jt --minsup 1000 --length 7 \
-   --is_preprocess False --gspan_data data/graph/jt_graph.data
+python decomposition.py --gspan --jt \
+ --data data/zinc/all.txt --jt --minsup 1000 --length 7 \
+ --gspan_data data/graph/jt_graph.data
 ```
 
-The argument of method has either `raw` or `jt`. 
-The raw is only graph, jt is applied a molecule to tree decomposition.
+If --jt argument is set, tree decomposition is applied to molecules.
 The calculated samples beforehand are stored in `data/results/tmp` folder.
 
 

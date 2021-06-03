@@ -11,6 +11,7 @@ import argparse
 SAVE_DIR_GSPAN = 'data/graph'
 SAVE_DIR_MINING = 'data/results'
 
+
 def run_gspan(args, graph, dataset=None):
     gspan = gSpan(
         database_file_name=graph,
@@ -38,19 +39,21 @@ def run_gspan(args, graph, dataset=None):
 
 def save_gspan(args):
     dataset = pd.read_table(args.data, header=None)
-    if args.is_preprocess:
+    method = 'jt' if args.jt else 'raw'
+    if args.preprocess:
         print("Convert SMILES to MOLECULES")
         gspan_data = os.path.join(SAVE_DIR_GSPAN, f"gspan_{args.method}.data")
         mols = [get_mol(s[0]) for s in tqdm(dataset.values)]
         print("Convert MOLECULES to gSpan dataset")
-        preprocess_mols(mols, gspan_data, method=args.method)
-    if not args.is_gspan:
-        return "END."
+        preprocess_mols(mols, gspan_data, method=method)
+    if not args.gspan:
+        print("--gspan False. END.")
+        return
     else:
         print("==" * 50)
-        print(f"method={args.method}: minsup={args.minsup}, length={args.length}")
+        print(f"method={method}: minsup={args.minsup}, length={args.length}")
         print("==" * 50)
-        gspan_data = args.gpspan_data
+        gspan_data = args.gspan_data
 
     run_gspan(args, graph=gspan_data, dataset=dataset)
 
@@ -58,12 +61,11 @@ def save_gspan(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', required=True)
-    parser.add_argument('--method', type=str, required=True)
     parser.add_argument('--minsup', type=int, default=1000)
     parser.add_argument('--length', type=int, default=7)
-    parser.add_argument('--is_gspan', type=bool, default=True)
-    parser.add_argument('--is_preprocess', type=bool, default=True)
+    parser.add_argument('--jt', action='store_true')
+    parser.add_argument('--preprocess', action='store_true')
+    parser.add_argument('--gspan', action='store_true')
     parser.add_argument('--gspan_data')
-
     args = parser.parse_args()
     save_gspan(args)
