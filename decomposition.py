@@ -9,7 +9,7 @@ from gspan_mining.config import parser
 from gspan_mining.main import main
 import argparse
 
-ZINC_PATH = 'data/zinc/all.txt'
+
 SAVE_DIR = 'data/graph/mining'
 
 
@@ -35,7 +35,7 @@ def save_gspan(minsup, length, method, is_gspan=True, dataset=None):
         print("NO MINED MOLECULES.")
         return
 
-    save_dir_smiles = os.path.join('data/results/mining', f'zinc_{method}_gspan_s{minsup}_l{length}.csv')
+    save_dir_smiles = os.path.join(SAVE_DIR, f'zinc_{method}_gspan_s{minsup}_l{length}.csv')
     pd.DataFrame(new_smis, columns=['smiles']).to_csv(save_dir_smiles)
     print(f"SAVE SMILES TO {save_dir_smiles}")
 
