@@ -9,6 +9,10 @@ Install RDKit using Anaconda environment.
 ```
 conda create -c rdkit -n my-rdkit-env rdkit==2020.09.1
 ```
+After creating the environment, please install:
+```
+pip install networkx scipy tqdm
+```
 
 
 ## How to run
@@ -20,7 +24,7 @@ SMILES are converted into the graph or junction tree dataset for gSpan algorithm
 Mined molecules are saved to the `'results/mining/name.data'`. There are applied samples in `data/results/tmp` folder.
 
 ```
-python decomposition.py --data 'data/zinc/all.txt' --method raw --support 1000 
+python decomposition.py --data data/zinc/all.txt --method raw --support 1000 
 ```
 
 
