@@ -5,7 +5,6 @@ from tqdm import tqdm
 from libs.chemutils import get_mol, get_smiles
 from libs.gspan_utils import preprocess_mols, gspan_to_mol
 
-from gspan_mining.config import parser
 from gspan_mining.gspan import gSpan
 import argparse
 

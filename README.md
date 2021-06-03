@@ -18,17 +18,30 @@ pip install networkx scipy tqdm
 ## How to run
 MOLDR takes two steps to generate molecular graphs: 
 
+### 1. Decomposition step  
+SMILES are converted into the graph or junction tree dataset for gSpan algorithm, and stored in the folder `data/graph/gspan.data`. 
+Mined molecules are saved to the `'results/mining/name.csv`. 
 
-- Decomposition step  
-SMILES are converted into the graph or junction tree dataset for gSpan algorithm.
-Mined molecules are saved to the `'results/mining/name.data'`. There are applied samples in `data/results/tmp` folder.
+- preprocessing + gSpan
 
 ```
-python decomposition.py --data data/zinc/all.txt --method raw --support 1000 
+python decomposition.py \
+  --data data/zinc/all.txt --method jt --minsup 1000 --length 7
 ```
 
+- only applying gSpan
+```
+python decomposition.py \
+  --data data/zinc/all.txt --method jt --minsup 1000 --length 7 \
+   --is_preprocess False --gspan_data data/graph/jt_graph.data
+```
 
-- Reassembling step
+The argument of method has either `raw` or `jt`. 
+The raw is only graph, jt is applied a molecule to tree decomposition.
+The calculated samples beforehand are stored in `data/results/tmp` folder.
+
+
+### 2. Reassembling step
 
 ```
 python reassemble.py --data 'zinc_jt_gspan_s1000_l7.csv' --target QED --rollout 100
