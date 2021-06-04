@@ -166,6 +166,8 @@ class MCTS:
         try:
             v = self.rollout(node=selected_node, state_map=self.state_map, scoring_function=self.scoring_function)
         except:
+            print(node.children)
+            print(node.smiles, new_smiles)
             v = 0
         # Backward pass
         selected_node.W += v

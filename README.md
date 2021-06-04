@@ -19,8 +19,8 @@ pip install networkx scipy tqdm
 MOLDR takes two steps to generate molecular graphs: 
 
 ### 1. Decomposition step  
-SMILES are converted into the graph or junction tree dataset for gSpan algorithm, and stored in the folder `data/graph/gspan.data`. 
-Mined molecules are saved to the `'results/mining/name.csv`. 
+SMILES are firstly converted into the *raw graph* or *junction tree* dataset for gSpan graph mining algorithm, and stored in the folder `data/graph/gspan.data`. 
+Mined molecules are saved into the `'results/mining/`. 
 
 - preprocessing + gSpan
 
@@ -30,23 +30,41 @@ python decomposition.py --gspan --jt --preprocess \
 ```
 
 - only applying gSpan
+
 ```
 python decomposition.py --gspan --jt \
  --data data/zinc/all.txt --jt --minsup 1000 --length 7 \
  --gspan_data data/graph/jt_graph.data
 ```
 
-If --jt argument is set, tree decomposition is applied to molecules.
-The calculated samples beforehand are stored in `data/results/tmp` folder.
+If `--jt` argument is set, tree decomposition is applied to molecules.
+
+The results of decomposition to molecules are already stored in `data/results/` folder beforehand.
 
 
 ### 2. Reassembling step
 
+- PlopP
+
 ```
-python reassemble.py --data 'data/results/zinc_jt_gspan_s1000_l7.csv' --prop PlogP 
- --rollout 1000 --max_wt 1000
+python reassemble.py --data 'data/results/zinc_jt_gspan_s1000_l7.csv' --prop PlogP \
+ --rollout 1000 --max_wt 1200
 ```
+
+- QED
+
+```
+python reassemble.py --data data/results/zinc_jt_gspan_s1000_l7.csv --prop QED \
+ --rollout 10000 --max_wt 350
+```
+
 
 All the generated molecules along the training process are stored in the `results/generate` folder.
 Generated molecules are stored as SMILES.
+
+
+### Examples
+You can check each components of our method by jupyter notebooks. See notebooks folder.
+
+
 
