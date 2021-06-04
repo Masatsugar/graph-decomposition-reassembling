@@ -14,6 +14,7 @@ from rdkit import RDLogger
 
 RDLogger.DisableLog('rdApp.*')
 
+
 def check_ring(s, max_size=10):
     mol = get_mol(s)
     ns = Chem.GetSSSR(mol)
@@ -30,8 +31,6 @@ def check_ring(s, max_size=10):
             return False
         else:
             return True
-
-
 
 
 if __name__ == "__main__":
@@ -74,6 +73,8 @@ if __name__ == "__main__":
 
     print(mcts)
     mcts.run(n_rollout=args.rollout)
+
+    # TODO: parallel calculation
     # pool = Pool(8)
     # pool.map()
     result = SmilesNode(mcts)

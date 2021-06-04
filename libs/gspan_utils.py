@@ -258,6 +258,7 @@ def _jt_to_mol(gspan, dataset: pd.DataFrame) -> List[rdkit.Chem.Mol]:
     :param dataset: original db
     :return: reconstructed mols
     """
+    # TODO: consider each position when combining nodes.
     _gspan_mols = []
     N = gspan._report_df.shape[0]
     for test_id in tqdm(range(0, N)):

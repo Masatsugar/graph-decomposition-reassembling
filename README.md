@@ -4,12 +4,12 @@ This is the implementation of our paper.
 
 
 ## Installation
-Install RDKit using Anaconda environment. 
+Install RDKit using Anaconda or Miniconda environment. 
 
 ```
 conda create -c rdkit -n my-rdkit-env rdkit==2020.09.1
 ```
-After creating the environment, please install:
+After creating the environment, please install below:
 ```
 pip install networkx scipy tqdm
 ```
@@ -62,7 +62,13 @@ All the generated molecules along the training process are stored in the `result
 Generated molecules are stored as SMILES.
 
 
-### Visualization Examples
+### Visualization examples
 You can check each components of our method by jupyter notebooks. See notebooks folder.
 Generated molecules optimized with penalized log P and QED are stored in the `data/results/paper`.
-Note that if the exploration steps increase, the better molecules can be found. 
+Note that if the exploration steps increase, the better molecules can be found.
+
+- Additional Installation
+
+```
+pip install jupyter matplotlib
+``` 
