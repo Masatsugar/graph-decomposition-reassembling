@@ -73,8 +73,6 @@ def merge_mol_from_node(mol1, mol2, id1, id2, direction=''):
     g, nodes, edges = mol_to_graph(mol)
     new_adj = copy.deepcopy(nx.adj_matrix(g).todense())
     # num_nodes = len(mol1.GetAtoms())
-
-    # 結合対象とするノード同士を足し合わせる
     tmp = new_adj[id1, :] + new_adj[id2, :]
     rep_vars = np.vstack([tmp, tmp])
     new_adj[[id1, id2], :] = rep_vars
@@ -102,8 +100,6 @@ def merge_mol_from_edge(mol1, mol2, edge_type1: tuple, edge_type2: tuple, direct
     # num_nodes = list(nx.connected_components(g))[0]
     id11, id12 = edge_type1
     id21, id22 = edge_type2
-
-    # 結合対象とするノード同士を足し合わせる
     tmp = np.vstack([new_adj[id11, :] + new_adj[id21, :], new_adj[id12, :] + new_adj[id22, :]])
     rep_vars = np.vstack([tmp, tmp])
     new_adj[[id11, id12, id21, id22], :] = rep_vars
@@ -131,7 +127,6 @@ def merge_mol_from_edge_all(mol, edge_type1: tuple, edge_type2: tuple, direction
     id11, id12 = edge_type1
     id21, id22 = edge_type2
 
-    # 結合対象とするノード同士を足し合わせる
     tmp = np.vstack([new_adj[id11, :] + new_adj[id21, :], new_adj[id12, :] + new_adj[id22, :]])
     rep_vars = np.vstack([tmp, tmp])
     new_adj[[id11, id12, id21, id22], :] = rep_vars
@@ -172,8 +167,6 @@ def init_clique(mols, edge_list):
             if used[v]:
                 nAtoms = len(mols[v].GetAtoms())
                 # print(f"node={nid}, edge={v}, clique={clique}, nAtom={nAtoms}")
-
-                # 最初の選び方で結合位置は変わる
                 if nAtoms > 2:
                     cliques[v] = [cliques[nid][counter - 1]] + [max_num + i for i in range(1, nAtoms)]
                 else:
@@ -465,9 +458,8 @@ def mol_with_amap(mol, nid=0, cliques=None):
 #         root = 0
 #
 #         self.nodeDict = nodeDict
-#         # edgeからクリークの番号を作る必要がある。修正必要
+#
 #         # cliques = [[atom.GetIdx() + i for atom in mol.GetAtoms()] for i, mol in enumerate(mols)]
-#         # defaultdict()で返す
 #         cliques = init_clique(mols, edge_list)
 #         for i, c in cliques.items():
 #             cmol = mols[i]

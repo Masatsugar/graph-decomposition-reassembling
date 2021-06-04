@@ -824,7 +824,6 @@ def get_molgraph_types(mol):
 
 
 def show_graph_info(mols):
-    # koko
     g = [get_molgraph_types(mol) for mol in tqdm(mols)]
     g = pd.DataFrame(g, columns=['num of vertices', 'num of edges', 'radius', 'diameter'])
     summary = g.describe().drop(labels=['count'])  # .boxplot()

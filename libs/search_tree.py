@@ -7,6 +7,8 @@ from libs.property_simulator import MolPropSearch
 from rdkit.Chem import Descriptors
 from tqdm import tqdm
 
+np.random.seed(0)
+
 # Exploaration parameter
 C_PUCT = 10
 
@@ -162,12 +164,13 @@ class MCTS:
                     child.P = score
 
         sum_count = sum([c.N for c in node.children])
+        #TODO: Need to bug fix.
         selected_node = max(node.children, key=lambda x: x.Q() + x.U(n=sum_count))
         try:
             v = self.rollout(node=selected_node, state_map=self.state_map, scoring_function=self.scoring_function)
         except:
-            print(node.children)
-            print(node.smiles, new_smiles)
+            # print(node.children)
+            # print(node.smiles, new_smiles)
             v = 0
         # Backward pass
         selected_node.W += v

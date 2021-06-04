@@ -9,7 +9,7 @@ from gspan_mining.gspan import gSpan
 import argparse
 
 SAVE_DIR_GSPAN = 'data/graph'
-SAVE_DIR_MINING = 'data/results'
+SAVE_DIR_MINING = 'data/results/mining'
 
 
 def run_gspan(args, graph_file, dataset=None):
@@ -27,7 +27,7 @@ def run_gspan(args, graph_file, dataset=None):
     gspan.run()
     gspan.time_stats()
     new_mols = gspan_to_mol(gspan, method=args.method, dataset=dataset)
-    new_smis = [get_smiles(m) for m in new_mols]
+    new_smis = [get_smiles(m) for m in new_mols if m is not None]  # Kekule SMILES
     if len(new_smis) < 1:
         print("NO MINED MOLECULES.")
         return

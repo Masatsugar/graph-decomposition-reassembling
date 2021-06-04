@@ -14,6 +14,26 @@ from rdkit import RDLogger
 
 RDLogger.DisableLog('rdApp.*')
 
+def check_ring(s, max_size=10):
+    mol = get_mol(s)
+    ns = Chem.GetSSSR(mol)
+    if ns == 0:
+        return False
+    elif ns == 1:
+        nAtoms = len(mol.GetAtoms())
+        if nAtoms > max_size:
+            return False
+        return True
+    else:
+        nAtoms = len(mol.GetAtoms())
+        if nAtoms > max_size:
+            return False
+        else:
+            return True
+
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', required=True, help='bulding blocks path')
@@ -38,11 +58,9 @@ if __name__ == "__main__":
     mined_mols = [get_mol(s) for s in mined_smiles.smiles]
     building_blocks_smiles = list([get_smiles(m) for m in mined_mols])
 
-    # add for minor differences support
-    vocab = [s for s in pd.read_csv('data/graph/vocab.csv', index_col=0).smiles if len(s) > 1]
-
-    building_blocks_smiles = vocab#building_blocks_smiles# + vocab
-
+    # add for minor differences support of rings
+    vocab = [s for s in pd.read_csv('data/graph/vocab.csv', index_col=0).smiles if len(s) > 1 and check_ring(s)]
+    building_blocks_smiles = building_blocks_smiles + vocab
     scores = np.array(scoring_function(building_blocks_smiles))
 
     # select top N score building blocks for better substructures.

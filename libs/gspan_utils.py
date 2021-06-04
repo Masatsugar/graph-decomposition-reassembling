@@ -14,7 +14,7 @@ import networkx as nx
 from networkx.algorithms import isomorphism
 
 from libs.chemutils import MolTree, get_mol_node_label, get_mol_edge_label
-from libs.chemutils import get_mol, get_clique_info, mol_from_graph
+from libs.chemutils import get_mol, get_smiles, get_clique_info, mol_from_graph
 
 
 @dataclass
@@ -282,8 +282,10 @@ def _jt_to_mol(gspan, dataset: pd.DataFrame) -> List[rdkit.Chem.Mol]:
             _gspan_mols.append(mol)
 
     # sanitize molecules
-    unique_mols = [Chem.MolFromSmiles(s) for s in np.unique([Chem.MolToSmiles(m) for m in _gspan_mols])]
-    gspan_smiles = [Chem.MolToSmiles(m) for m in unique_mols if m is not None]
+    unique_smis = np.unique([Chem.MolToSmiles(m) for m in _gspan_mols if m is not None])
+    unique_mols = [Chem.MolFromSmiles(s) for s in unique_smis]
+    # Kekule form
+    gspan_smiles = [get_smiles(m) for m in unique_mols if m is not None]
     gspan_mols = [get_mol(s) for s in gspan_smiles]
 
     return gspan_mols
