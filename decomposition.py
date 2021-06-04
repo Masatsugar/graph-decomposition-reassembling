@@ -32,6 +32,9 @@ def run_gspan(args, graph_file, dataset=None):
         print("NO MINED MOLECULES.")
         return
 
+    if SAVE_DIR_MINING not in os.listdir('data/results'):
+        os.makedirs(SAVE_DIR_MINING, exist_ok=True)
+
     save_dir_smiles = os.path.join(SAVE_DIR_MINING, f'zinc_{args.method}_gspan_s{args.minsup}_l{args.length}.csv')
     pd.DataFrame(new_smis, columns=['smiles']).to_csv(save_dir_smiles)
     print(f"SAVE SMILES TO {save_dir_smiles}")
@@ -41,6 +44,9 @@ def save_gspan(args):
     dataset = pd.read_table(args.data, header=None)
     args.method = 'jt' if args.jt else 'raw'
     gspan_data = os.path.join(SAVE_DIR_GSPAN, f"gspan_{args.method}.data")
+    if SAVE_DIR_GSPAN not in os.listdir('data/results'):
+        os.makedirs(SAVE_DIR_GSPAN, exist_ok=True)
+
     if args.preprocess:
         print("Convert SMILES to MOLECULES")
         mols = [get_mol(s[0]) for s in tqdm(dataset.values)]

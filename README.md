@@ -33,7 +33,7 @@ python decomposition.py --gspan --jt --preprocess \
 ```
 python decomposition.py --gspan --jt \
  --data data/zinc/all.txt --jt --minsup 1000 --length 7 \
- --gspan_data data/graph/jt_graph.data
+ --gspan_data data/graph/gspan_jt.data
 ```
 
 If `--jt` argument is set, tree decomposition is applied to molecules.
