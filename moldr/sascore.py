@@ -37,7 +37,7 @@ def readFragmentScores(name="fpscores"):
     global _fscores
     # generate the full path filename:
     if name == "fpscores":
-        name = "./libs/fpscores"
+        name = "data/zinc/fpscores"
     _fscores = cPickle.load(gzip.open("%s.pkl.gz" % name))
     outDict = {}
     for i in _fscores:
