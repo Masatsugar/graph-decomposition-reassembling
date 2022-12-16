@@ -7,11 +7,12 @@ MOLDR: Molecular Graph Generation by Decomposition and Reassembling
 ```shell
 git clone https://github.com/Masatsugar/graph-decomposition-reassembling.git
 conda install create --file env.yaml
+cd graph-decomposition-reassembling/mi-collections
 python setup.py install mi-collections
 ```
 
 ## Usage
-Set path `export PYTHONPATH=.`.
+Set python path: `export PYTHONPATH=.`.
 
 ### Decomposition
 In decomposition step, molecules are decomposed into subgraphs by gSpan. You can select raw or junction tree data.
@@ -40,14 +41,15 @@ gspan = runner.decompose(mols)
 
 If you want to see the subgraphs in detail, see `examples/decomponsition.ipynb`.
 
-### Training 
+### Reassembing
+- Training 
 The agent takes an action from building blocks obtained from a decomposition step. The agent is trained by PPO with RLlib.
 
 ```shell
 python train.py --epochs 100 --num_workers 128 --num_gpus 1
 ```
 
-Generated molecules are sampled through the trained agent. Select and rewrite the model that you want to use.
+Generated molecules are sampled through the trained agent. Select and rewrite the model path that you want to use.
 
 ```shell
 python run_moldr.py 
