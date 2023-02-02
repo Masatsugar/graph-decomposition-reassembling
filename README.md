@@ -1,6 +1,7 @@
 # Molecular Graph Generation by Decomposition and Reassembling
 
 MOLDR: Molecular Graph Generation by Decomposition and Reassembling
+- https://arxiv.org/abs/2302.00587
 
 ## Installation
 
