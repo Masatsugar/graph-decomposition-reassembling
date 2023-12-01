@@ -1,7 +1,5 @@
 # Molecular Graph Generation by Decomposition and Reassembling
-
-MOLDR: Molecular Graph Generation by Decomposition and Reassembling
-- https://arxiv.org/abs/2302.00587
+This repository is for [MOLDR: Molecular Graph Generation by Decomposition and Reassembling](https://pubs.acs.org/doi/10.1021/acsomega.3c01078). 
 
 ## Installation
 
@@ -47,11 +45,31 @@ If you want to see the subgraphs in detail, see `examples/decomponsition.ipynb`.
 The agent takes an action from building blocks obtained from a decomposition step. The agent is trained by PPO with RLlib.
 
 ```shell
-python train.py --epochs 100 --num_workers 128 --num_gpus 1
+python train.py --epochs 100 --num_workers 40 --num_gpus 1
 ```
 
 Generated molecules are sampled through the trained agent. Select and rewrite the model path that you want to use.
 
 ```shell
 python run_moldr.py 
+```
+
+
+### Citation
+
+```bib
+@article{Yamada2023MOLDR,
+  author={Yamada, Masatsugu and Sugiyama, Mahito},
+  title={Molecular Graph Generation by Decomposition and Reassembling},
+  journal={ACS Omega},
+  year={2023},
+  month={Jun},
+  day={06},
+  publisher={American Chemical Society},
+  volume={8},
+  number={22},
+  pages={19575-19586},
+  doi={10.1021/acsomega.3c01078},
+  url={https://doi.org/10.1021/acsomega.3c01078}
+}
 ```
