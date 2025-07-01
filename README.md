@@ -3,11 +3,14 @@ This repository is for [MOLDR: Molecular Graph Generation by Decomposition and R
 
 ## Installation
 
+### For Latest Version
+We assume Python 3.10 or later.
+
 ```shell
+pip install uv
 git clone https://github.com/Masatsugar/graph-decomposition-reassembling.git
-conda install create --file env.yaml
-cd graph-decomposition-reassembling/mi-collections
-python setup.py install mi-collections
+cd graph-decomposition-reassembling
+uv sync
 ```
 
 ## Usage
@@ -18,8 +21,8 @@ In decomposition step, molecules are decomposed into subgraphs by gSpan. You can
 
 ```python
 from pathlib import Path
-from mi_collections.moldr.decompose import MolsMining, DefaultConfig
-from mi_collections.chemutils import get_mol
+from moldr.decompose import MolsMining, DefaultConfig
+from moldr.chemutils import get_mol
 
 test_smiles = [
     "CC1CCC2=CC=CC=C2O1",
@@ -53,6 +56,22 @@ Generated molecules are sampled through the trained agent. Select and rewrite th
 ```shell
 python run_moldr.py 
 ```
+
+
+### For Paper Reproducibility
+
+To reproduce the exact results from the paper, please use the specific version tagged for the publication:
+
+```shell
+git clone https://github.com/Masatsugar/graph-decomposition-reassembling.git
+cd graph-decomposition-reassembling
+git checkout v1.0.0-paper
+conda env create --file env.yaml
+conda activate moldr
+pip install -e mi-collections/
+```
+
+**Note**: The v1.0.0-paper tag contains the exact code and dependencies used in the published paper to ensure reproducibility of results.
 
 
 ### Citation

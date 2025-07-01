@@ -25,7 +25,6 @@ def load(fpath):
 
 
 def custom_log_creator(custom_path, custom_str):
-
     timestr = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
     logdir_prefix = f"{custom_str}_{timestr}"
 

@@ -1,19 +1,17 @@
 import multiprocessing
 import timeit
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import ray
+from ray.rllib.agents.ppo import PPOTrainer
+from pathlib import Path
+from joblib import Parallel, delayed
+from tqdm import tqdm
+
 from guacamol.assess_distribution_learning import assess_distribution_learning
 from guacamol.standard_benchmarks import logP_benchmark
-from joblib import Parallel, delayed
 
-# if multiprocessing.get_start_method() == "fork":
-#     multiprocessing.set_start_method("spawn", force=True)
-#     print("{} setup done".format(multiprocessing.get_start_method()))
-from ray.rllib.agents.ppo import PPOTrainer
-from tqdm import tqdm
 
 from moldr.config import get_default_config
 from moldr.env import MolEnvValueMax

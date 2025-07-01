@@ -1,16 +1,16 @@
 import copy
 from typing import List, Optional, Tuple
 
-import gym
+import gymnasium as gym
 import numpy as np
-from guacamol.standard_benchmarks import logP_benchmark
-from gym.utils import seeding
-from mi_collections.chemutils import get_mol, get_smiles
-from mi_collections.mol2vec.model import Mol2Vec
-from mi_collections.moldr.reassemble import merge_edge, merge_node
-from mi_collections.molgraph import sanitize_molgraph
 from numpy import ndarray
-from rdkit.Chem import Draw
+from gymnasium.utils import seeding
+
+
+from moldr.chemutils import get_mol, get_smiles
+from moldr.mol2vec.model import Mol2Vec
+from moldr.core.reassemble import merge_edge, merge_node
+from moldr.core.molgraph import sanitize_molgraph
 
 from moldr.config import get_default_config
 
@@ -33,16 +33,19 @@ class MolEnvValueMax(gym.Env):
         self.base_mol = get_mol(self._base_smiles)
         self.action_mask = np.ones(len(self.building_blocks))
 
-    def reset(self):
+    def reset(self, *, seed=None, options=None):
+        super().reset(seed=seed)
         self.base_smiles = copy.deepcopy(self._base_smiles)
         self.base_mol = get_mol(self.base_smiles)
         self.env_step = 0
         self.prev_reward = 0.0
         self.prev_smiles = self.base_smiles
         vec = self.mol2vec.fit_transform([self.base_mol])
-        return vec.flatten()
+        return vec.flatten(), {}
 
     def render(self, mode="human"):
+        from rdkit.Chem import Draw
+
         mol = self.base_mol
         smiles = get_smiles(mol)
         reward = float(self.compute_score([smiles]))
@@ -66,7 +69,7 @@ class MolEnvValueMax(gym.Env):
 
     def step(
         self, action: Optional[List[int]] = None
-    ) -> Tuple[ndarray, float, bool, dict]:
+    ) -> Tuple[ndarray, float, bool, bool, dict]:
         self.env_step += 1
         self.prev_smiles = self.base_smiles
         self.prev_action = action
@@ -79,11 +82,11 @@ class MolEnvValueMax(gym.Env):
             "prev_score": self.prev_reward,
         }
         if len(gen_smiles) == 0:
-            return np.zeros(300), 0.0, True, infos
+            return np.zeros(300), 0.0, True, False, infos
 
         rewards = self.compute_score(gen_smiles)
 
-        # TODO: SELECT NEW NODE
+        # TODO: SELECT NEW NODE BASED ON VF
         idx = np.argmax(rewards)
         # idx = np.random.choice(len(rewards))
         self.base_mol = gen_mols[idx]
@@ -91,9 +94,11 @@ class MolEnvValueMax(gym.Env):
         obs = self.mol2vec.fit_transform([self.base_mol]).flatten()
         reward = float(rewards[idx])
         done = self.is_done(reward)
+        truncated = False  # This environment doesn't use truncation
+
         if done:
             # reward = float(rewards[idx]) * self.final_weight #self.prev_reward
-            return obs, reward, done, infos
+            return obs, reward, done, truncated, infos
         else:
             reward_diff = reward - self.prev_reward
             self.prev_reward = reward
@@ -102,7 +107,7 @@ class MolEnvValueMax(gym.Env):
 
         # self.running_reward += reward_mean
         # score = self.running_reward if done else 0
-        return obs, reward, done, infos
+        return obs, reward, done, truncated, infos
 
     def compute_score(self, smiles) -> ndarray:
         scores = np.array([self.scoring_function(s) for s in smiles])
@@ -126,6 +131,8 @@ class MolEnvValueMax(gym.Env):
 
 
 if __name__ == "__main__":
+    from guacamol.standard_benchmarks import logP_benchmark
+
     objective = logP_benchmark(8.0)
     building_blocks_smiles = ["CC", "CCO", "CCCC"]
     config = get_default_config(
@@ -135,15 +142,15 @@ if __name__ == "__main__":
         model_path="models/model_300dim.pkl",
     )
     env = MolEnvValueMax(config)
-    obs = env.reset()
+    obs, info = env.reset()
     assert len(obs) == 300  # mol2vec dim
 
     rewards = 0.0
     while True:
         action = np.random.choice(len(building_blocks_smiles))
-        obs, reward, done, info = env.step(action)
+        obs, reward, done, truncated, info = env.step(action)
         rewards += reward
-        if done:
+        if done or truncated:
             break
 
     print(info)
