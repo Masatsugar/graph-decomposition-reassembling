@@ -16,10 +16,14 @@ uv pip install -e .
 
 After installing it, please modify `.venv/lib/<your-python-version>/site-packages/guacamol/utils/chemistry.py` file in the guacamol library.
 
-```
+```diff
 -from scipy import histogram
 +from numpy import histogram
 ```
+
+This is a temporary fix for compatibility with the guacamol library. 
+Related to the [issue#33](https://github.com/BenevolentAI/guacamol/issues/33) in `BenevolentAI/guacamol` repository.
+
 
 
 ## Usage
@@ -56,9 +60,13 @@ If you want to see the subgraphs in detail, see `examples/decomponsition.ipynb`.
 
 ### Reassembling
 - Training 
-The agent takes an action from building blocks obtained from a decomposition step. The agent is trained by PPO with RLlib.
 
-You can choose the building blocks from gucamol or zinc. The default is guacamol with minsup 10,000.
+The agent takes an action from building blocks obtained from a decomposition step. 
+In default, PPO with RLlib is used for training the agent, but you can also use other algorithms such as DQN, A2C, or IMPALA by changing the `algo` parameter in `train.py`.
+For detailes, see rllib [documentation](https://docs.ray.io/en/latest/rllib/rllib-algorithms.html).
+
+We already mined the building blocks from gucamol or zinc dataset. The default is guacamol with minsup 10,000.
+Set your own dataset to generate building blocks if you want to use other datasets.
 
 ```shell
 python moldr/train.py --epochs 10 --num_workers 8 --num_gpus 1
@@ -71,14 +79,12 @@ python run_moldr.py
 ```
 
 If you want to use the custom score function to optimize the generated molecules, 
-you can edit `moldr/objective.py` according to guacamol API, and add it into `sc_list` in `train.py`.
-
-```shell
+edit `moldr/objective.py` directly according to guacamol API, and add it into `sc_list` in `train.py`.
 
 
 ### For Paper Reproducibility
 
-To reproduce the exact results from the paper, please use the specific version tagged for the publication:
+To reproduce the exact results from our paper, please use the specific version tagged for the publication:
 
 ```shell
 git clone https://github.com/Masatsugar/graph-decomposition-reassembling.git
@@ -89,7 +95,7 @@ conda activate moldr
 pip install -e mi-collections/
 ```
 
-**Note**: The v1.0.0-paper tag contains the exact code and dependencies used in the published paper to ensure reproducibility of results.
+**Note**: The v1.0.0-paper tag contains the exact code and dependencies used in the published paper to ensure results.
 
 
 ### Citation
