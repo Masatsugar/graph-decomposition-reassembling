@@ -171,7 +171,7 @@ if __name__ == "__main__":
             result = algo.train()
             if args.logger == "wandb":
                 flatten_result = clean_for_wandb(result)
-                wb_run.log(result, step=i)
+                wb_run.log(flatten_result, step=i)
 
             if i % 20 == 0:
                 checkpoint_dir = algo.save(
