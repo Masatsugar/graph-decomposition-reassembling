@@ -5,7 +5,6 @@ from guacamol.scoring_function import (
     ScoringFunctionWrapper,
 )
 from guacamol.standard_benchmarks import logP_benchmark, similarity
-from mi_collections.chemutils import get_mol
 from rdkit import Chem
 
 from moldr.sascore import calculateScore

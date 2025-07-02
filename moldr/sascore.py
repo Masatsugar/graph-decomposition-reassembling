@@ -22,6 +22,7 @@ import os.path as op
 from collections import defaultdict
 
 import networkx as nx
+
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.Descriptors import MolLogP

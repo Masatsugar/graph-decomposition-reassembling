@@ -1,15 +1,13 @@
 from collections import defaultdict
-
-import rdkit.Chem as Chem
-
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
+
+import rdkit.Chem as Chem
 
 MST_MAX_WEIGHT = 100
 MAX_NCAND = 2000
 
 from moldr.chemutils import get_clique_mol, get_mol, get_smiles, set_atommap
-# from dgllife.utils.jtvae.chemutils import enum_assemble
 
 
 def tree_decomp(mol):

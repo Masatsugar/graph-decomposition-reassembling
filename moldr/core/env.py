@@ -3,25 +3,31 @@ import random
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple, Union
 
-import gym
 import numpy as np
-import rdkit.Chem as Chem
-import torch.nn as nn
+from numpy import ndarray
+
+import gymnaysium as gym
 from gym.utils import seeding
-from mi_collections.chemutils import (
+
+
+import torch.nn as nn
+
+import rdkit.Chem as Chem
+from rdkit import DataStructs
+from rdkit.Chem import Draw
+
+from ray.rllib.agents.ppo import PPOTrainer, ppo
+
+from moldr.chemutils import (
     get_mol,
     get_smiles,
     mol_from_graph,
     mol_to_graph,
     sanitize,
 )
-from mi_collections.mol2vec import Mol2Vec
-from mi_collections.moldr.reassemble import merge_edge, merge_node
-from mi_collections.molgraph import MolGraph
-from numpy import ndarray
-from ray.rllib.agents.ppo import PPOTrainer, ppo
-from rdkit import DataStructs
-from rdkit.Chem import Draw
+from moldr.mol2vec import Mol2Vec
+from moldr.core.reassemble import merge_edge, merge_node
+from moldr.core.molgraph import MolGraph
 
 
 def sanitize_molgraph(m_graphs: List[MolGraph]):

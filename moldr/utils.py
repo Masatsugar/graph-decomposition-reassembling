@@ -4,7 +4,7 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
-from ray.tune.logger import UnifiedLogger
+from ray.tune.logger import UnifiedLogger, DEFAULT_LOGGERS
 
 
 def save(fpath, obj):
@@ -31,7 +31,9 @@ def custom_log_creator(custom_path, custom_str):
     def logger_creator(config):
         if not os.path.exists(custom_path):
             os.makedirs(custom_path)
-        logdir = tempfile.mkdtemp(prefix=logdir_prefix, dir=custom_path)
-        return UnifiedLogger(config, logdir, loggers=None)
+        # logdir = tempfile.mkdtemp(prefix=logdir_prefix, dir=custom_path)
+        logdir = os.path.join(custom_path, logdir_prefix)
+        os.makedirs(logdir, exist_ok=True)
+        return UnifiedLogger(config, logdir, loggers=DEFAULT_LOGGERS)
 
     return logger_creator
