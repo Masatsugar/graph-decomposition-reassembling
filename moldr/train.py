@@ -21,11 +21,10 @@ from guacamol.standard_benchmarks import (
     ranolazine_mpo,
 )
 
-from moldr.chemutils import get_mol
-from moldr.config import get_default_config
-from moldr.env import MolEnvValueMax
-from moldr.objective import qed_sa, rediscovery
-from moldr.utils import custom_log_creator, load, save
+from moldr.config import get_default_config_v1
+from moldr.utils import custom_log_creator, save
+
+from moldr.objective import rediscovery, qed_sa
 
 sc_list = [
     logP_benchmark(8.0),
@@ -72,7 +71,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--num_workers",
-        default=16,
+        default=8,
         type=int,
         help="the number of workers",
     )
@@ -87,6 +86,12 @@ if __name__ == "__main__":
         default="wandb",
         type=str,
         help="logging method, e.g., wandb or tensorboard",
+    )
+    parser.add_argument(
+        "--project_name",
+        default="moldr",
+        type=str,
+        help="Project name for logging",
     )
 
     print("[INFO] Base path:", os.getcwd())
@@ -116,7 +121,9 @@ if __name__ == "__main__":
         print("Load:", smi_file)
         building_blocks_smiles = pd.read_csv(smi_file, index_col=0).values.flatten()
     else:
-        raise ValueError("Firstly decompose molecules into building blocks or select the path of building block.")
+        raise ValueError(
+            "Firstly decompose molecules into building blocks or select the path of building block."
+        )
 
     building_blocks_smiles = [smi for smi in building_blocks_smiles if len(smi) > 1]
     print(
@@ -133,7 +140,6 @@ if __name__ == "__main__":
 
         # Get configuration
         config = get_default_config(
-            MolEnvValueMax,
             objective,
             building_blocks_smiles,
             model_path=model_path,
@@ -145,8 +151,9 @@ if __name__ == "__main__":
         wb_run = None
         if args.logger == "wandb":
             wb_run = setup_wandb(
-                project="moldr",
+                project=args.project_name,
                 group=f"{target}_{run_time}",
+                name=f"{target}_{run_time}",
                 config={"task": target},
             )
         else:
@@ -164,7 +171,9 @@ if __name__ == "__main__":
 
         # Save env_config separately as it contains the actual environment parameters
         env_config = config.env_config
-        save(f"outputs/{algo_name}/models/{target}/{run_time}/env_config.pkl", env_config)
+        save(
+            f"outputs/{algo_name}/models/{target}/{run_time}/env_config.pkl", env_config
+        )
 
         # Training loop
         for i in tqdm(range(1, args.epochs + 1)):
@@ -180,7 +189,7 @@ if __name__ == "__main__":
                 print(f"Checkpoint saved at: {checkpoint_dir}")
 
         # Final save
-        final_checkpoint = algo.save(f"outputs/{algo_name}/models/{target}/{time}/")
+        final_checkpoint = algo.save(f"outputs/{algo_name}/models/{target}/{run_time}/")
         print(f"Final checkpoint saved at: {final_checkpoint}")
 
         algo.stop()

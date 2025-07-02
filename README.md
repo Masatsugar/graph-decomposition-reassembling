@@ -11,13 +11,24 @@ pip install uv
 git clone https://github.com/Masatsugar/graph-decomposition-reassembling.git
 cd graph-decomposition-reassembling
 uv sync
+uv pip install -e .
 ```
+
+After installing it, please modify `.venv/lib/<your-python-version>/site-packages/guacamol/utils/chemistry.py` file in the guacamol library.
+
+```
+-from scipy import histogram
++from numpy import histogram
+```
+
 
 ## Usage
 Set python path: `export PYTHONPATH=.`.
 
 ### Decomposition
-In decomposition step, molecules are decomposed into subgraphs by gSpan. You can select raw or junction tree data.
+In the decomposition step, molecules are decomposed into subgraphs using gSpan.  
+Choose the "raw" decomposition method for greater versatility, or "jt" (junction tree) to take cliques into account.
+
 
 ```python
 from pathlib import Path
@@ -43,12 +54,14 @@ gspan = runner.decompose(mols)
 
 If you want to see the subgraphs in detail, see `examples/decomponsition.ipynb`.
 
-### Reassembing
+### Reassembling
 - Training 
 The agent takes an action from building blocks obtained from a decomposition step. The agent is trained by PPO with RLlib.
 
+You can choose the building blocks from gucamol or zinc. The default is guacamol with minsup 10,000.
+
 ```shell
-python train.py --epochs 100 --num_workers 40 --num_gpus 1
+python moldr/train.py --epochs 10 --num_workers 8 --num_gpus 1
 ```
 
 Generated molecules are sampled through the trained agent. Select and rewrite the model path that you want to use.
@@ -56,6 +69,11 @@ Generated molecules are sampled through the trained agent. Select and rewrite th
 ```shell
 python run_moldr.py 
 ```
+
+If you want to use the custom score function to optimize the generated molecules, 
+you can edit `moldr/objective.py` according to guacamol API, and add it into `sc_list` in `train.py`.
+
+```shell
 
 
 ### For Paper Reproducibility

@@ -12,8 +12,6 @@ from moldr.mol2vec.model import Mol2Vec
 from moldr.core.reassemble import merge_edge, merge_node
 from moldr.core.molgraph import sanitize_molgraph
 
-from moldr.config import get_default_config
-
 
 class MolEnvValueMax(gym.Env):
     def __init__(self, env_config):
@@ -128,29 +126,3 @@ class MolEnvValueMax(gym.Env):
         self.env = copy.deepcopy(state[0])
         obs = np.array(list(self.env.unwrapped.state))
         return obs.flatten()
-
-
-if __name__ == "__main__":
-    from guacamol.standard_benchmarks import logP_benchmark
-
-    objective = logP_benchmark(8.0)
-    building_blocks_smiles = ["CC", "CCO", "CCCC"]
-    config = get_default_config(
-        MolEnvValueMax,
-        objective,
-        building_blocks_smiles,
-        model_path="models/model_300dim.pkl",
-    )
-    env = MolEnvValueMax(config)
-    obs, info = env.reset()
-    assert len(obs) == 300  # mol2vec dim
-
-    rewards = 0.0
-    while True:
-        action = np.random.choice(len(building_blocks_smiles))
-        obs, reward, done, truncated, info = env.step(action)
-        rewards += reward
-        if done or truncated:
-            break
-
-    print(info)
