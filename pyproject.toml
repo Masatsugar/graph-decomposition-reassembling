@@ -9,9 +9,11 @@ dependencies = [
     "guacamol>=0.5.5",
     "gymnasium>=1.0.0",
     "joblib>=1.5.1",
+    "networkx>=3.4.2",
     "ray[rllib]>=2.47.1",
     "torch>=2.7.1",
     "tqdm>=4.67.1",
+    "wandb>=0.21.0",
 ]
 
 [project.optional-dependencies]

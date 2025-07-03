@@ -24,6 +24,11 @@ After installing it, please modify `.venv/lib/<your-python-version>/site-package
 This is a temporary fix for compatibility with the guacamol library. 
 Related to the [issue#33](https://github.com/BenevolentAI/guacamol/issues/33) in `BenevolentAI/guacamol` repository.
 
+In addition, remove either `rdkit` or `rdkit-pypi` due to the dependency problem. We test with `rdkit-pypi==2022.9.5`.
+
+```shell
+uv pip uninstall rdkit
+```
 
 
 ## Usage
