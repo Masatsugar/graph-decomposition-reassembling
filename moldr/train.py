@@ -13,8 +13,21 @@ from tqdm import tqdm
 import ray
 from rdkit import RDLogger
 
+CODE_ROOT = Path(__file__).resolve().parent
+
 def _silence_rdkit():
     RDLogger.DisableLog('rdApp.warning')
+
+
+# Initialize Ray
+ray.init(
+    ignore_reinit_error=True,
+    runtime_env={
+        "worker_process_setup_hook": _silence_rdkit,
+        "env_vars": {"PYTHONWARNINGS": "ignore::DeprecationWarning"},
+        "excludes": ["**/.git/**", "**/__pycache__/**", "**/.pytest_cache/**"],
+    },
+)
 
 from ray.rllib.algorithms.ppo import PPO
 from ray.air.integrations.wandb import setup_wandb
@@ -140,12 +153,6 @@ if __name__ == "__main__":
         print("[INFO] TARGET:", target)
         run_time = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
 
-        # Initialize Ray
-        ray.init(
-            ignore_reinit_error=True,
-            runtime_env={"worker_process_setup_hook": _silence_rdkit}
-        )
-
         # Get configuration
         config = get_default_config_v1(
             objective,
@@ -199,7 +206,7 @@ if __name__ == "__main__":
         # Final save
         final_checkpoint = algo.save(f"outputs/{algo_name}/models/{target}/{run_time}/")
         print(f"Final checkpoint saved at: {final_checkpoint}")
-
         algo.stop()
-        ray.shutdown()
         wb_run.finish()
+
+    ray.shutdown()
