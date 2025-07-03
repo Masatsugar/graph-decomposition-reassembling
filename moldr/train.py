@@ -11,6 +11,11 @@ import pandas as pd
 from tqdm import tqdm
 
 import ray
+from rdkit import RDLogger
+
+def _silence_rdkit():
+    RDLogger.DisableLog('rdApp.warning')
+
 from ray.rllib.algorithms.ppo import PPO
 from ray.air.integrations.wandb import setup_wandb
 from ray.tune.utils import flatten_dict
@@ -136,7 +141,10 @@ if __name__ == "__main__":
         run_time = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
 
         # Initialize Ray
-        ray.init(ignore_reinit_error=True)
+        ray.init(
+            ignore_reinit_error=True,
+            runtime_env={"worker_process_setup_hook": _silence_rdkit}
+        )
 
         # Get configuration
         config = get_default_config_v1(

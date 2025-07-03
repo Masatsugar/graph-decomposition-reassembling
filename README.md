@@ -69,13 +69,13 @@ We already mined the building blocks from gucamol or zinc dataset. The default i
 Set your own dataset to generate building blocks if you want to use other datasets.
 
 ```shell
-python moldr/train.py --epochs 10 --num_workers 8 --num_gpus 1
+uv run python moldr/train.py --epochs 10 --num_workers 8 --num_gpus 1
 ```
 
 Generated molecules are sampled through the trained agent. Select and rewrite the model path that you want to use.
 
 ```shell
-python run_moldr.py 
+uv run python run_moldr.py 
 ```
 
 If you want to use the custom score function to optimize the generated molecules, 

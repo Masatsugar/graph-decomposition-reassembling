@@ -3,6 +3,7 @@ import numpy as np
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
+from ray.rllib.core.rl_module.default_model_config import DefaultModelConfig
 
 from moldr.chemutils import get_mol
 from moldr.env import MolEnvValueMax
@@ -79,12 +80,12 @@ def get_default_config_v1(
             num_gpus_per_env_runner=0,
             sample_timeout_s=360.0,
         )
-        .model(
-            model_config={
-                "fcnet_hiddens": [256, 128, 128],
-                "fcnet_activation": "relu",
-                "max_seq_len": 100,
-            }
+        .rl_module(
+            model_config=DefaultModelConfig(
+                fcnet_hiddens=[256, 128, 128],
+                fcnet_activation="relu",
+                max_seq_len=100
+            )
         )
         .training(
             train_batch_size_per_learner=4000,
