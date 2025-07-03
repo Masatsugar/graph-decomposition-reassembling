@@ -139,7 +139,7 @@ if __name__ == "__main__":
         ray.init(ignore_reinit_error=True)
 
         # Get configuration
-        config = get_default_config(
+        config = get_default_config_v1(
             objective,
             building_blocks_smiles,
             model_path=model_path,
