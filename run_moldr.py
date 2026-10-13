@@ -39,14 +39,12 @@ class Sampler:
         np.random.seed(seed)
         obs, info = self.env.reset()
         done = False
-        prev_info = None
         while not done:
-            obs_tensor = torch.FloatTensor(obs).unsqueeze(0)
-            action = self.algo.compute_single_action(obs_tensor)
+            action = self.algo.compute_single_action(obs)
             obs, reward, done, truncated, info = self.env.step(action)
+            done = done or truncated
             if reward > self.threshold:
-                return prev_info
-            prev_info = info
+                return info
         return info
 
     def random(self, y):
@@ -58,6 +56,7 @@ class Sampler:
         while not done:
             action = np.random.choice(self.n_building_blocks)
             obs, reward, done, truncated, info = self.env.step(action)
+            done = done or truncated
 
         if info["gen_smiles"]:
             return np.random.choice(info["gen_smiles"])
@@ -98,17 +97,17 @@ class Sampler:
         rewards = 0.0
         info_list = []
         while not done:
-            obs_tensor = torch.FloatTensor(obs).unsqueeze(0)
-            action = self.algo.compute_single_action(obs_tensor)
+            action = self.algo.compute_single_action(obs)
             obs, reward, done, truncated, info = self.env.step(action)
+            done = done or truncated
             rewards += reward
             info_list.append(info)
 
-        final_scores = self.env.compute_score(info_list[-1]["gen_smiles"])
-        final_smiles = info_list[-1]["gen_smiles"][np.argmax(final_scores)]
-        rewards += np.max(final_scores)
-        info_list.append({"prev_smiles": final_smiles})
-        print("total reward:", rewards, "final reward:", np.max(final_scores))
+        # The environment has already selected and scored its final molecule.
+        # Dead ends have no candidates; a completion bonus was already paid
+        # by step(), and a time-limit truncation must not invent one here.
+        info_list.append({"prev_smiles": self.env.base_smiles})
+        print("total reward:", rewards, "final score:", self.env.prev_reward)
         return info_list
 
 

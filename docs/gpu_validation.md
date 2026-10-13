@@ -11,7 +11,9 @@ formal charges during merges; the vocabulary includes 17 charged entries.
   local/remote-worker RLlib PPO updates. Two subsequent config regressions also
   passed (NumPy input and rejection of an empty block table).
 - Actual CLI: QED PPO with two CPU rollout workers and one GPU trained and
-  saved a checkpoint using `--logger tensorboard`.
+  saved a checkpoint using `--logger tensorboard`. The saved CUDA policy was
+  restored through `PPO.from_checkpoint` and the actual Sampler completed three
+  molecule-generation episodes.
 - Real GuacaMol building-block CSV: 1,709 rows, 1,679 valid canonical fragments.
   All five measured PPO runs changed model weights with finite loss, entropy,
   KL and weights. GPU policy parameters were on `cuda:0`.

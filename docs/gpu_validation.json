@@ -411,5 +411,17 @@
       ]
     }
   },
-  "cpu_cuda_ppo_loss_close": true
+  "cpu_cuda_ppo_loss_close": true,
+  "cli_validation": {
+    "objective": "QED",
+    "gpu_count": 1,
+    "rollout_workers": 2,
+    "iterations": 1,
+    "train_batch_size": 128,
+    "minibatch_size": 64,
+    "num_epochs": 1,
+    "length": 12,
+    "checkpoint_saved": true,
+    "restored_sampler_episodes": 3
+  }
 }
