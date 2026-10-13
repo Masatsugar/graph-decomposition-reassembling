@@ -1,9 +1,10 @@
-# Experiment results — short speed sweep complete, 2026-10-14 (Asia/Tokyo)
+# Experiment results — 2026-10-14 (Asia/Tokyo)
 
 All **54 of 54 short speed-comparison jobs completed successfully**: 15 major
 configuration jobs, 30 additional ablation jobs, and nine worker-scaling jobs.
-Every configuration has seeds 0, 1, and 2. Isolated trace capture and
-post-training sampling are still pending and will be added separately.
+Every configuration has seeds 0, 1, and 2. All five separate GPU trace cases,
+all fifteen post-training checkpoint evaluations, and the CPU actor/lookahead
+comparison have also completed successfully.
 Recorded trials are available in
 the [local comparison report](../artifacts/experiments_short/sweep_2026-10-13_23-28-09-727175/index.html)
 and [sweep state](../artifacts/experiments_short/sweep_2026-10-13_23-28-09-727175/sweep.json).
@@ -115,8 +116,8 @@ updates and therefore matches update count in these environments. Final output
 rate counts completed episodes, including terminal, truncated, and dead-end
 endings, divided by measured wall time. Every final base passes the environment's
 chemistry validation gate. Counts include repeated molecules. The report's
-rolling sampled uniqueness uses bounded histories that include warmup;
-post-training Morgan/Tanimoto diversity is still pending.
+rolling sampled uniqueness uses bounded histories that include warmup; the
+following checkpoint evaluation measures fingerprint diversity separately.
 
 The separate trace sweep uses batch **128**, minibatch 32, three PPO epochs,
 two workers, and the full 1709-fragment catalog. One warmup and one untraced
@@ -126,15 +127,115 @@ the speed sweep above retains batch **1024**. Trace iteration duration and scope
 fractions must be interpreted within the trace configuration, rather than
 compared directly with the eight-worker, batch-1024 speed measurements.
 
-Pending measurements are the separate trace jobs, actor versus value-lookahead
-cost/quality evaluation, and matched post-training diversity for all five major
-configurations across three training seeds. The selector comparison will use the
-full-catalog short-sweep actor seed-0 checkpoint, with identical weights for both
-selectors. The saved
-[post-training plan](../artifacts/experiments_posthoc/evaluation_plan.json) lists
-the checkpoints and common episode budget. These measurements will run serially
-after environment synchronization and validation. The 3600-second-per-job longwall sweep is supplied as
-an explicit future experiment specification.
+All five trace jobs completed with **zero dropped events**. The following table
+uses fresh measured driver spans and the union of traced CUDA activity; GPU
+percent is a fraction of that iteration, not whole-device utilization. Each row
+is one seed-0 traced iteration with the smaller trace configuration.
+
+| Trace configuration | Iteration seconds | Driver sampling/wait seconds | Learner seconds | Traced GPU busy seconds | Traced GPU busy fraction |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| [Mol2Vec actor](../artifacts/experiments_trace/sweep_2026-10-14_02-07-52-856936/trace_mol2vec_actor_seed0_workers2/timeline.html) | 3.867 | 3.684 | 0.175 | 0.141 | 3.65% |
+| [Mol2Vec actor-value](../artifacts/experiments_trace/sweep_2026-10-14_02-07-52-856936/trace_actor_value_seed0_workers2/timeline.html) | 4.062 | 3.768 | 0.285 | 0.251 | 6.19% |
+| [Mol2Vec auxiliary-only](../artifacts/experiments_trace/sweep_2026-10-14_02-07-52-856936/trace_auxiliary_only_seed0_workers2/timeline.html) | 3.929 | 3.654 | 0.266 | 0.231 | 5.87% |
+| [Frozen MPNN actor](../artifacts/experiments_trace/sweep_2026-10-14_02-07-52-856936/trace_mpnn_frozen_seed0_workers2/timeline.html) | 13.186 | 10.431 | 2.613 | 0.513 | 3.89% |
+| [Trainable MPNN actor](../artifacts/experiments_trace/sweep_2026-10-14_02-07-52-856936/trace_mpnn_trainable_seed0_workers2/timeline.html) | 13.433 | 10.325 | 3.097 | 0.731 | 5.44% |
+
+The worker breakdown exposes SMILES processing, candidate-value computation,
+and graph encoding. Values below are **mean exclusive milliseconds per traced
+worker fragment** across the two concurrent CPU rollout workers. They must not
+be summed across workers and treated as iteration wall time. A dash means no
+worker span for that category; auxiliary-only U training occurs in the learner.
+
+| Trace configuration | SMILES processing ms | Candidate U ms | GNN ms |
+| --- | ---: | ---: | ---: |
+| Mol2Vec actor | 168.3 | — | — |
+| Mol2Vec actor-value | 172.1 | 109.6 | — |
+| Mol2Vec auxiliary-only | 174.2 | — | — |
+| Frozen MPNN actor | 226.4 | — | 6920.3 |
+| Trainable MPNN actor | 230.9 | — | 6798.4 |
+
+Graph encoding dominates the measured MPNN worker fragments in this full-table
+setting. The driver also has a 2.59–2.68-second gap after the final traced worker
+fragment in these captures. That gap can include worker postprocessing,
+compression, Ray serialization/transport, and driver aggregation; it is not a
+direct network-time measurement. Configuration names in the trace table link
+their HTML timelines; each run directory also retains merged Chrome/Perfetto
+JSON and `trace_analysis.json`, including the
+[actor breakdown](../artifacts/experiments_trace/sweep_2026-10-14_02-07-52-856936/trace_mol2vec_actor_seed0_workers2/trace_analysis.json).
+
+The two GNN timelines use compact display: only raw `cpu_op`, `cuda_runtime`,
+and `cuda_driver` duration spans are omitted. Logical scopes, all device events,
+counters, and the original time envelope remain. Frozen/trainable GNN HTML
+sizes decrease from 598.7/691.4 MiB to 220.5/243.7 MiB; the original HTML remains
+as `timeline_full.html`. Each compact page shows omitted counts and links the
+complete JSON. SHA256 checks confirm that every source JSON and analysis is
+unchanged, and GPU busy time exactly matches the original full viewer. This is
+a display filter, separate from the recorder's zero dropped events. The
+[display audit](../artifacts/experiments_trace/sweep_2026-10-14_02-07-52-856936/compact_delivery.json)
+records retained scopes, counts, sizes, and before/after hashes for all five jobs.
+
+Matched post-training sampling restored the final checkpoints of the five major
+configurations at all three training seeds. Every checkpoint used evaluation
+seeds 0/1/2, `explore=true`, zero rollout workers, and one GPU. No further learning
+occurred. This is **three episodes per checkpoint, fifteen checkpoints, 45 final
+molecules**. The table averages each checkpoint's three-molecule metrics over
+the three training seeds; deviations are sample SD across those training seeds.
+
+| Configuration | Mean evaluation QED | Morgan/Tanimoto diversity |
+| --- | ---: | ---: |
+| Mol2Vec actor | 0.8283 ± 0.0311 | 0.8604 ± 0.0108 |
+| Mol2Vec actor-value | 0.8131 ± 0.0428 | 0.8589 ± 0.0225 |
+| Mol2Vec auxiliary-only | 0.7765 ± 0.0521 | 0.8768 ± 0.0191 |
+| Frozen MPNN actor | 0.5803 ± 0.0904 | 0.8672 ± 0.0173 |
+| Trainable MPNN actor | 0.6800 ± 0.1182 | 0.8781 ± 0.0080 |
+
+All 45 final molecules were valid. Each checkpoint's three molecules were
+distinct, giving per-checkpoint uniqueness 1.0; this does not assert uniqueness
+across the nine molecules from different training seeds. Diversity is one minus
+mean pairwise Tanimoto similarity of radius-2, 2048-bit Morgan fingerprints,
+computed within each checkpoint's three episodes. The small budget provides
+three molecule pairs per checkpoint and does not establish a quality or diversity
+advantage. Evaluation uses final policies, whereas the training table averages
+completed episode scores over the measured learning iterations. The
+[post-training JSON](../artifacts/experiments_posthoc/comparison.json) and
+[PNG](../artifacts/experiments_posthoc/quality_diversity.png)/[SVG](../artifacts/experiments_posthoc/quality_diversity.svg)
+retain the metrics, checkpoint identities, and training-seed deviations.
+
+The selector comparison uses identical weights from the full-catalog short-sweep
+Mol2Vec actor seed-0 checkpoint at iteration 13. It runs on CPU with one Torch
+thread, no rollout workers, and `explore=false`. Starting seeds 0/1/2 each request
+three episodes, giving nine episodes per selector. Actual episode seeds are
+`starting_seed + episode_index`, so the ranges overlap.
+
+| CPU selector | Mean QED | Valid final molecules/s | Rollout seconds, nine episodes | Score requests/computations, nine episodes |
+| --- | ---: | ---: | ---: | ---: |
+| Actor | 0.7412 | 13.31 | 0.6762 | 36 / 36 |
+| Value lookahead | 0.9060 | 3.54 | 2.5456 | 1008 / 1008 |
+
+Lookahead changes the final molecule and raises QED on this particular trajectory,
+while rollout time is 3.76 times greater and score requests are 28 times greater.
+All 27 lookahead attachment transitions verified their actual **K+1** request
+delta: the trajectory presents K=1, 30, and 77 candidates. Totals are 972 preview
+requests, 27 normal selected-attachment requests, and nine reset requests. Caching
+was disabled, so every request computes QED. Rollout timing includes reset,
+selection, chemical transitions, and scoring, while model/Ray startup and output
+are recorded separately: total full-run wall times were 17.24 seconds for actor
+and 17.09 seconds for lookahead across the three runs each. Startup variation
+therefore obscures the much shorter episode work in end-to-end process time.
+
+All final molecules were valid. Each deterministic selector returned one repeated
+molecule across its nine episodes: aggregate uniqueness is 1/9 and fingerprint
+diversity is zero. These repetitions demonstrate the selected trajectory and cost,
+not independent seed evidence of a general lookahead quality advantage. The
+[comparison JSON](../artifacts/experiments_evaluation/comparison.json) and
+[PNG](../artifacts/experiments_evaluation/comparison.png)/[SVG](../artifacts/experiments_evaluation/comparison.svg)
+include episode-level counters, elapsed times, repeated outputs, and checkpoint
+provenance. Every evaluation run also saves its resolved configuration, manifest,
+asset snapshots, and checkpoint file hashes.
+
+The 3600-second-per-job longwall sweep remains an explicit future experiment
+specification. This delivery measures implementation, throughput, and initial
+quality at the stated short budgets; it does not assess long-run convergence.
 
 Provenance note: while this sweep was running, checkpoint validation, handling
 of undefined explained variance in JSON, legacy hidden width, custom-objective
@@ -149,3 +250,7 @@ limit kept explicit. Recorded revisions also differ: earlier manifests use
 `4146926`, while runs saved after the VAE provenance fix use `241447a`. Both may
 include other uncommitted implementation files identified by their source hashes;
 the jobs do not all record the same commit revision.
+The later trace captures record core revision `6bee2a0`; their compact viewer
+support was added in `47ac124`. Both post-training sampling and the CPU selector
+comparison record evaluation revision `47ac124`. Those evaluations did not
+modify the trained checkpoint weights.

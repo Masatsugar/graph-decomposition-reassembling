@@ -298,5 +298,5 @@ implicitly converts an old model.
 These short sweeps assess implementation, throughput, and initial quality.
 Measured results and real GPU validation must be read from produced run
 artifacts; the supplied YAML is an executable experiment specification.
-See [experiment results](experiment_results.md) for the explicitly partial
-measurement snapshot and remaining comparisons.
+See [experiment results](experiment_results.md) for the completed short comparison,
+trace captures, matched checkpoint sampling, selector costs, and provenance limits.

@@ -1,4 +1,4 @@
-# Shared experiment validation — 2026-10-13 (Asia/Tokyo)
+# Shared experiment validation — 2026-10-14 (Asia/Tokyo)
 
 All nine validation cases trained on the NVIDIA GeForce RTX 4060 Ti (16 GiB,
 driver 570.211.01) and restored in a separate Python process. The complete
@@ -97,12 +97,19 @@ and an independently owned frozen Mol2Vec encoder while PPO trains the GNN.
 It does not claim trained conditional decoding. Configuration preflight rejects
 episode/step reconditioning for an untrained context decoder; conditioned VAE
 experiments require aligned nonzero contexts and persisted training provenance.
+An actual CLI preflight using the unconditioned proposer
+[rejects episode reconditioning](../artifacts/local_delivery/untrained-context-rejected.log),
+while the same invocation with `fragments.recond_every=never`
+[succeeds](../artifacts/local_delivery/context-never-accepted.log). This verifies
+the provenance gate through the shared command, as well as through unit tests.
 
 The final regression run on 2026-10-14 used the synchronized lockfile and actual
-CUDA/Ray access: **456 tests passed** in 33.69 seconds. The command was
+CUDA/Ray access: **459 tests passed**, with 28 warnings, in **32.59 seconds**. The command was
 `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 .venv/bin/python -m pytest -q`.
-The complete local log is `/tmp/moldr_final_pytest.log`. New implementation and
-test files pass Ruff. An audit of all 44 changed Python files against revision
-`4146926` found no introduced lint findings; pre-existing findings are retained.
+The complete local [pytest log](../artifacts/local_delivery/pytest.log) is retained.
+New implementation and test files pass Ruff. An
+[audit of all 46 changed Python files](../artifacts/local_delivery/ruff-audit.json)
+against revision `4146926` found no introduced lint findings; 90 pre-existing
+findings are retained.
 `uv lock --check --offline` and `git diff --check` also passed. The final lint
 cleanup only changed a return annotation and an explicit public re-export marker.
