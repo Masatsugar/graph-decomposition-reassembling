@@ -143,9 +143,12 @@ regressions are repository code. No cloud cluster is provisioned.
 
 ## Validation
 
-23 profiling regressions passed: nested/exclusive timing, bounded recording,
+24 profiling regressions passed: nested/exclusive timing, bounded recording,
 Ray cached-method dispatch, clock conversion, separate GPU lanes/flow IDs,
 fragment accounting, overlapping GPU activity, annotation exclusion and
 portable artifact links. The existing GPU/Ray training suite also passed.
 The offline index and an eight-worker timeline were opened in headless Firefox
-for visual inspection, and the ZIP archive passed a CRC check.
+for visual inspection. Official Perfetto trace_processor loaded all four final
+JSON files with zero parser errors and 8,288–8,290 CPU/GPU flow links each.
+Flow IDs use collision-free integers compatible with its JSON importer.
+The ZIP archive passed a CRC check.

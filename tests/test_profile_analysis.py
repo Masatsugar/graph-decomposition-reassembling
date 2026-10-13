@@ -43,8 +43,41 @@ def test_merge_preserves_epoch_precision_and_namespaces_cpu_gpu_and_flows():
     assert cpu["tid"] != gpu["tid"]
     flows = [e for e in merged["traceEvents"] if e["ph"] in {"s", "f"}]
     assert flows[0]["id"] == flows[1]["id"] != 7
+    assert isinstance(flows[0]["id"], int)
     assert merged["dropped_events"] == {"driver": 2}
     assert (custom, torch) == before
+
+
+def test_merge_uses_perfetto_integer_flow_ids_without_custom_collisions():
+    custom = [
+        {"ph": "s", "name": "custom flow", "ts": 0, "pid": 10,
+         "tid": 1, "id": 1},
+        {"ph": "f", "name": "custom flow", "ts": 1, "pid": 10,
+         "tid": 1, "id2": {"global": "0x2"}},
+    ]
+    torch = {
+        "baseTimeNanoseconds": 1_000,
+        "traceEvents": [
+            {"ph": "s", "name": "flow", "ts": 0, "pid": 20,
+             "tid": 1, "id": 7},
+            {"ph": "f", "name": "flow", "ts": 1, "pid": 0,
+             "tid": 2, "id2": {"global": "0x7"}},
+            dict(event("bound", "kernel", 1, 1, pid=0, tid=2), bind_id=7),
+        ],
+    }
+    merged = merge_trace(custom, torch, 1_000)
+    torch_events = [
+        e for e in merged["traceEvents"]
+        if e.get("args", {}).get("source_type") == "torch" and e["ph"] != "M"
+    ]
+    identifiers = [
+        e.get("id", e.get("bind_id", e.get("id2", {}).get("global")))
+        for e in torch_events
+    ]
+    assert identifiers == [3, 3, 3]
+    assert all(isinstance(identifier, int) for identifier in identifiers)
+    assert custom[0]["id"] == 1
+    assert custom[1]["id2"]["global"] == "0x2"
 
 
 @pytest.mark.parametrize("base", [None, 0, -1, float("nan"), "123"])

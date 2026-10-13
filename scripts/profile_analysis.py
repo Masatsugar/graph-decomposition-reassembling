@@ -84,24 +84,39 @@ def merge_trace(
             first_pid = max([0, *used_pids]) + 1_000
             pid_map = {key: first_pid + i for i, key in enumerate(pids)}
             tid_map: dict[tuple[str, str], int] = {}
-            flow_map: dict[str, str] = {}
-            used_flows = set()
-            for event in custom:
-                for key in ("id", "bind_id"):
-                    if key in event:
-                        used_flows.add(_identity(event[key]))
-                used_flows.update(
-                    _identity(value) for value in event.get("id2", {}).values()
-                )
+            flow_map: dict[str, int] = {}
+            used_flows: set[int] = set()
+
+            def numeric_flow_id(value):
+                if _finite_number(value) and int(value) == value:
+                    return int(value)
+                # Chrome supports hexadecimal string IDs; arbitrary prefixed
+                # strings are rejected by Perfetto's JSON trace importer.
+                if isinstance(value, str) and re.fullmatch(
+                    r"(?:0[xX])?[0-9a-fA-F]+", value
+                ):
+                    return int(value, 16)
+                return None
+
+            for event in [*custom, *torch_events]:
+                identifiers = [event[key] for key in ("id", "bind_id") if key in event]
+                identifiers.extend(event.get("id2", {}).values())
+                for value in identifiers:
+                    identifier = numeric_flow_id(value)
+                    if identifier is not None:
+                        used_flows.add(identifier)
+            next_flow_id = 1
 
             def flow_id(value):
-                key = _identity(value)
+                nonlocal next_flow_id
+                numeric = numeric_flow_id(value)
+                key = _identity(numeric if numeric is not None else value)
                 if key not in flow_map:
-                    candidate = f"torch:{key}"
-                    while _identity(candidate) in used_flows:
-                        candidate = f"torch:{candidate}"
-                    used_flows.add(_identity(candidate))
-                    flow_map[key] = candidate
+                    while next_flow_id in used_flows:
+                        next_flow_id += 1
+                    flow_map[key] = next_flow_id
+                    used_flows.add(next_flow_id)
+                    next_flow_id += 1
                 return flow_map[key]
 
             gpu_pids = {
