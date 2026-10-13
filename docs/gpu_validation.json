@@ -423,5 +423,11 @@
     "length": 12,
     "checkpoint_saved": true,
     "restored_sampler_episodes": 3
+  },
+  "test_suite": {
+    "passed": 161,
+    "skipped": 0,
+    "seconds": 49.05,
+    "warnings": 14
   }
 }

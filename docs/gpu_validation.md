@@ -7,9 +7,9 @@ formal charges during merges; the vocabulary includes 17 charged entries.
 
 ## What passed
 
-- Full test run: 159 passed, no skips, including a real CUDA VAE regression and
-  local/remote-worker RLlib PPO updates. Two subsequent config regressions also
-  passed (NumPy input and rejection of an empty block table).
+- Final committed-code test run: 161 passed, no skips (49.05 seconds), including
+  a real CUDA VAE regression, local/remote-worker RLlib PPO updates, NumPy block
+  input, and rejection of an empty block table.
 - Actual CLI: QED PPO with two CPU rollout workers and one GPU trained and
   saved a checkpoint using `--logger tensorboard`. The saved CUDA policy was
   restored through `PPO.from_checkpoint` and the actual Sampler completed three
