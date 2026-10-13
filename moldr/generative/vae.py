@@ -39,6 +39,8 @@ class FragmentVAE(nn.Module):
         latent_dim: int = 16,
         hidden_dim: int = 64,
         desc_dim: int = DESCRIPTOR_DIM,
+        *,
+        context_trained: bool = False,
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -46,6 +48,10 @@ class FragmentVAE(nn.Module):
         self.latent_dim = latent_dim
         self.hidden_dim = hidden_dim
         self.desc_dim = desc_dim
+        # Training provenance is not a parameter/buffer, preserving existing
+        # state-dict compatibility. Custom conditional trainers may explicitly
+        # set it after optimization; proposer saves carry the flag separately.
+        self.context_trained = bool(context_trained)
 
         self.enc = nn.Sequential(
             nn.Linear(desc_dim, hidden_dim),
@@ -132,6 +138,8 @@ def train_fragment_vae(
         each fragment (e.g. Mol2Vec of the parent molecule the fragment was
         decomposed from). ``None`` trains context-free (zeros), which is enough
         for the unconditional ``propose_library`` use and the CPU demo.
+        Conditional inference is enabled only after positive-epoch training
+        with supplied, aligned, finite contexts containing a nonzero value.
 
     Notes
     -----
@@ -186,4 +194,7 @@ def train_fragment_vae(
             loss.backward()
             opt.step()
     model.eval()
+    model.context_trained = bool(
+        epochs > 0 and lr > 0 and contexts is not None and torch.any(ctx != 0).item()
+    )
     return model

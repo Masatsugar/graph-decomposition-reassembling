@@ -20,10 +20,10 @@ so:
 * Action ``i`` always means "the fragment family anchored at ``z_i``" -- a
   stable semantics the policy can learn, because ``z_i`` is fixed across the
   whole run.
-* ``context`` (Mol2Vec 300-d of the current base) lets the *actual* fragment
-  behind each anchor adapt to the growing molecule -- i.e. the generation is
-  conditional on the base embedding, as the brief asks, **without** changing the
-  action space.
+* With recorded conditional training, ``context`` (Mol2Vec 300-d of the current
+  base) lets the fragment behind each anchor adapt without changing the action
+  space. Context-free and older saves have ``context_trained=False``; supplied
+  contexts then safely have no effect instead of activating untrained weights.
 
 Re-conditioning cadence (``recond_every``) is a knob:
   * ``"never"`` / context omitted -> a static decoded library == a drop-in
@@ -108,6 +108,11 @@ class VAEProposer:
             (self.n_blocks, vae.latent_dim), generator=g
         ).to(next(vae.parameters()))
 
+    @property
+    def context_trained(self) -> bool:
+        """Whether conditional optimization is recorded for this decoder."""
+        return bool(getattr(self.vae, "context_trained", False))
+
     # ------------------------------------------------------------------ core
     @torch.no_grad()
     def _logits(self, context: Optional[np.ndarray]) -> np.ndarray:
@@ -125,8 +130,14 @@ class VAEProposer:
                 )
             if not np.isfinite(values).all():
                 raise ValueError("context must contain only finite values")
-            c = torch.as_tensor(values, device=parameter.device, dtype=parameter.dtype)
-            ctx = c.unsqueeze(0).expand(self.n_blocks, -1)
+            if self.context_trained:
+                c = torch.as_tensor(values, device=parameter.device, dtype=parameter.dtype)
+                ctx = c.unsqueeze(0).expand(self.n_blocks, -1)
+            else:
+                # Context-free training never updates the decoder's context
+                # input weights. Keep the old API callable but do not activate
+                # those untrained weights when an environment supplies context.
+                ctx = parameter.new_zeros((self.n_blocks, self.vae.context_dim))
         return self.vae.decode(self.anchors, ctx).float().cpu().numpy()
 
     def propose(self, context: Optional[np.ndarray] = None) -> List[str]:
@@ -207,12 +218,14 @@ class VAEProposer:
             latent_dim=self.vae.latent_dim,
             hidden_dim=self.vae.hidden_dim,
             desc_dim=self.vae.desc_dim,
+            context_trained=self.context_trained,
         )
 
     @classmethod
     def from_spec(cls, spec: dict) -> "VAEProposer":
         """Build (or pass through) a proposer from a lightweight, picklable spec.
 
+        Missing context-training metadata in older saves is treated as false.
         ``spec`` is either an existing :class:`VAEProposer` under key
         ``"instance"``, or a dict with ``"dir"`` pointing at a :meth:`save`
         directory. This indirection keeps ``env_config`` cheap to ship to RLlib
@@ -235,6 +248,11 @@ class VAEProposer:
                     int(meta["desc_dim"])
                     if "desc_dim" in meta
                     else vocab.descriptors.shape[1]
+                ),
+                context_trained=(
+                    bool(meta["context_trained"])
+                    if "context_trained" in meta
+                    else False
                 ),
             )
             vae.load_state_dict(

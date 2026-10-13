@@ -55,6 +55,10 @@ def build_proposer_from_smiles(
     ``contexts``, when supplied, must follow the final, filtered vocabulary
     order (one row per unique valid fragment). ``device`` controls training
     and inference, so GPU training is available through this entry point too.
+    A proposer built without nonzero contexts remains context-free, and records
+    ``context_trained=False``. Its provided inference contexts safely have no
+    effect. Positive-epoch optimization with aligned nonzero contexts records
+    conditional training; zero epochs do not establish that provenance.
     """
     vocab = (
         FragmentVocab.from_molecules(smiles)
