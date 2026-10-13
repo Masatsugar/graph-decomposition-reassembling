@@ -18,7 +18,13 @@ from moldr.chemutils import (
     mol_to_adj,
     mol_to_graph,
 )
-from moldr.core.reassemble import merge_edge, merge_node
+from moldr.core.reassemble import (
+    get_ring_targets,
+    merge_edge,
+    merge_mol_from_edge,
+    merge_mol_from_node,
+    merge_node,
+)
 from moldr.core.molgraph import MolGraph, sanitize_molgraph
 
 # A deliberately diverse set: chains, hetero atoms, fused/aromatic rings,
@@ -131,3 +137,84 @@ def test_molgraph_graph_is_lazy_but_correct():
     ref = mol_to_graph(get_mol("CC1CCC2=CC=CC=C2O1"))
     assert g.number_of_nodes() == ref.number_of_nodes()
     assert g.number_of_edges() == ref.number_of_edges()
+
+
+@pytest.mark.parametrize("smiles", ["C[NH3+]", "[13CH3]O", "F[C@H](Cl)Br", "c1cc[nH]c1"])
+def test_sanitize_molgraph_preserves_atom_chemistry(smiles):
+    candidates = sanitize_molgraph([MolGraph(smiles)])
+    assert len(candidates) == 1
+    assert get_smiles(candidates[0]) == get_smiles(get_mol(smiles))
+
+
+def test_sanitize_molgraph_drops_invalid_and_deduplicates_atom_maps():
+    candidates = sanitize_molgraph([MolGraph("invalid"), MolGraph("[CH3:1][OH:2]"), MolGraph("CO")])
+    assert [get_smiles(m) for m in candidates] == ["CO"]
+
+
+@pytest.mark.parametrize("smiles", ["C1CC2CCC1C2", "C1CCC2CC1C2", "C1CC2CCC1CC2"])
+def test_bridged_ring_targets_are_actual_bonds(smiles):
+    mol = get_mol(smiles)
+    targets = get_ring_targets(mol)
+    expected = {
+        tuple(sorted((bond.GetBeginAtomIdx(), bond.GetEndAtomIdx())))
+        for bond in mol.GetBonds()
+        if bond.IsInRing()
+    }
+    assert set(targets) == expected
+    assert len(targets) == len(set(targets))
+
+
+@pytest.mark.parametrize("direction", ["target1", "target2"])
+def test_edge_merge_keeps_atom_labels_for_reversed_endpoints(direction):
+    base, attach = get_mol("N1CCCCC1"), get_mol("C1CCOCC1")
+    offset = base.GetNumAtoms()
+    forward = merge_mol_from_edge(base, attach, (0, 1), (offset, offset + 1), direction)
+    reversed_ends = merge_mol_from_edge(base, attach, (1, 0), (offset + 1, offset), direction)
+    assert get_smiles(forward) == get_smiles(reversed_ends)
+
+
+@pytest.mark.parametrize("smiles", ["C[NH3+]", "[13CH3]O", "c1cc[nH]c1"])
+def test_mol_from_adj_with_templates_preserves_atom_properties(smiles):
+    mol = get_mol(smiles)
+    adj, nodes = mol_to_adj(mol)
+    rebuilt = mol_from_adj(adj, nodes, atom_templates=list(mol.GetAtoms()))
+    assert get_smiles(rebuilt) == get_smiles(mol)
+
+
+@pytest.mark.parametrize("base,charge,isotope", [
+    ("C[NH3+]", 1, 0),
+    ("[13CH3]CO", 0, 13),
+])
+def test_node_merge_preserves_charge_and_isotope(base, charge, isotope):
+    mols = sanitize_molgraph(merge_node(get_mol(base), get_mol("CC")))
+    assert mols
+    for mol in mols:
+        assert sum(atom.GetFormalCharge() for atom in mol.GetAtoms()) == charge
+        if isotope:
+            assert sum(atom.GetIsotope() == isotope for atom in mol.GetAtoms()) == 1
+
+
+@pytest.mark.parametrize("base,charge,isotope", [
+    ("C1CC[NH2+]CC1", 1, 0),
+    ("[13CH2]1CCCCC1", 0, 13),
+])
+def test_edge_merge_preserves_charge_and_isotope(base, charge, isotope):
+    mols = sanitize_molgraph(merge_edge(get_mol(base), get_mol("C1CCCCC1")))
+    assert mols
+    for mol in mols:
+        assert sum(atom.GetFormalCharge() for atom in mol.GetAtoms()) == charge
+        if isotope:
+            assert sum(atom.GetIsotope() == isotope for atom in mol.GetAtoms()) == 1
+
+
+@pytest.mark.parametrize("smiles", ["C[C@H](O)F", "C/C=C/C"])
+@pytest.mark.parametrize("merge", [merge_node, merge_edge])
+def test_reassembly_rejects_stereo_instead_of_silently_corrupting_it(smiles, merge):
+    for base, attach in [(get_mol(smiles), get_mol("CC")), (get_mol("CC"), get_mol(smiles))]:
+        with pytest.raises(ValueError, match="Stereochemical input"):
+            merge(base, attach)
+
+
+def test_low_level_merge_rejects_stereo():
+    with pytest.raises(ValueError, match="Stereochemical input"):
+        merge_mol_from_node(get_mol("C[C@H](O)F"), get_mol("CC"), 0, 4)

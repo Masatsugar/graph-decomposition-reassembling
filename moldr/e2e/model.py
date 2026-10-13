@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 # Large *finite* negative used to mask invalid action logits. softmax drives
 # these to ~0 probability (exp(-1e9) underflows to 0) while, unlike
@@ -56,14 +57,22 @@ class PointerPolicyNet(nn.Module):
         ctx_in = torch.cat([base, phase], dim=-1)  # [B, D+2]
         ctx = self.ctx_enc(ctx_in)  # [B, H]
         opt = self.opt_enc(options)  # [B, A, H]
-        b, a, h = opt.shape
-        ctx_t = ctx.unsqueeze(1).expand(b, a, h)  # [B, A, H]
-        pair = torch.cat([ctx_t, opt], dim=-1)  # [B, A, 2H]
-        scores = self.scorer(pair).squeeze(-1)  # [B, A]
+        # Linear([context, option]) = W_context context + W_option option + b.
+        # Compute the repeated context term once and avoid allocating the large
+        # [B, A, 2H] concatenation (and repeating its matrix multiply per slot).
+        first = self.scorer[0]
+        hidden = ctx.shape[-1]
+        ctx_scores = F.linear(ctx, first.weight[:, :hidden], first.bias)
+        opt_scores = F.linear(opt, first.weight[:, hidden:])
+        scores = self.scorer[2](self.scorer[1](ctx_scores.unsqueeze(1) + opt_scores))
+        scores = scores.squeeze(-1)  # [B, A]
 
-        # log(mask): 0 where valid, -inf where masked -> clamp to FLOAT_MIN.
-        inf_mask = torch.clamp(torch.log(mask), min=FLOAT_MIN)
-        logits = scores + inf_mask  # [B, A]
+        # Keep distribution calculations in float32 under autocast. -1e9 is
+        # outside float16's finite range, and its log-mask clamp used to raise
+        # an overflow error before a mixed-precision GPU update could start.
+        if scores.dtype in (torch.float16, torch.bfloat16):
+            scores = scores.float()
+        logits = scores.masked_fill(mask <= 0, FLOAT_MIN)  # [B, A]
 
         value = self.vf(ctx_in).squeeze(-1)  # [B]
         return logits, value
@@ -77,10 +86,17 @@ try:
     from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 
     _HAS_RAY = True
-except Exception:  # pragma: no cover - exercised only where Ray is absent
+except Exception:
     ModelCatalog = None
-    TorchModelV2 = object
     _HAS_RAY = False
+
+    class TorchModelV2:
+        # Using object here makes (object, nn.Module) an inconsistent MRO,
+        # breaking the plain PyTorch network's promised optional-Ray import.
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError(
+                "Ray RLlib is not available; cannot create its model adapter."
+            )
 
 
 MODEL_NAME = "moldr_pointer"

@@ -14,7 +14,7 @@ from ray.tune.registry import register_env
 
 from moldr.chemutils import get_mol
 from moldr.e2e.env import MolEnvE2E
-from moldr.e2e.model import register_pointer_model, MODEL_NAME
+from moldr.e2e.model import MODEL_NAME, register_pointer_model
 
 ENV_NAME = "moldr_e2e"
 
@@ -39,6 +39,7 @@ def get_e2e_config(
     hidden: int = 256,
     proposer=None,
     recond_every: str = "episode",
+    max_episode_steps: int | None = None,
 ):
     """Build a PPOConfig for the end-to-end reassembly environment.
 
@@ -51,6 +52,10 @@ def get_e2e_config(
     ``{"dir": ...}`` spec). Phase A then offers *generated* building blocks,
     re-decoded per ``recond_every`` in {"never", "episode", "step"}. The action
     space stays ``Discrete`` of the proposer's N, so PPO is unchanged.
+
+    ``max_episode_steps`` bounds decisions even when an attachment adds no
+    atoms. By default it is twice ``length``; hitting it truncates the episode
+    so PPO can bootstrap the value of the unfinished molecule.
     """
     register_env(ENV_NAME, e2e_env_creator)
     register_pointer_model()
@@ -62,17 +67,23 @@ def get_e2e_config(
 
     if proposer is None and building_blocks_smiles is None:
         raise ValueError("Pass either building_blocks_smiles or a proposer.")
+    blocks = list(building_blocks_smiles) if building_blocks_smiles is not None else ["C"]
+    if proposer is None and not blocks:
+        raise ValueError("BUILDING_BLOCKS must not be empty.")
 
     # The env derives the pool from the proposer when one is given; otherwise it
     # uses the fixed table. A placeholder table keeps the env_config schema
     # uniform when a proposer is supplied.
     env_config = {
-        "BUILDING_BLOCKS": list(building_blocks_smiles or ["C"]),
+        "BUILDING_BLOCKS": blocks,
         "SCORE_FUNCTION": scoring_function,
         "MODEL_PATH": model_path,
         "BASE_SMILES": base_smiles,
         "SCORE_THRESHOLD": score_threshold,
         "LENGTH": length,
+        "MAX_EPISODE_STEPS": (
+            max_episode_steps if max_episode_steps is not None else 2 * length
+        ),
         "OBS_DIM": obs_dim,
         "MAX_ATTACH": max_attach,
         "OPTION_POOL_SIZE": option_pool_size,
@@ -91,6 +102,10 @@ def get_e2e_config(
             enable_rl_module_and_learner=False,
             enable_env_runner_and_connector_v2=False,
         )
+        # The pointer model consumes the Dict directly. Flattening the padded
+        # option matrix copies potentially millions of elements per decision,
+        # then ModelV2 immediately reconstructs the same Dict again.
+        .experimental(_disable_preprocessor_api=True)
         .resources(num_gpus=num_gpus)
         .env_runners(
             num_env_runners=num_workers,

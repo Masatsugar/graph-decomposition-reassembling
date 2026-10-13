@@ -44,7 +44,7 @@ import gymnasium as gym
 import numpy as np
 from numpy import ndarray
 
-from moldr.chemutils import get_mol, get_smiles
+from moldr.chemutils import get_mol, get_smiles, validate_reassembly_mol
 from moldr.core.molgraph import sanitize_molgraph
 from moldr.core.reassemble import merge_edge, merge_node
 from moldr.mol2vec.model import Mol2Vec
@@ -87,13 +87,31 @@ class MolEnvE2E(gym.Env):
         # fixed-table baseline). An int K -> sample K blocks per step (used by
         # the generative pool variant, Phase 3).
         self.option_pool_size: Optional[int] = env_config.get("OPTION_POOL_SIZE", None)
+        if self.option_pool_size is not None:
+            self.option_pool_size = int(self.option_pool_size)
+            if self.option_pool_size <= 0:
+                raise ValueError("OPTION_POOL_SIZE must be positive or None.")
         self.threshold: float = float(env_config.get("SCORE_THRESHOLD", 0.9))
         self.length: int = int(env_config.get("LENGTH", 100))
+        # Atom count alone is not a horizon: merging a one-atom block can leave
+        # the molecule unchanged indefinitely. Bound the number of decisions so
+        # PPO evaluation and complete-episode sampling always finish.
+        self.max_episode_steps = int(
+            env_config.get("MAX_EPISODE_STEPS", 2 * self.length)
+        )
+        if self.max_episode_steps <= 0:
+            raise ValueError("MAX_EPISODE_STEPS must be positive.")
         self._base_smiles: str = env_config.get("BASE_SMILES", "C")
+        base = get_mol(self._base_smiles)
+        if base is None:
+            raise ValueError("BASE_SMILES must be a valid molecule.")
+        validate_reassembly_mol(base)
         self.final_weight: float = float(env_config.get("FINAL_WEIGHT", 1.0))
         # "improvement" -> dense reward = score(new) - score(prev) (default,
         # better for PPO). "sparse" -> reward only on termination (original).
         self.reward_mode: str = env_config.get("REWARD_MODE", "improvement")
+        if self.reward_mode not in ("improvement", "sparse"):
+            raise ValueError("REWARD_MODE must be 'improvement' or 'sparse'.")
 
         self.mol2vec = Mol2Vec(model_path=env_config["MODEL_PATH"])
 
@@ -115,11 +133,15 @@ class MolEnvE2E(gym.Env):
 
         self.bb_mols = [get_mol(s) for s in self.building_blocks]
         self.n_bb = len(self.building_blocks)
+        if self.n_bb == 0 or any(m is None for m in self.bb_mols):
+            raise ValueError("BUILDING_BLOCKS must contain at least one valid molecule.")
+        for mol in self.bb_mols:
+            validate_reassembly_mol(mol)
         # Precompute building-block embeddings once (static for the fixed table;
         # refreshed per episode/step when a proposer re-decodes the pool).
         self._bb_embeddings = self._embed([m for m in self.bb_mols])
 
-        n_bb_options = self.option_pool_size or self.n_bb
+        n_bb_options = min(self.option_pool_size or self.n_bb, self.n_bb)
         self.n_options = int(max(n_bb_options, self.max_attach))
 
         # Finite bound (not finfo.max) so RLlib's obs statistics never overflow
@@ -170,9 +192,15 @@ class MolEnvE2E(gym.Env):
         changes. No-op without a proposer."""
         if self._proposer is None:
             return
-        self.building_blocks = list(self._proposer.propose(context))
-        self.bb_mols = [get_mol(s) for s in self.building_blocks]
-        self._bb_embeddings = self._embed(self.bb_mols)
+        blocks = list(self._proposer.propose(context))
+        mols = [get_mol(s) for s in blocks]
+        if len(mols) != self.n_bb:
+            raise ValueError("PROPOSER must preserve the building-block pool size.")
+        for mol in mols:
+            validate_reassembly_mol(mol)
+        embeddings = self._embed(mols)
+        self.building_blocks, self.bb_mols = blocks, mols
+        self._bb_embeddings = embeddings
 
     def _pad_options(self, embeddings: ndarray, count: int):
         options = np.zeros((self.n_options, self.obs_dim), dtype=np.float32)
@@ -244,8 +272,16 @@ class MolEnvE2E(gym.Env):
     def step(self, action):
         self.env_step += 1
         if self.phase == Phase.SELECT_BB:
-            return self._step_select_bb(action)
-        return self._step_select_attach(action)
+            transition = self._step_select_bb(action)
+        else:
+            transition = self._step_select_attach(action)
+        obs, reward, terminated, truncated, info = transition
+        if not terminated and self.env_step >= self.max_episode_steps:
+            # Time-limit truncation retains the current observation and reward
+            # so RLlib can bootstrap its value rather than paying a false
+            # completion bonus for an unfinished molecule.
+            truncated = True
+        return obs, reward, terminated, truncated, info
 
     def _step_select_bb(self, action):
         pool = self._bb_pool_idx

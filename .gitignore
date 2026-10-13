@@ -151,3 +151,5 @@ poetry.lock
 requirements.txt
 mlruns
 .vscode/
+/outputs/
+/ray_results/

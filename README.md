@@ -4,31 +4,21 @@ This repository is for [MOLDR: Molecular Graph Generation by Decomposition and R
 ## Installation
 
 ### For Latest Version
-We assume Python 3.10 or later.
+Use Python 3.10.13–3.12 (the GPU validation uses Python 3.12).
 
 ```shell
-pip install uv
+pip install --upgrade uv
 git clone https://github.com/Masatsugar/graph-decomposition-reassembling.git
 cd graph-decomposition-reassembling
-uv sync
-uv pip install -e .
+uv sync --python 3.12 --locked --extra dev
 ```
 
-After installing it, please modify `.venv/lib/<your-python-version>/site-packages/guacamol/utils/chemistry.py` file in the guacamol library.
-
-```diff
--from scipy import histogram
-+from numpy import histogram
-```
-
-This is a temporary fix for compatibility with the guacamol library. 
-Related to the [issue#33](https://github.com/BenevolentAI/guacamol/issues/33) in `BenevolentAI/guacamol` repository.
-
-In addition, remove either `rdkit` or `rdkit-pypi` due to the dependency problem. We test with `rdkit-pypi==2022.9.5`.
-
-```shell
-uv pip uninstall rdkit
-```
+The lock file pins compatible Ray, NumPy, SciPy and PyArrow versions. SciPy
+1.11.4 retains the import GuacaMol requires. The uv configuration excludes
+GuacaMol's obsolete `rdkit-pypi` dependency and installs the maintained `rdkit`
+distribution instead. No site-packages edits or manual uninstalls are needed.
+Use a recent uv supporting
+[`exclude-dependencies`](https://docs.astral.sh/uv/reference/settings/#exclude-dependencies).
 
 
 ## Usage
@@ -41,7 +31,7 @@ Choose the "raw" decomposition method for greater versatility, or "jt" (junction
 
 ```python
 from pathlib import Path
-from moldr.decompose import MolsMining, DefaultConfig
+from moldr.core.decompose import MolsMining, DefaultConfig
 from moldr.chemutils import get_mol
 
 test_smiles = [
@@ -77,6 +67,14 @@ Set your own dataset to generate building blocks if you want to use other datase
 uv run python moldr/train.py --epochs 10 --num_workers 8 --num_gpus 1
 ```
 
+For a short run without an external experiment tracker:
+
+```shell
+uv run python -m moldr.train --objective QED --epochs 1 --num_workers 2 \
+  --num_gpus 1 --logger tensorboard --train-batch-size 128 \
+  --minibatch-size 64 --num-epochs 1 --length 12
+```
+
 Generated molecules are sampled through the trained agent. Select and rewrite the model path that you want to use.
 
 ```shell
@@ -90,16 +88,19 @@ edit `moldr/objective.py` directly according to guacamol API, and add it into `s
 ## Faster, End-to-End, and Generative Extensions
 
 Three optional extensions improve the speed and expressiveness of the method.
-They are additive: the original pipeline above is unchanged.
+The original and new environments share the corrected merge implementation.
 
 ### 1. Faster reassembly (transparent)
 
 The merge/reassembly step no longer round-trips molecules through networkx and
 SMILES on every candidate; it uses direct numpy/RWMol operations
 (`moldr.chemutils.mol_to_adj` / `mol_from_adj`). The generated molecule sets are
-byte-identical to before (see `tests/test_reassemble_fast.py`), so nothing in
-your workflow changes — it is simply ~2x faster per step, and `merge_edge` now
-always returns a list (never `None`).
+identical for the tested neutral, non-stereochemical fixtures
+(see `tests/test_reassemble_fast.py`). Bug fixes additionally retain charges
+and isotopes, use actual bonds in bridged rings, and always return a list from
+`merge_edge`. These corrected chemistry cases intentionally differ from the
+old results. Both environments now impose an episode step limit and report
+time limits as truncations for PPO bootstrapping.
 
 ### 2. End-to-end reassembly (no greedy heuristic)
 
@@ -108,8 +109,7 @@ attach; the environment then enumerated every merge, scored them all, and
 greedily kept `argmax(score)`. `moldr/e2e` makes that attachment choice *learned*
 instead, as a two-phase MDP (select building block → select attachment) driven by
 a single action-masked **pointer policy**, while keeping RLlib PPO. Only the
-chosen candidate is scored, so expensive objectives are evaluated far fewer times
-(~33x fewer scoring calls on a matched rollout).
+chosen candidate is scored, reducing objective evaluations per attachment.
 
 ```python
 from moldr.e2e.config import get_e2e_config
@@ -140,7 +140,13 @@ from moldr.generative.producer import build_proposer_from_smiles
 
 # Train a proposer from the existing building-block CSVs (or full molecules
 # with decompose=True). For real runs raise epochs/hidden_dim on a GPU.
-proposer = build_proposer_from_smiles(building_blocks_smiles, n_blocks=1000)
+proposer = build_proposer_from_smiles(
+    building_blocks_smiles, n_blocks=1000, device="cuda", hidden_dim=256,
+    batch_size=256, epochs=50,
+)
+# Keep rollout workers on CPU: save the CUDA-trained model and pass its spec.
+proposer.save("tmp/proposer")
+proposer_spec = {"dir": "tmp/proposer"}
 ```
 
 Use it in either environment:
@@ -148,15 +154,30 @@ Use it in either environment:
 ```python
 # (a) generative blocks + original reassembly (ablation vs the gSpan table)
 from moldr.config import get_generative_config_v1
-config = get_generative_config_v1(objective, proposer, model_path="models/model_300dim.pkl")
+config = get_generative_config_v1(objective, proposer_spec, model_path="models/model_300dim.pkl")
 
 # (b) generative blocks + end-to-end reassembly (combines 2 and 3)
 from moldr.e2e.config import get_e2e_config
-config = get_e2e_config(objective, model_path="models/model_300dim.pkl", proposer=proposer)
+config = get_e2e_config(objective, model_path="models/model_300dim.pkl", proposer=proposer_spec)
 ```
 
-All three extensions are covered by unit tests in `tests/` (CPU-only; a real
-RLlib PPO train step is smoke-tested for the end-to-end and generative paths).
+All three extensions are covered by unit and real PPO tests. CUDA tests run
+when a GPU is visible. Reproduce the full GPU validation with:
+
+```shell
+uv run python -m pytest -q
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  uv run python -m scripts.validate_training --output tmp/gpu_validation.json
+```
+
+See [the measured GPU validation](docs/gpu_validation.md) for settings,
+timings and limits. Model computation benefits from CUDA, while these short
+PPO runs remain dominated by CPU molecule enumeration. Fragment proposals
+select entries from the existing vocabulary; unseen fragments are not created.
+Without per-fragment `contexts`, VAE training is unconditional. Specified
+tetrahedral or bond stereochemistry is currently unsupported by the adjacency
+merge implementation: environments reject it, and fragment vocabularies filter
+it out rather than silently discarding it.
 
 
 ### For Paper Reproducibility

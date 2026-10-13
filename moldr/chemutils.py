@@ -132,18 +132,32 @@ def mol_to_adj(mol: Mol) -> Tuple[ndarray, List[str]]:
     return adj, nodes
 
 
-def mol_from_adj(adj_mat: ndarray, nodes: List[str]) -> Optional[Mol]:
+def mol_from_adj(
+    adj_mat: ndarray,
+    nodes: List[str],
+    *,
+    atom_templates: Optional[List[Chem.Atom]] = None,
+) -> Optional[Mol]:
     """Fast, networkx-free equivalent of ``mol_from_graph``.
 
     Builds a plain-atom RWMol from an adjacency matrix of bond orders and a
     list of atom-symbol labels, mirroring ``mol_from_graph`` exactly: atoms
     are added in index order, bonds are read from the upper triangle, and
     bond orders map 1.0->single, 2.0->double, 3.0->triple, 1.5->aromatic
-    (any other value is skipped, as in the original).
+    (any other value is skipped, as in the original). Optional atom templates
+    preserve formal charges, isotopes and explicit hydrogen counts during
+    merging; symbol-only callers retain the original plain-atom behavior.
+    Specified stereochemistry is rejected because rebuilding bond order can
+    change the meaning of an atom's chiral tag.
     """
     mol = Chem.RWMol()
-    for symbol in nodes:
-        mol.AddAtom(Chem.Atom(symbol))
+    if atom_templates is not None and len(atom_templates) != len(nodes):
+        raise ValueError("atom_templates must contain one atom per node.")
+    for idx, symbol in enumerate(nodes):
+        atom = Chem.Atom(symbol if atom_templates is None else atom_templates[idx])
+        if atom_templates is not None and atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED:
+            raise ValueError("Stereochemical input is unsupported for adjacency-based reassembly.")
+        mol.AddAtom(atom)
     n_atom = len(nodes)
     for ix in range(n_atom):
         row = adj_mat[ix]
@@ -156,6 +170,29 @@ def mol_from_adj(adj_mat: ndarray, nodes: List[str]) -> Optional[Mol]:
                 continue
             mol.AddBond(ix, iy, bond_type)
     return mol.GetMol()
+
+
+def validate_reassembly_mol(mol: Mol) -> None:
+    """Fail explicitly for input whose stereochemistry the merge cannot retain.
+
+    Reassembling currently supports molecular connectivity, charges, isotopes
+    and explicit hydrogens. A caller may deliberately remove stereochemistry
+    before using it, but the merge must never silently change a stereoisomer.
+    """
+    if mol is None or mol.GetNumAtoms() == 0:
+        raise ValueError("Reassembly requires a valid, nonempty molecule.")
+    has_stereo = any(
+        atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for atom in mol.GetAtoms()
+    ) or any(
+        bond.GetStereo() != Chem.BondStereo.STEREONONE
+        or bond.GetBondDir() != Chem.BondDir.NONE
+        for bond in mol.GetBonds()
+    )
+    if has_stereo:
+        raise ValueError(
+            "Stereochemical input is unsupported for adjacency-based reassembly; "
+            "remove stereochemistry explicitly before use."
+        )
 
 
 def mol_from_graph(graph: Graph) -> Optional[Mol]:

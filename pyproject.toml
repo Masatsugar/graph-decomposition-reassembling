@@ -1,17 +1,26 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "graph-decomposition-reassembling"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10.13"
+requires-python = ">=3.10.13,<3.13"
 dependencies = [
-    "gensim>=4.3.3",
-    "guacamol>=0.5.5",
-    "gymnasium>=1.0.0",
+    "gensim==4.3.3",
+    "guacamol==0.5.5",
+    "gymnasium==1.0.0",
+    "numpy>=1.26.4,<2",
+    "scipy==1.11.4",
+    "pandas>=2.2.3,<3",
+    "pyarrow==17.0.0",
+    "rdkit==2025.3.6",
     "joblib>=1.5.1",
     "networkx>=3.4.2",
-    "ray[rllib]>=2.47.1",
-    "torch>=2.7.1",
+    "ray[rllib]==2.47.1",
+    "torch==2.7.1",
     "tqdm>=4.67.1",
     "wandb>=0.21.0",
 ]
@@ -19,7 +28,13 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "ruff>=0.12.1",
+    "pytest>=7.4",
 ]
+
+[tool.uv]
+# GuacaMol's obsolete rdkit-pypi package has no Python 3.12 wheels and
+# installs the same module as rdkit. Use the maintained distribution above.
+exclude-dependencies = ["rdkit-pypi"]
 
 [tool.setuptools.packages.find]
 where = ["."]

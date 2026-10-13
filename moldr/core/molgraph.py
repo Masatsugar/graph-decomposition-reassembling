@@ -6,9 +6,6 @@ import rdkit.Chem as Chem
 from moldr.chemutils import (
     get_mol,
     get_smiles,
-    mol_from_adj,
-    mol_from_graph,
-    mol_to_adj,
     mol_to_graph,
     sanitize,
 )
@@ -104,11 +101,21 @@ class MolToGraph:
 
 
 def sanitize_molgraph(m_graphs: List[MolGraph]):
-    # Rebuild each candidate as a plain-atom mol (same effect as the former
-    # mol_to_graph -> mol_from_graph networkx round trip), sanitize, then
-    # dedup by canonical kekulé SMILES. Uses the networkx-free fast path.
-    rebuilt = [mol_from_adj(*mol_to_adj(m.mol)) for m in m_graphs if m.mol is not None]
-    mols = [sanitize(m) for m in rebuilt]
-    smiles = np.unique([get_smiles(m) for m in mols])
-    mols = [get_mol(s) for s in smiles]
-    return mols
+    # The candidates are already molecules. Rebuilding from element labels
+    # destroys charges, isotopes, explicit hydrogens and stereochemistry.
+    # Only the temporary atom-map numbers used by the merge code need removal.
+    by_smiles = {}
+    for candidate in m_graphs:
+        if candidate.mol is None:
+            continue
+        mol = Chem.Mol(candidate.mol)
+        for atom in mol.GetAtoms():
+            atom.SetAtomMapNum(0)
+        try:
+            smiles = get_smiles(mol)
+            parsed = get_mol(smiles)
+        except (ValueError, RuntimeError):
+            continue
+        if parsed is not None:
+            by_smiles[smiles] = parsed
+    return [by_smiles[smiles] for smiles in sorted(by_smiles)]

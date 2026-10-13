@@ -43,6 +43,7 @@ index, and every vocabulary entry passed ``is_valid_block`` at build time. So
 
 from __future__ import annotations
 
+from numbers import Integral
 from pathlib import Path
 from typing import List, Optional
 
@@ -78,6 +79,12 @@ class VAEProposer:
             fragment with the next-best distinct candidate (deterministic), so
             the N positions are diverse.
         """
+        if not isinstance(n_blocks, Integral) or n_blocks <= 0:
+            raise ValueError("n_blocks must be a positive integer")
+        if not np.isfinite(min_ring_fraction) or not 0 <= min_ring_fraction <= 1:
+            raise ValueError("min_ring_fraction must be between 0 and 1")
+        if vae.vocab_size != len(vocab):
+            raise ValueError("VAE output size must match the fragment vocabulary")
         self.vae = vae.eval()
         self.vocab = vocab
         self.n_blocks = int(n_blocks)
@@ -99,21 +106,28 @@ class VAEProposer:
         g = torch.Generator().manual_seed(anchor_seed)
         self.anchors = torch.randn(
             (self.n_blocks, vae.latent_dim), generator=g
-        ).float()
+        ).to(next(vae.parameters()))
 
     # ------------------------------------------------------------------ core
     @torch.no_grad()
     def _logits(self, context: Optional[np.ndarray]) -> np.ndarray:
         """(N, |V|) decode logits, one row per frozen anchor."""
+        parameter = next(self.vae.parameters())
+        # Also support callers moving/casting the model after construction.
+        self.anchors = self.anchors.to(parameter)
         if context is None:
-            ctx = torch.zeros((self.n_blocks, self.vae.context_dim))
+            ctx = parameter.new_zeros((self.n_blocks, self.vae.context_dim))
         else:
-            c = torch.as_tensor(np.asarray(context, dtype=np.float32)).reshape(-1)
-            assert c.numel() == self.vae.context_dim, (
-                f"context dim {c.numel()} != {self.vae.context_dim}"
-            )
-            ctx = c.unsqueeze(0).expand(self.n_blocks, -1).contiguous()
-        return self.vae.decode(self.anchors, ctx).cpu().numpy()
+            values = np.asarray(context, dtype=np.float32).reshape(-1)
+            if values.size != self.vae.context_dim:
+                raise ValueError(
+                    f"context dim {values.size} != {self.vae.context_dim}"
+                )
+            if not np.isfinite(values).all():
+                raise ValueError("context must contain only finite values")
+            c = torch.as_tensor(values, device=parameter.device, dtype=parameter.dtype)
+            ctx = c.unsqueeze(0).expand(self.n_blocks, -1)
+        return self.vae.decode(self.anchors, ctx).float().cpu().numpy()
 
     def propose(self, context: Optional[np.ndarray] = None) -> List[str]:
         """Return exactly ``N`` valid SMILES, position ``i`` from anchor ``i``.
@@ -192,6 +206,7 @@ class VAEProposer:
             context_dim=self.vae.context_dim,
             latent_dim=self.vae.latent_dim,
             hidden_dim=self.vae.hidden_dim,
+            desc_dim=self.vae.desc_dim,
         )
 
     @classmethod
@@ -209,21 +224,27 @@ class VAEProposer:
             return spec["instance"]
         d = Path(spec["dir"])
         vocab = FragmentVocab.load(d / "vocab.json")
-        meta = np.load(d / "proposer.npz")
-        vae = FragmentVAE(
-            vocab_size=len(vocab),
-            context_dim=int(meta["context_dim"]),
-            latent_dim=int(meta["latent_dim"]),
-            # hidden_dim persisted since 0.1; default to 64 for older saves.
-            hidden_dim=int(meta["hidden_dim"]) if "hidden_dim" in meta else 64,
-            desc_dim=vocab.descriptors.shape[1],
-        )
-        vae.load_state_dict(torch.load(d / "vae.pt", map_location="cpu"))
-        return cls(
-            vae=vae,
-            vocab=vocab,
-            n_blocks=int(meta["n_blocks"]),
-            anchor_seed=int(meta["anchor_seed"]),
-            min_ring_fraction=float(meta["min_ring_fraction"]),
-            dedup=bool(meta["dedup"]),
-        )
+        with np.load(d / "proposer.npz") as meta:
+            vae = FragmentVAE(
+                vocab_size=len(vocab),
+                context_dim=int(meta["context_dim"]),
+                latent_dim=int(meta["latent_dim"]),
+                # Preserve compatibility with older saves.
+                hidden_dim=int(meta["hidden_dim"]) if "hidden_dim" in meta else 64,
+                desc_dim=(
+                    int(meta["desc_dim"])
+                    if "desc_dim" in meta
+                    else vocab.descriptors.shape[1]
+                ),
+            )
+            vae.load_state_dict(
+                torch.load(d / "vae.pt", map_location="cpu", weights_only=True)
+            )
+            return cls(
+                vae=vae,
+                vocab=vocab,
+                n_blocks=int(meta["n_blocks"]),
+                anchor_seed=int(meta["anchor_seed"]),
+                min_ring_fraction=float(meta["min_ring_fraction"]),
+                dedup=bool(meta["dedup"]),
+            )

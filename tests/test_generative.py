@@ -8,6 +8,7 @@ with Mol2Vec monkeypatched to a zero embedder so the tests need no gensim model.
 
 import numpy as np
 import pytest
+import torch
 
 from moldr.chemutils import get_mol, get_smiles
 from moldr.core.reassemble import merge_node, merge_edge, num_rings
@@ -82,6 +83,13 @@ def test_vocab_from_molecules_decomposes():
     assert len(vocab) >= 2
     assert all(is_valid_block(s) for s in vocab.smiles)
     assert vocab.ring_mask.any()  # decomposition surfaced at least one ring
+
+
+@pytest.mark.parametrize("smiles", ["C[C@H](O)F", "C/C=C/C"])
+def test_vocab_filters_stereochemistry_unsupported_by_reassembly(smiles):
+    assert not is_valid_block(smiles)
+    vocab = FragmentVocab.from_smiles_list([smiles, "CC(O)F", "CC=CC"])
+    assert vocab.smiles == [get_smiles(get_mol(s)) for s in ("CC(O)F", "CC=CC")]
 
 
 # --------------------------------------------------------------------------- #
@@ -300,3 +308,100 @@ def test_build_proposer_from_smiles_end_to_end():
     lib = producer.propose_building_blocks(proposer)
     assert len(lib) == N_BLOCKS
     assert all(get_mol(s) is not None for s in lib)
+
+
+def test_vae_loss_without_metrics_keeps_gradients_without_host_copy(monkeypatch):
+    logits = torch.randn(4, 3, requires_grad=True)
+    mu = torch.randn(4, 2, requires_grad=True)
+    logvar = torch.randn(4, 2, requires_grad=True)
+    targets = torch.tensor([0, 1, 2, 0])
+    expected, _ = vae_loss(logits, targets, mu, logvar)
+
+    def forbid_host_copy(*args, **kwargs):
+        raise AssertionError("training loss must not copy metrics to the host")
+
+    monkeypatch.setattr(torch.Tensor, "cpu", forbid_host_copy)
+    loss, metrics = vae_loss(logits, targets, mu, logvar, collect_metrics=False)
+    torch.testing.assert_close(loss, expected)
+    assert metrics == {}
+    loss.backward()
+    assert all(
+        t.grad is not None and torch.isfinite(t.grad).all()
+        for t in (logits, mu, logvar)
+    )
+
+
+@pytest.mark.parametrize("n_blocks", [0, -1, 2.5])
+def test_proposer_rejects_invalid_action_count(n_blocks):
+    vocab = FragmentVocab.from_smiles_list(SEED_FRAGMENTS)
+    model = FragmentVAE(len(vocab))
+    with pytest.raises(ValueError, match="n_blocks"):
+        VAEProposer(model, vocab, n_blocks=n_blocks)
+
+
+@pytest.mark.parametrize("fraction", [-0.1, 1.1, np.nan, np.inf])
+def test_proposer_rejects_invalid_ring_fraction(fraction):
+    vocab = FragmentVocab.from_smiles_list(SEED_FRAGMENTS)
+    model = FragmentVAE(len(vocab))
+    with pytest.raises(ValueError, match="min_ring_fraction"):
+        VAEProposer(model, vocab, n_blocks=4, min_ring_fraction=fraction)
+
+
+def test_proposer_rejects_wrong_vocabulary_size():
+    vocab = FragmentVocab.from_smiles_list(SEED_FRAGMENTS)
+    with pytest.raises(ValueError, match="output size"):
+        VAEProposer(FragmentVAE(len(vocab) + 1), vocab, n_blocks=4)
+
+
+def test_proposer_follows_model_dtype_and_checks_context():
+    vocab = FragmentVocab.from_smiles_list(SEED_FRAGMENTS)
+    model = FragmentVAE(len(vocab), context_dim=7)
+    proposer = VAEProposer(model, vocab, n_blocks=4)
+    model.double()
+    assert len(proposer.propose(np.zeros(7))) == 4
+    assert proposer.anchors.dtype == torch.float64
+    with pytest.raises(ValueError, match="context dim"):
+        proposer.propose(np.zeros(8))
+    with pytest.raises(ValueError, match="finite"):
+        proposer.propose(np.full(7, np.nan))
+
+
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
+def test_producer_train_propose_and_reload_on_device(device, tmp_path):
+    if device == "cuda" and not torch.cuda.is_available():
+        pytest.skip("CUDA device unavailable")
+    vocab = FragmentVocab.from_smiles_list(SEED_FRAGMENTS)
+    contexts = np.random.default_rng(4).normal(size=(len(vocab), 7)).astype(np.float32)
+    proposer = producer.build_proposer_from_smiles(
+        SEED_FRAGMENTS,
+        n_blocks=8,
+        context_dim=7,
+        contexts=contexts,
+        hidden_dim=16,
+        latent_dim=8,
+        epochs=4,
+        batch_size=4,
+        beta=0.1,
+        device=device,
+    )
+    assert next(proposer.vae.parameters()).device.type == device
+    assert all(torch.isfinite(p).all() for p in proposer.vae.parameters())
+    context = contexts[0]
+    library = proposer.propose(context)
+    assert len(library) == 8
+    assert all(is_valid_block(s) for s in library)
+    proposer.save(tmp_path)
+    restored = VAEProposer.from_spec({"dir": tmp_path})
+    torch.testing.assert_close(
+        torch.from_numpy(restored._logits(context)),
+        torch.from_numpy(proposer._logits(context)),
+    )
+    assert restored.propose(context) == library
+
+
+def test_trainer_rejects_invalid_contexts():
+    vocab = FragmentVocab.from_smiles_list(SEED_FRAGMENTS)
+    with pytest.raises(ValueError, match="contexts shape"):
+        train_fragment_vae(vocab, contexts=np.zeros((len(vocab) - 1, 300)))
+    with pytest.raises(ValueError, match="finite"):
+        train_fragment_vae(vocab, contexts=np.full((len(vocab), 300), np.inf))

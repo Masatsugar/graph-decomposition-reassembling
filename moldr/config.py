@@ -1,9 +1,7 @@
 import gymnasium as gym
 import numpy as np
-import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
-from ray.rllib.core.rl_module.default_model_config import DefaultModelConfig
 
 from moldr.chemutils import get_mol
 from moldr.env import MolEnvValueMax
@@ -80,15 +78,15 @@ def get_default_config_v1(
             num_gpus_per_env_runner=0,
             sample_timeout_s=360.0,
         )
-        .rl_module(
-            model_config=DefaultModelConfig(
-                fcnet_hiddens=[256, 128, 128],
-                fcnet_activation="relu",
-                max_seq_len=100
-            )
-        )
         .training(
-            train_batch_size_per_learner=4000,
+            # The legacy Policy/ModelV2 stack reads `model`, not RLModule's
+            # `model_config`. Configure the network actually used for training.
+            model={
+                "fcnet_hiddens": [256, 128, 128],
+                "fcnet_activation": "relu",
+                "max_seq_len": 100,
+            },
+            train_batch_size=4000,
             minibatch_size=128,
             num_epochs=30,
             lr=5e-5,
@@ -139,14 +137,9 @@ def get_generative_config_v1(
     register_env("moldr_env", env_creator)
 
     prop = VAEProposer.from_spec(proposer) if isinstance(proposer, dict) else proposer
-    building_blocks_smiles = [
-        s for s in prop.propose_library(init_context) if len(s) > 1
-    ]
-    # Pad defensively so len == N even if the len>1 filter dropped entries
-    # (the vocab guarantees len>1, so this is a no-op in practice).
-    assert len(building_blocks_smiles) == prop.n_blocks, (
-        "proposer must emit exactly N multi-atom blocks"
-    )
+    building_blocks_smiles = list(prop.propose_library(init_context))
+    if len(building_blocks_smiles) != prop.n_blocks:
+        raise ValueError("proposer must emit exactly N building blocks")
 
     def check_valid_smiles(smiles):
         mol = get_mol(smiles)
@@ -190,15 +183,13 @@ def get_generative_config_v1(
             num_gpus_per_env_runner=0,
             sample_timeout_s=360.0,
         )
-        .rl_module(
-            model_config=DefaultModelConfig(
-                fcnet_hiddens=[256, 128, 128],
-                fcnet_activation="relu",
-                max_seq_len=100,
-            )
-        )
         .training(
-            train_batch_size_per_learner=4000,
+            model={
+                "fcnet_hiddens": [256, 128, 128],
+                "fcnet_activation": "relu",
+                "max_seq_len": 100,
+            },
+            train_batch_size=4000,
             minibatch_size=128,
             num_epochs=30,
             lr=5e-5,
@@ -257,9 +248,6 @@ def get_default_config_v2(
         .environment("moldr_env", env_config=env_config)
         # .environment(env=env, env_config=env_config)
         .framework("torch")
-        .resources(
-            num_gpus=num_gpus,
-        )
         .api_stack(
             enable_rl_module_and_learner=True,
             enable_env_runner_and_connector_v2=True,
@@ -272,8 +260,10 @@ def get_default_config_v2(
             sample_timeout_s=360.0,
         )
         .learners(
-            num_learners=1,  # Need to set to 0 for RLModule due to bug.
-            num_gpus_per_learner=1,
+            # CPU and single-GPU runs use a local learner. Multiple GPUs use
+            # one distributed learner per GPU, honoring the requested budget.
+            num_learners=int(num_gpus) if num_gpus > 1 else 0,
+            num_gpus_per_learner=1 if num_gpus > 1 else num_gpus,
         )
         .rl_module(
             model_config={
@@ -304,3 +294,7 @@ def get_default_config_v2(
     )
 
     return config
+
+
+# Backward-compatible name used by earlier environment examples.
+get_default_config = get_default_config_v1

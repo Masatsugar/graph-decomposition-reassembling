@@ -92,15 +92,19 @@ def vae_loss(
     mu: torch.Tensor,
     logvar: torch.Tensor,
     beta: float = 1.0,
+    *,
+    collect_metrics: bool = True,
 ) -> Tuple[torch.Tensor, dict]:
+    """Return the differentiable objective and optional host-side metrics."""
     recon = F.cross_entropy(logits, target_ids, reduction="mean")
     kl = -0.5 * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=-1))
     loss = recon + beta * kl
-    parts = {
-        "loss": float(loss.detach()),
-        "recon": float(recon.detach()),
-        "kl": float(kl.detach()),
-    }
+    # Reading CUDA scalars on the host synchronizes the device. The trainer
+    # does not consume these metrics, so keep its entire minibatch on-device.
+    parts = {}
+    if collect_metrics:
+        values = torch.stack((loss, recon, kl)).detach().cpu().tolist()
+        parts = dict(zip(("loss", "recon", "kl"), values))
     return loss, parts
 
 
@@ -135,8 +139,15 @@ def train_fragment_vae(
     runs. For real training on the user GPU, raise ``epochs``/``hidden_dim`` and
     feed real per-fragment contexts; the API is unchanged.
     """
+    if epochs < 0:
+        raise ValueError("epochs must be nonnegative")
+    if batch_size <= 0:
+        raise ValueError("batch_size must be positive")
+    if context_dim <= 0:
+        raise ValueError("context_dim must be positive")
+    if not np.isfinite(beta) or beta < 0:
+        raise ValueError("beta must be finite and nonnegative")
     torch.manual_seed(seed)
-    rng = np.random.default_rng(seed)
 
     desc = torch.as_tensor(vocab.descriptors, dtype=torch.float32, device=device)
     target_ids = torch.arange(len(vocab), dtype=torch.long, device=device)
@@ -144,7 +155,12 @@ def train_fragment_vae(
         ctx = torch.zeros((len(vocab), context_dim), dtype=torch.float32, device=device)
     else:
         ctx = torch.as_tensor(contexts, dtype=torch.float32, device=device)
-        assert ctx.shape == (len(vocab), context_dim)
+        if ctx.shape != (len(vocab), context_dim):
+            raise ValueError(
+                f"contexts shape {tuple(ctx.shape)} != {(len(vocab), context_dim)}"
+            )
+        if not torch.isfinite(ctx).all():
+            raise ValueError("contexts must contain only finite values")
 
     model = FragmentVAE(
         vocab_size=len(vocab),
@@ -156,14 +172,17 @@ def train_fragment_vae(
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
     n = len(vocab)
+    rng = torch.Generator(device=desc.device).manual_seed(seed)
     model.train()
     for _ in range(epochs):
-        perm = rng.permutation(n)
+        perm = torch.randperm(n, generator=rng, device=desc.device)
         for start in range(0, n, batch_size):
-            idx = torch.as_tensor(perm[start : start + batch_size], device=device)
+            idx = perm[start : start + batch_size]
             logits, mu, logvar = model(desc[idx], ctx[idx])
-            loss, _ = vae_loss(logits, target_ids[idx], mu, logvar, beta=beta)
-            opt.zero_grad()
+            loss, _ = vae_loss(
+                logits, target_ids[idx], mu, logvar, beta=beta, collect_metrics=False
+            )
+            opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
     model.eval()

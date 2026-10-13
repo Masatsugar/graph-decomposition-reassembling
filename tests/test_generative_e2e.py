@@ -55,6 +55,19 @@ def test_from_spec_passthrough_instance():
     assert VAEProposer.from_spec({"instance": prop}) is prop
 
 
+def test_save_reload_preserves_custom_descriptor_dimension(tmp_path):
+    from moldr.generative.vae import FragmentVAE
+    from moldr.generative.vocab import FragmentVocab
+
+    vocab = FragmentVocab.from_smiles_list(SEED_FRAGMENTS)
+    model = FragmentVAE(len(vocab), desc_dim=9, hidden_dim=16)
+    prop = VAEProposer(model, vocab, n_blocks=N_BLOCKS)
+    prop.save(tmp_path)
+    restored = VAEProposer.from_spec({"dir": tmp_path})
+    assert restored.vae.desc_dim == 9
+    assert restored.propose_library() == prop.propose_library()
+
+
 def test_ring_fraction_unsatisfiable_raises():
     """The ring-fraction guarantee must fail fast when the vocabulary has no
     ring fragments, rather than silently returning a ring-free library."""

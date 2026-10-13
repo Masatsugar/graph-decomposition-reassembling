@@ -40,12 +40,21 @@ def build_proposer_from_smiles(
     min_ring_fraction: float = 0.3,
     context_dim: int = 300,
     seed: int = 0,
+    device: str = "cpu",
+    contexts: Optional[np.ndarray] = None,
+    batch_size: int = 64,
+    lr: float = 1e-3,
+    beta: float = 1.0,
 ) -> VAEProposer:
     """End-to-end: SMILES -> vocab -> trained FragmentVAE -> VAEProposer.
 
     ``decompose=True`` extracts junction-tree fragments from full molecules;
     ``False`` treats the inputs as candidate fragments directly (e.g. when
     seeding from the existing building-block CSVs).
+
+    ``contexts``, when supplied, must follow the final, filtered vocabulary
+    order (one row per unique valid fragment). ``device`` controls training
+    and inference, so GPU training is available through this entry point too.
     """
     vocab = (
         FragmentVocab.from_molecules(smiles)
@@ -59,6 +68,11 @@ def build_proposer_from_smiles(
         hidden_dim=hidden_dim,
         epochs=epochs,
         seed=seed,
+        device=device,
+        contexts=contexts,
+        batch_size=batch_size,
+        lr=lr,
+        beta=beta,
     )
     return VAEProposer(
         vae=vae,

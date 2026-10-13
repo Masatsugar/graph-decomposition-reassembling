@@ -1,5 +1,7 @@
 """Unit tests for the end-to-end reassembly environment (no Ray required)."""
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
@@ -14,6 +16,22 @@ BUILDING_BLOCKS = [
     "C1CCCCC1",
     "CC1CCC2=CC=CC=C2O1",
 ]
+
+
+def test_e2e_config_accepts_numpy_block_table():
+    from moldr.e2e.config import get_e2e_config
+
+    objective = SimpleNamespace(wrapped_objective=SimpleNamespace(score=_num_atoms_score))
+    config = get_e2e_config(objective, np.array(["CC", "CO"]), num_workers=0)
+    assert config.env_config["BUILDING_BLOCKS"] == ["CC", "CO"]
+
+
+def test_e2e_config_rejects_empty_table():
+    from moldr.e2e.config import get_e2e_config
+
+    objective = SimpleNamespace(wrapped_objective=SimpleNamespace(score=_num_atoms_score))
+    with pytest.raises(ValueError, match="must not be empty"):
+        get_e2e_config(objective, [], num_workers=0)
 
 
 def _num_atoms_score(smiles):
@@ -104,6 +122,75 @@ def test_option_pool_size_limits_phase_a():
     assert obs["action_mask"].sum() == 3
     # n_options accommodates the larger of the bb pool and max_attach.
     assert env.n_options == max(3, 32)
+
+
+def test_option_pool_larger_than_library_does_not_allocate_extra_padding():
+    env = _make_env(OPTION_POOL_SIZE=10000, MAX_ATTACH=3)
+    obs, _ = env.reset(seed=0)
+    assert env.n_options == len(BUILDING_BLOCKS)
+    assert obs["action_mask"].sum() == len(BUILDING_BLOCKS)
+
+
+@pytest.mark.parametrize(
+    "overrides, message",
+    [
+        ({"OPTION_POOL_SIZE": 0}, "OPTION_POOL_SIZE"),
+        ({"OPTION_POOL_SIZE": -1}, "OPTION_POOL_SIZE"),
+        ({"BUILDING_BLOCKS": []}, "BUILDING_BLOCKS"),
+        ({"BUILDING_BLOCKS": ["invalid"]}, "BUILDING_BLOCKS"),
+        ({"BASE_SMILES": "invalid"}, "BASE_SMILES"),
+        ({"MAX_EPISODE_STEPS": 0}, "MAX_EPISODE_STEPS"),
+        ({"REWARD_MODE": "typo"}, "REWARD_MODE"),
+    ],
+)
+def test_invalid_configuration_fails_before_rollout(overrides, message):
+    with pytest.raises(ValueError, match=message):
+        _make_env(**overrides)
+
+
+@pytest.mark.parametrize("smiles", ["C[C@H](O)F", "C/C=C/C"])
+@pytest.mark.parametrize("key", ["BASE_SMILES", "BUILDING_BLOCKS"])
+def test_specified_stereo_fails_before_training(smiles, key):
+    value = [smiles] if key == "BUILDING_BLOCKS" else smiles
+    with pytest.raises(ValueError, match="stereo"):
+        _make_env(**{key: value})
+
+
+@pytest.mark.parametrize("blocks", [["CC"], ["CC", "C[C@H](O)F", "CC", "CC", "CC"]])
+def test_generated_pool_validation_preserves_previous_pool_on_failure(blocks):
+    env = _make_env()
+    previous = list(env.building_blocks)
+    env._proposer = SimpleNamespace(propose=lambda context: blocks)
+    with pytest.raises(ValueError):
+        env._refresh_bb_pool()
+    assert env.building_blocks == previous
+
+
+def test_no_growth_episode_truncates_without_completion_bonus():
+    env = _make_env(
+        BUILDING_BLOCKS=["C"],
+        SCORE_THRESHOLD=2.0,
+        MAX_EPISODE_STEPS=4,
+        REWARD_MODE="sparse",
+    )
+    obs, _ = env.reset(seed=0)
+    for step in range(4):
+        obs, reward, terminated, truncated, _ = env.step(0)
+        assert env.base_smiles == "C"
+        assert reward == 0.0
+        assert not terminated
+        assert truncated is (step == 3)
+        assert env.observation_space.contains(obs)
+
+
+def test_time_limit_can_truncate_building_block_selection():
+    env = _make_env(MAX_EPISODE_STEPS=1)
+    env.reset(seed=0)
+    obs, reward, terminated, truncated, info = env.step(0)
+    assert info["n_candidates"] > 0
+    assert env.phase == Phase.SELECT_ATTACH
+    assert reward == 0.0 and not terminated and truncated
+    assert env.observation_space.contains(obs)
 
 
 def test_resolve_action_guards_out_of_range():

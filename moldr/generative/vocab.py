@@ -11,8 +11,10 @@ building block (see the scout contract):
 
 1. ``get_mol(s) is not None``          -> parses *and* kekulizes (env.py:28)
 2. ``len(s) > 1``                       -> multi-atom (train.py:146)
-3. >=1 atom with ``GetImplicitValence() > 0`` -> node-mergeable
+3. >=1 atom with positive implicit valence -> node-mergeable
    (check_valance, reassemble.py:216)
+4. no specified stereochemistry -> supported by the graph-reassembly engine
+   (it cannot preserve atom chirality or bond stereo when rebuilding products)
 
 Each entry is additionally tagged ``has_ring`` (``num_rings >= 1``) so the
 proposer can guarantee a minimum fraction of edge-mergeable (ring) blocks
@@ -29,7 +31,7 @@ import numpy as np
 import rdkit.Chem as Chem
 from rdkit import RDLogger
 
-from moldr.chemutils import get_mol, get_smiles
+from moldr.chemutils import get_mol, get_smiles, validate_reassembly_mol
 
 RDLogger.DisableLog("rdApp.*")
 
@@ -47,7 +49,14 @@ def num_rings(mol: Chem.Mol) -> int:
 
 def has_open_valence(mol: Chem.Mol) -> bool:
     """True if at least one atom has spare implicit valence (node-mergeable)."""
-    return any(a.GetImplicitValence() > 0 for a in mol.GetAtoms())
+    return any(_implicit_valence(a) > 0 for a in mol.GetAtoms())
+
+
+def _implicit_valence(atom: Chem.Atom) -> int:
+    """Use the current RDKit API, while retaining older-release support."""
+    if hasattr(atom, "GetValence"):
+        return atom.GetValence(Chem.ValenceType.IMPLICIT)
+    return atom.GetImplicitValence()
 
 
 def is_valid_block(smiles: str) -> bool:
@@ -56,6 +65,10 @@ def is_valid_block(smiles: str) -> bool:
         return False
     mol = get_mol(smiles)  # MolFromSmiles + Kekulize, returns None on failure
     if mol is None:
+        return False
+    try:
+        validate_reassembly_mol(mol)
+    except ValueError:
         return False
     if mol.GetNumAtoms() < 2:
         return False
@@ -84,7 +97,7 @@ def fragment_descriptor(mol: Chem.Mol) -> np.ndarray:
     ri = mol.GetRingInfo()
     ring_sizes = [len(r) for r in ri.AtomRings()]
     max_ring = max(ring_sizes) if ring_sizes else 0
-    n_open = sum(1 for a in mol.GetAtoms() if a.GetImplicitValence() > 0)
+    n_open = sum(1 for a in mol.GetAtoms() if _implicit_valence(a) > 0)
     mw = sum(a.GetMass() for a in mol.GetAtoms())
     feats = [float(counts[e]) for e in _ELEMENTS] + [
         float(mol.GetNumAtoms()),
