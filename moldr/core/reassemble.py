@@ -14,16 +14,15 @@ RDLogger.DisableLog("rdApp.deprecation")
 
 
 from moldr.chemutils import (
-    _set_edge_label,
-    _set_node_label,
     get_mol,
     get_smiles,
-    mol_from_graph,
+    mol_from_adj,
+    mol_to_adj,
     mol_to_graph,
     mol_with_atom_index,
     sanitize,
+    validate_reassembly_mol,
 )
-from moldr.core.moltree import tree_decomp
 from moldr.core.molgraph import MolGraph
 
 LABEL = "label"
@@ -78,12 +77,11 @@ def adj_list_to_mat(adj_list):
     return adj_mat
 
 
-def _reconstruct(adj_mat, nodes):
-    graph = nx.from_numpy_array(adj_mat)
-    edges = adj_mat_to_list(adj_mat)
-    _set_node_label(graph, nodes)
-    _set_edge_label(graph, edges)
-    return mol_from_graph(graph)
+def _reconstruct(adj_mat, nodes, atom_templates=None):
+    # Direct numpy -> RWMol build. Equivalent to the previous networkx round
+    # trip (nx.from_numpy_array + _set_*_label + mol_from_graph) but ~10x
+    # cheaper; see moldr.chemutils.mol_from_adj.
+    return mol_from_adj(adj_mat, nodes, atom_templates=atom_templates)
 
 
 def num_rings(mol):
@@ -93,13 +91,15 @@ def num_rings(mol):
 
 
 def merge_mol_from_node(mol1, mol2, id1, id2, direction=""):
+    validate_reassembly_mol(mol1)
+    if mol2 is not None:
+        validate_reassembly_mol(mol2)
     if mol2 is not None:
         mol = Chem.CombineMols(mol1, mol2)
     else:
         mol = mol1
-    graph = mol_to_graph(mol)
-    nodes = [node[LABEL] for node in graph.nodes.values()]
-    new_adj = copy.deepcopy(nx.adjacency_matrix(graph).toarray())
+    new_adj, nodes = mol_to_adj(mol)
+    atom_templates = list(mol.GetAtoms())
     tmp = new_adj[id1, :] + new_adj[id2, :]
     rep_vars = np.vstack([tmp, tmp])
     new_adj[[id1, id2], :] = rep_vars
@@ -108,25 +108,29 @@ def merge_mol_from_node(mol1, mol2, id1, id2, direction=""):
     if direction == "target1":
         new_adj = np.delete(np.delete(new_adj, id1, axis=0), id1, axis=1)
         del nodes[id1]
+        del atom_templates[id1]
     else:
         new_adj = np.delete(np.delete(new_adj, id2, axis=0), id2, axis=1)
         del nodes[id2]
+        del atom_templates[id2]
 
-    mol = _reconstruct(adj_mat=new_adj, nodes=nodes)
+    mol = _reconstruct(adj_mat=new_adj, nodes=nodes, atom_templates=atom_templates)
     if mol is None:
         return None
     return mol
 
 
 def merge_mol_from_edge(mol1, mol2, edge_type1: tuple, edge_type2: tuple, direction=""):
+    validate_reassembly_mol(mol1)
+    if mol2 is not None:
+        validate_reassembly_mol(mol2)
     if mol2 is not None:
         mol = Chem.CombineMols(mol1, mol2)
     else:
         mol = mol1
 
-    graph = mol_to_graph(mol)
-    _new_adj = copy.deepcopy(nx.adjacency_matrix(graph).toarray())
-    nodes = [node[LABEL] for node in graph.nodes.values()]
+    _new_adj, nodes = mol_to_adj(mol)
+    atom_templates = list(mol.GetAtoms())
 
     id11, id12 = edge_type1
     id21, id22 = edge_type2
@@ -146,7 +150,8 @@ def merge_mol_from_edge(mol1, mol2, edge_type1: tuple, edge_type2: tuple, direct
         # for i in range(len(nodes)):
         #     if i != id11 or i != id12:
         #         new_nodes.append(nodes[i])
-        del new_nodes[id11], new_nodes[id12 - 1]
+        new_nodes = [node for idx, node in enumerate(nodes) if idx not in (id11, id12)]
+        atom_templates = [atom for idx, atom in enumerate(atom_templates) if idx not in (id11, id12)]
     else:
         # new_nodes = []  # copy.deepcopy(nodes)
         new_nodes = copy.deepcopy(nodes)
@@ -157,9 +162,10 @@ def merge_mol_from_edge(mol1, mol2, edge_type1: tuple, edge_type2: tuple, direct
         #     if i != id21 or i != id22:
         #         new_nodes.append(nodes[i])
         #
-        del new_nodes[id21], new_nodes[id22 - 1]
+        new_nodes = [node for idx, node in enumerate(nodes) if idx not in (id21, id22)]
+        atom_templates = [atom for idx, atom in enumerate(atom_templates) if idx not in (id21, id22)]
 
-    mol = _reconstruct(adj_mat=new_adj, nodes=new_nodes)
+    mol = _reconstruct(adj_mat=new_adj, nodes=new_nodes, atom_templates=atom_templates)
     if mol is None:
         return None
 
@@ -206,18 +212,18 @@ def init_clique(mols, edge_list):
 
 
 def valence(atom, explicit: bool):
-    try:
+    if hasattr(Chem.rdchem, "ValenceType"):
+        vt = Chem.rdchem.ValenceType
         return atom.GetValence(vt.EXPLICIT if explicit else vt.IMPLICIT)
-    except (AttributeError, TypeError):
-        # 2022.06 以前（bool 受け取り版）の後方互換
-        return atom.GetValence(explicit)
+    # RDKit releases before GetValence was introduced.
+    return atom.GetExplicitValence() if explicit else atom.GetImplicitValence()
 
 
 def check_valance(atom1, atom2):
-    iv1 = atom1.GetImplicitValence()
-    iv2 = atom2.GetImplicitValence()
-    ev1 = atom1.GetExplicitValence()
-    ev2 = atom2.GetExplicitValence()
+    iv1 = valence(atom1, explicit=False)
+    iv2 = valence(atom2, explicit=False)
+    ev1 = valence(atom1, explicit=True)
+    ev2 = valence(atom2, explicit=True)
     # iv1 = valence(atom1, explicit=False)
     # iv2 = valence(atom2, explicit=False)
     # ev1 = valence(atom1, explicit=True)
@@ -233,8 +239,8 @@ def check_valance(atom1, atom2):
 
 
 def check_edge_valance(atom1, atom2):
-    iv1 = atom1.GetImplicitValence()
-    iv2 = atom2.GetImplicitValence()
+    iv1 = valence(atom1, explicit=False)
+    iv2 = valence(atom2, explicit=False)
     if iv1 == 0:
         return False
     if iv2 == 0:
@@ -259,33 +265,15 @@ def reorder_target_obj(target):
 
 
 def get_ring_targets(mol) -> List[Tuple]:
-    cliques, _ = tree_decomp(mol)
-    rings = [cli for cli in cliques if len(cli) > 2]
-    targets = []
-    for idx, ring in enumerate(rings):
-        for i in range(len(ring)):
-            if i == len(ring) - 1:
-                targets.append((ring[i], ring[0]))
-            else:
-                targets.append((ring[i], ring[i + 1]))
-
-    # remove duplication of target atom
-    target_atom_list = []
-    for lst in targets:
-        if lst not in target_atom_list:
-            target_atom_list.append(lst)
-
-    target_edge_list = [reorder_target_obj(target) for target in target_atom_list]
-
-    edge_list = []
-    for target_edge in target_edge_list:
-        src, dst = target_edge
-        atom1 = mol.GetAtomWithIdx(src)
-        atom2 = mol.GetAtomWithIdx(dst)
-        if check_edge_valance(atom1, atom2):
-            edge_list.append(target_edge)
-
-    return edge_list
+    # Junction-tree decomposition merges bridged rings into unordered cliques;
+    # consecutive clique entries are then not necessarily bonded atoms.
+    # Enumerate actual ring bonds so every target is a genuine attachment edge.
+    return sorted(
+        tuple(sorted((bond.GetBeginAtomIdx(), bond.GetEndAtomIdx())))
+        for bond in mol.GetBonds()
+        if bond.IsInRing()
+        and check_edge_valance(bond.GetBeginAtom(), bond.GetEndAtom())
+    )
 
 
 def check_target_edge(base_mol, attach_mol) -> Dict[int, List[int]]:
@@ -321,6 +309,8 @@ def check_target_atom(base_mol, attach_mol) -> Dict[int, List[int]]:
 
 
 def merge_node(base_mol, attach_mol) -> List[MolGraph]:
+    validate_reassembly_mol(base_mol)
+    validate_reassembly_mol(attach_mol)
     smis = []
     target_list = check_target_atom(base_mol, attach_mol)
     n_atoms = len(base_mol.GetAtoms())
@@ -348,6 +338,8 @@ def merge_node(base_mol, attach_mol) -> List[MolGraph]:
 
 
 def merge_edge(base_mol, attach_mol):
+    validate_reassembly_mol(base_mol)
+    validate_reassembly_mol(attach_mol)
     smis = []
     target_list = check_target_edge(base_mol, attach_mol)
     for src, dst_list in target_list.items():
@@ -384,7 +376,10 @@ def merge_edge(base_mol, attach_mol):
                         smi = get_smiles(res)
                         smis.append(smi)
         else:
-            return
+            # No ring on either side -> no edge merge is possible. Stop and
+            # return an empty list instead of None, so callers can safely
+            # ``extend`` the result (see MolEnvValueMax._reassemble).
+            break
 
     smis = np.unique(smis)
     mol_graphs = [MolGraph(smi) for smi in smis]
