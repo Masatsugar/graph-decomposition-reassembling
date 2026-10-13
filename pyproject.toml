@@ -23,6 +23,8 @@ dependencies = [
     "torch==2.7.1",
     "tqdm>=4.67.1",
     "wandb>=0.21.0",
+    "PyYAML>=6.0,<7",
+    "matplotlib==3.9.2",
 ]
 
 [project.optional-dependencies]

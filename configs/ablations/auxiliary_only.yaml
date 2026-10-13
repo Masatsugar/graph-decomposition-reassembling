@@ -1,0 +1,7 @@
+# Train U on selected attachment returns; its contribution to logits is zero.
+selection:
+  mode: actor
+  candidate_value: true
+  auxiliary_loss_coeff: 0.5
+  alpha: 0.0
+  temperature: 1.0

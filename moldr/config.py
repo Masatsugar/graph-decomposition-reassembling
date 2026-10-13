@@ -5,6 +5,7 @@ from ray.tune.registry import register_env
 
 from moldr.chemutils import get_mol
 from moldr.env import MolEnvValueMax
+from moldr.experiment import ExperimentConfig, load_config  # noqa: F401 -- public configuration API
 
 # from ray.rllib.callbacks import DefaultCallbacks
 # from rdkit import RDLogger

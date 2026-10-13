@@ -1,0 +1,9 @@
+representation:
+  name: mpnn
+  trainable: false
+  layers: 3
+  hidden: 128
+  output: 128
+  atom_chunk_size: 4096
+  gradient_checkpointing: false
+  embedding_cache_size: 0

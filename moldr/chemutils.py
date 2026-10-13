@@ -53,12 +53,22 @@ def force_kekulize(mol: Mol) -> Mol:
     return mol
 
 
-def mol_with_atom_index(mol: Mol) -> Mol:
+def mol_with_atom_index(mol: Mol, map_storage: str = "int") -> Mol:
+    """Assign index maps, including index zero, with selectable storage.
+
+    ``SetAtomMapNum(0)`` clears the property and is not equivalent to the
+    original index-zero map. ``SetIntProp`` preserves that map while avoiding
+    conversion through Python strings.
+    """
+    if map_storage not in {"int", "string"}:
+        raise ValueError("map_storage must be 'int' or 'string'.")
     atoms = mol.GetNumAtoms()
     for idx in range(atoms):
-        mol.GetAtomWithIdx(idx).SetProp(
-            "molAtomMapNumber", str(mol.GetAtomWithIdx(idx).GetIdx())
-        )
+        atom = mol.GetAtomWithIdx(idx)
+        if map_storage == "int":
+            atom.SetIntProp("molAtomMapNumber", idx)
+        else:
+            atom.SetProp("molAtomMapNumber", str(idx))
     return mol
 
 
@@ -137,6 +147,7 @@ def mol_from_adj(
     nodes: List[str],
     *,
     atom_templates: Optional[List[Chem.Atom]] = None,
+    bond_scan: str = "nonzero",
 ) -> Optional[Mol]:
     """Fast, networkx-free equivalent of ``mol_from_graph``.
 
@@ -150,6 +161,8 @@ def mol_from_adj(
     Specified stereochemistry is rejected because rebuilding bond order can
     change the meaning of an atom's chiral tag.
     """
+    if bond_scan not in {"nonzero", "python"}:
+        raise ValueError("bond_scan must be 'nonzero' or 'python'.")
     mol = Chem.RWMol()
     if atom_templates is not None and len(atom_templates) != len(nodes):
         raise ValueError("atom_templates must contain one atom per node.")
@@ -159,15 +172,17 @@ def mol_from_adj(
             raise ValueError("Stereochemical input is unsupported for adjacency-based reassembly.")
         mol.AddAtom(atom)
     n_atom = len(nodes)
-    for ix in range(n_atom):
-        row = adj_mat[ix]
-        for iy in range(ix + 1, n_atom):
-            bond = row[iy]
-            if bond == 0.0:
-                continue
-            bond_type = _BOND_FROM_ORDER.get(bond)
-            if bond_type is None:
-                continue
+    if bond_scan == "nonzero":
+        # numpy still visits a dense matrix. This reduces Python work, while
+        # retaining row-major atom/bond insertion order; it is not O(E).
+        src, dst = np.nonzero(adj_mat)
+        upper = dst > src
+        entries = ((int(i), int(j)) for i, j in zip(src[upper], dst[upper]))
+    else:
+        entries = ((i, j) for i in range(n_atom) for j in range(i + 1, n_atom))
+    for ix, iy in entries:
+        bond_type = _BOND_FROM_ORDER.get(adj_mat[ix, iy])
+        if bond_type is not None:
             mol.AddBond(ix, iy, bond_type)
     return mol.GetMol()
 

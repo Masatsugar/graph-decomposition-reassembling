@@ -1,0 +1,55 @@
+# Separate trace collection: batch 128, minibatch 32, 3 epochs, full vocabulary.
+# 5 jobs, one warmup and one measured iteration, then one traced iteration.
+# The batch reduces exported Torch events; the speed sweep retains batch 1024.
+# Supply --config configs/short.yaml; every job is explicitly listed.
+command: profile
+jobs:
+  - name: trace_mol2vec_actor_seed0_workers2
+    set:
+      - training.seed=0
+      - training.num_workers=2
+      - training.train_batch_size=128
+      - profiling.warmup_iterations=1
+      - profiling.measured_iterations=1
+      - profiling.time_budget_seconds=null
+      - profiling.trace=true
+  - name: trace_actor_value_seed0_workers2
+    config: ../ablations/actor_value.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=2
+      - training.train_batch_size=128
+      - profiling.warmup_iterations=1
+      - profiling.measured_iterations=1
+      - profiling.time_budget_seconds=null
+      - profiling.trace=true
+  - name: trace_auxiliary_only_seed0_workers2
+    config: ../ablations/auxiliary_only.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=2
+      - training.train_batch_size=128
+      - profiling.warmup_iterations=1
+      - profiling.measured_iterations=1
+      - profiling.time_budget_seconds=null
+      - profiling.trace=true
+  - name: trace_mpnn_frozen_seed0_workers2
+    config: ../ablations/mpnn_frozen.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=2
+      - training.train_batch_size=128
+      - profiling.warmup_iterations=1
+      - profiling.measured_iterations=1
+      - profiling.time_budget_seconds=null
+      - profiling.trace=true
+  - name: trace_mpnn_trainable_seed0_workers2
+    config: ../ablations/mpnn_trainable.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=2
+      - training.train_batch_size=128
+      - profiling.warmup_iterations=1
+      - profiling.measured_iterations=1
+      - profiling.time_budget_seconds=null
+      - profiling.trace=true

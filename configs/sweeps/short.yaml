@@ -1,0 +1,262 @@
+# Short comparison: 54 jobs, seeds 0/1/2; worker-8 baseline occurs once per seed.
+# Supply --config configs/short.yaml; every job is explicitly listed.
+command: profile
+jobs:
+  - name: mol2vec_actor_seed0_workers8
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: mol2vec_actor_seed1_workers8
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: mol2vec_actor_seed2_workers8
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: actor_value_seed0_workers8
+    config: ../ablations/actor_value.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: actor_value_seed1_workers8
+    config: ../ablations/actor_value.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: actor_value_seed2_workers8
+    config: ../ablations/actor_value.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: auxiliary_only_seed0_workers8
+    config: ../ablations/auxiliary_only.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: auxiliary_only_seed1_workers8
+    config: ../ablations/auxiliary_only.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: auxiliary_only_seed2_workers8
+    config: ../ablations/auxiliary_only.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: mpnn_frozen_seed0_workers8
+    config: ../ablations/mpnn_frozen.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: mpnn_frozen_seed1_workers8
+    config: ../ablations/mpnn_frozen.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: mpnn_frozen_seed2_workers8
+    config: ../ablations/mpnn_frozen.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: mpnn_trainable_seed0_workers8
+    config: ../ablations/mpnn_trainable.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: mpnn_trainable_seed1_workers8
+    config: ../ablations/mpnn_trainable.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: mpnn_trainable_seed2_workers8
+    config: ../ablations/mpnn_trainable.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: map_string_seed0_workers8
+    config: ../ablations/map_string.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: map_string_seed1_workers8
+    config: ../ablations/map_string.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: map_string_seed2_workers8
+    config: ../ablations/map_string.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: unshared_preparation_seed0_workers8
+    config: ../ablations/unshared_preparation.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: unshared_preparation_seed1_workers8
+    config: ../ablations/unshared_preparation.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: unshared_preparation_seed2_workers8
+    config: ../ablations/unshared_preparation.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: python_bond_scan_seed0_workers8
+    config: ../ablations/python_bond_scan.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: python_bond_scan_seed1_workers8
+    config: ../ablations/python_bond_scan.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: python_bond_scan_seed2_workers8
+    config: ../ablations/python_bond_scan.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: mapless_seed0_workers8
+    config: ../ablations/mapless.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: mapless_seed1_workers8
+    config: ../ablations/mapless.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: mapless_seed2_workers8
+    config: ../ablations/mapless.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: aromatic_dedup_seed0_workers8
+    config: ../ablations/aromatic_dedup.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: aromatic_dedup_seed1_workers8
+    config: ../ablations/aromatic_dedup.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: aromatic_dedup_seed2_workers8
+    config: ../ablations/aromatic_dedup.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: direct_mapless_seed0_workers8
+    config: ../ablations/direct_mapless.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: direct_mapless_seed1_workers8
+    config: ../ablations/direct_mapless.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: direct_mapless_seed2_workers8
+    config: ../ablations/direct_mapless.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: mol_scoring_seed0_workers8
+    config: ../ablations/mol_scoring.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: mol_scoring_seed1_workers8
+    config: ../ablations/mol_scoring.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: mol_scoring_seed2_workers8
+    config: ../ablations/mol_scoring.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: score_cache_seed0_workers8
+    config: ../ablations/score_cache.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: score_cache_seed1_workers8
+    config: ../ablations/score_cache.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: score_cache_seed2_workers8
+    config: ../ablations/score_cache.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: no_embedding_reuse_seed0_workers8
+    config: ../ablations/no_embedding_reuse.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: no_embedding_reuse_seed1_workers8
+    config: ../ablations/no_embedding_reuse.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: no_embedding_reuse_seed2_workers8
+    config: ../ablations/no_embedding_reuse.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: classic_context_seed0_workers8
+    config: ../ablations/classic_context.yaml
+    set:
+      - training.seed=0
+      - training.num_workers=8
+  - name: classic_context_seed1_workers8
+    config: ../ablations/classic_context.yaml
+    set:
+      - training.seed=1
+      - training.num_workers=8
+  - name: classic_context_seed2_workers8
+    config: ../ablations/classic_context.yaml
+    set:
+      - training.seed=2
+      - training.num_workers=8
+  - name: mol2vec_actor_seed0_workers1
+    set:
+      - training.seed=0
+      - training.num_workers=1
+  - name: mol2vec_actor_seed1_workers1
+    set:
+      - training.seed=1
+      - training.num_workers=1
+  - name: mol2vec_actor_seed2_workers1
+    set:
+      - training.seed=2
+      - training.num_workers=1
+  - name: mol2vec_actor_seed0_workers2
+    set:
+      - training.seed=0
+      - training.num_workers=2
+  - name: mol2vec_actor_seed1_workers2
+    set:
+      - training.seed=1
+      - training.num_workers=2
+  - name: mol2vec_actor_seed2_workers2
+    set:
+      - training.seed=2
+      - training.num_workers=2
+  - name: mol2vec_actor_seed0_workers4
+    set:
+      - training.seed=0
+      - training.num_workers=4
+  - name: mol2vec_actor_seed1_workers4
+    set:
+      - training.seed=1
+      - training.num_workers=4
+  - name: mol2vec_actor_seed2_workers4
+    set:
+      - training.seed=2
+      - training.num_workers=4

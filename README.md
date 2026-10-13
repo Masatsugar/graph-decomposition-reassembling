@@ -24,6 +24,28 @@ Use a recent uv supporting
 ## Usage
 Set python path: `export PYTHONPATH=.`.
 
+New training runs use **E2E + PPO + fixed Mol2Vec + a fixed fragment table +
+actor selection**, with QED, improvement rewards, and local logging. The policy
+selects both the building block and its completed attachment candidate. Training,
+evaluation, sampling, profiling, and explicit sweeps share a typed YAML
+configuration and the existing RLlib ModelV2 API stack.
+
+```shell
+uv run python -m moldr.cli train --iterations 10 --num_workers 8 --num_gpus 1
+uv run python -m moldr.cli train --config configs/short.yaml --dry-run
+uv run python -m moldr.cli sample --checkpoint outputs/experiments/YOUR_RUN --episodes 12
+```
+
+Use the run directory printed by training for `--checkpoint`. See
+[experiment configuration](docs/experiment_configuration.md) for defaults,
+overrides, ablation files, sweeps, candidate values, MPNN, and restoration.
+`--mode legacy` selects the original greedy candidate scorer. The old Python
+factories in `moldr.config` and `moldr.legacy` retain their legacy behavior,
+and old E2E registration names remain available for existing checkpoints.
+The [GPU validation](docs/experiment_validation.md) and
+[short comparison results](docs/experiment_results.md) record the measured
+behavior and its limits.
+
 ### Decomposition
 In the decomposition step, molecules are decomposed into subgraphs using gSpan.  
 Choose the "raw" decomposition method for greater versatility, or "jt" (junction tree) to take cliques into account.
@@ -56,39 +78,47 @@ If you want to see the subgraphs in detail, see `examples/decomponsition.ipynb`.
 ### Reassembling
 - Training 
 
-The agent takes an action from building blocks obtained from a decomposition step. 
-In default, PPO with RLlib is used for training the agent, but you can also use other algorithms such as DQN, A2C, or IMPALA by changing the `algo` parameter in `train.py`.
-For detailes, see rllib [documentation](https://docs.ray.io/en/latest/rllib/rllib-algorithms.html).
+Building blocks come from the decomposition step. The standard E2E environment
+lets PPO select a building block and then an attachment. The original research
+environment lets the agent select a building block and greedily retains the
+highest-scoring candidate; this behavior is available through `--mode legacy`
+and the existing Python factories. The shared CLI uses PPO.
 
 We already mined the building blocks from gucamol or zinc dataset. The default is guacamol with minsup 10,000.
 Set your own dataset to generate building blocks if you want to use other datasets.
 
 ```shell
-uv run python moldr/train.py --epochs 10 --num_workers 8 --num_gpus 1
+uv run python -m moldr.train --epochs 10 --num_workers 8 --num_gpus 1
 ```
 
 For a short run without an external experiment tracker:
 
 ```shell
 uv run python -m moldr.train --objective QED --epochs 1 --num_workers 2 \
-  --num_gpus 1 --logger tensorboard --train-batch-size 128 \
+  --num_gpus 1 --logger local --train-batch-size 128 \
   --minibatch-size 64 --num-epochs 1 --length 12
 ```
 
-Generated molecules are sampled through the trained agent. Select and rewrite the model path that you want to use.
+Generated molecules are sampled through the trained agent and the run's saved
+configuration and assets:
 
 ```shell
-uv run python run_moldr.py 
+uv run python -m moldr.cli sample --checkpoint outputs/experiments/YOUR_RUN
 ```
 
-If you want to use the custom score function to optimize the generated molecules, 
-edit `moldr/objective.py` directly according to guacamol API, and add it into `sc_list` in `train.py`.
+Registered objectives are selected with `--objective`; QED is the default.
+Custom Python evaluators can be registered through
+`moldr.scoring.register_objective`. Existing `run_moldr.py` and the legacy
+configuration functions remain compatibility entry points for earlier runs.
 
 
 ## Faster, End-to-End, and Generative Extensions
 
-Three optional extensions improve the speed and expressiveness of the method.
-The original and new environments share the corrected merge implementation.
+The sections below describe the chemistry, E2E, and generative extensions and
+their existing Python APIs. E2E is the shared CLI's standard environment.
+The original and new environments share the corrected merge implementation;
+the CLI uses versioned observations/models while these older API examples keep
+their original contracts.
 
 ### 1. Faster reassembly (transparent)
 
@@ -134,6 +164,10 @@ construction (it can only emit pre-validated fragments), and `N` frozen latent
 anchors keep the action space a fixed `Discrete(N)` so PPO is unchanged. The
 pool can be re-decoded conditioned on the current molecule (`recond_every` ∈
 `{"never", "episode", "step"}`).
+
+For the shared CLI, an unconditional VAE must use
+`--set fragments.recond_every=never`. Episode or step reconditioning requires
+training with molecular contexts and a saved context-trained proposer.
 
 ```python
 from moldr.generative.producer import build_proposer_from_smiles

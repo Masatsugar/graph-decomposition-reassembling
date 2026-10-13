@@ -45,7 +45,7 @@ def clean_for_wandb(d: dict, sep: str = "/"):
     return {k: v for k, v in flat.items() if isinstance(v, numbers.Number)}
 
 
-def main(argv=None):
+def legacy_main(argv=None):
     parser = argparse.ArgumentParser(description="Test arguments.")
     parser.add_argument(
         "--dataset",
@@ -230,6 +230,13 @@ def main(argv=None):
 
     finally:
         ray.shutdown()
+
+
+def main(argv=None):
+    """Shared experiment CLI; E2E, QED and local logging are the defaults."""
+    from moldr.cli import main as experiment_main
+
+    return experiment_main(argv, default_command="train")
 
 
 if __name__ == "__main__":

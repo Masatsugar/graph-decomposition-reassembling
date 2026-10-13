@@ -45,8 +45,6 @@ import numpy as np
 from numpy import ndarray
 
 from moldr.chemutils import get_mol, get_smiles, validate_reassembly_mol
-from moldr.core.molgraph import sanitize_molgraph
-from moldr.core.reassemble import merge_edge, merge_node
 from moldr.mol2vec.model import Mol2Vec
 
 
@@ -62,9 +60,9 @@ def reassemble_candidates(base_mol, attach_mol) -> List:
     This is the same enumeration the original environment used, factored out so
     both environments share one code path.
     """
-    candidates = list(merge_node(base_mol, attach_mol))
-    candidates.extend(merge_edge(base_mol, attach_mol))
-    return sanitize_molgraph(candidates)
+    from moldr.chemistry import CandidateGenerator
+
+    return [candidate.mol for candidate in CandidateGenerator().generate(base_mol, attach_mol)]
 
 
 class MolEnvE2E(gym.Env):

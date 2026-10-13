@@ -206,7 +206,10 @@ def span(name: str, category: str = "moldr", args: dict | None = None):
     return recorder.span(name, category, args)
 
 
-def _wrap(function: Callable, name: str, category: str, *, env_scoring=False):
+def _wrap(
+    function: Callable, name: str, category: str, *, env_scoring=False,
+    scoring_counts=False,
+):
     if getattr(function, "_moldr_trace_wrapper", False):
         return function
 
@@ -222,8 +225,20 @@ def _wrap(function: Callable, name: str, category: str, *, env_scoring=False):
             scorer = getattr(env, "scoring_function", None)
             if scorer is not None and not getattr(scorer, "_moldr_trace_wrapper", False):
                 env.scoring_function = _wrap(scorer, "objective.score", "scoring")
+        counts_before = None
+        if scoring_counts and args:
+            scorer = args[0]
+            counts_before = dict(scorer.stats)
+            # Cache hits retain a score-request span while only actual
+            # evaluations produce the nested objective-computation span.
+            scorer.function = _wrap(scorer.function, "objective.compute", "scoring")
         with recorder.span(name, category) as current:
             result = function(*args, **kwargs)
+            if counts_before is not None:
+                current.args.update(
+                    input_mode=scorer.input_mode,
+                    **{key: value - counts_before[key] for key, value in scorer.stats.items()},
+                )
             if isinstance(result, list):
                 current.args["result_count"] = len(result)
             if category == "rollout":
@@ -236,10 +251,11 @@ def _wrap(function: Callable, name: str, category: str, *, env_scoring=False):
     return traced
 
 
-def _patch(owner, attribute, name, category, *, env_scoring=False):
+def _patch(owner, attribute, name, category, *, env_scoring=False, scoring_counts=False):
     function = getattr(owner, attribute, None)
     if function is not None:
-        setattr(owner, attribute, _wrap(function, name, category, env_scoring=env_scoring))
+        setattr(owner, attribute, _wrap(function, name, category, env_scoring=env_scoring,
+                                       scoring_counts=scoring_counts))
 
 
 def _patch_aliases(owner, attribute, aliases, name, category):
@@ -257,6 +273,10 @@ def install(*, include_rllib: bool = True) -> None:
     with _install_lock:
         legacy = importlib.import_module("moldr.env")
         e2e = importlib.import_module("moldr.e2e.env")
+        e2e_v2 = importlib.import_module("moldr.e2e.env_v2")
+        chemistry = importlib.import_module("moldr.chemistry")
+        scoring = importlib.import_module("moldr.scoring")
+        chemutils = importlib.import_module("moldr.chemutils")
         reassemble = importlib.import_module("moldr.core.reassemble")
         molgraph = importlib.import_module("moldr.core.molgraph")
         mol2vec = importlib.import_module("moldr.mol2vec.model")
@@ -295,6 +315,29 @@ def install(*, include_rllib: bool = True) -> None:
                     category,
                     env_scoring=method in {"step", "reset"},
                 )
+        # V2 owns direct scopes around step, embedding, and graph packing.
+        # Add its surrounding phases without duplicating those direct scopes.
+        for method, category in {
+            "reset": "environment",
+            "_step_select_bb": "environment",
+            "_step_select_attach": "environment",
+            "_make_obs": "observation",
+            "_refresh_bb_pool": "proposer",
+            "peek_attachment": "evaluation",
+        }.items():
+            _patch(e2e_v2.MolEnvE2EV2, method, f"MolEnvE2EV2.{method}", category)
+        _patch(chemistry.CandidateGenerator, "generate", "CandidateGenerator.generate", "reassembly")
+        _patch(scoring.ScoringService, "score", "ScoringService.score", "scoring", scoring_counts=True)
+        _patch(scoring, "_parse", "SMILES.parse_score", "smiles")
+        aliases = [legacy, e2e, e2e_v2, reassemble, molgraph, chemistry]
+        for function, name in (("get_mol", "SMILES.parse"), ("get_smiles", "SMILES.serialize"),
+                               ("sanitize", "SMILES.sanitize_roundtrip")):
+            _patch_aliases(chemutils, function, aliases, name, "smiles")
+        _patch_aliases(chemutils, "mol_with_atom_index", aliases, "atom_maps", "chemistry")
+        _patch_aliases(reassemble, "prepare_pair", [chemistry], "prepare_pair", "chemistry")
+        for function in ("merge_mol_from_node", "merge_mol_from_edge"):
+            _patch(reassemble, function, function, "chemistry")
+        _patch(reassemble, "_reconstruct", "reconstruct_molecule", "chemistry")
         _patch(e2e, "reassemble_candidates", "reassemble_candidates", "reassembly")
         for function in ("merge_node", "merge_edge"):
             _patch_aliases(reassemble, function, [legacy, e2e], function, "chemistry")
@@ -313,6 +356,7 @@ def install(*, include_rllib: bool = True) -> None:
         runner_group = importlib.import_module("ray.rllib.env.env_runner_group")
         policy = importlib.import_module("ray.rllib.policy.torch_policy_v2")
         model = importlib.import_module("moldr.e2e.model")
+        model_v2 = importlib.import_module("moldr.e2e.model_v2")
 
         _patch(ppo.PPO, "training_step", "PPO.training_step", "iteration")
         _patch_aliases(
@@ -337,6 +381,9 @@ def install(*, include_rllib: bool = True) -> None:
         }.items():
             _patch(policy.TorchPolicyV2, method, f"TorchPolicyV2.{method}", category)
         _patch(model.PointerPolicyNet, "forward", "PointerPolicyNet.forward", "inference")
+        _patch(model_v2.PointerPolicyNetV2, "forward", "PointerPolicyNetV2.forward", "inference")
+        _patch(model_v2.E2EPolicyNetV2, "encode_observation", "E2EPolicyNetV2.encode_observation", "embedding")
+        _patch(model_v2.E2EPolicyNetV2, "auxiliary_loss", "E2EPolicyNetV2.auxiliary_loss", "candidate_value")
 
 
 def enable(

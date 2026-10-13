@@ -9,8 +9,8 @@ from gymnasium.utils import seeding
 
 from moldr.chemutils import get_mol, get_smiles, validate_reassembly_mol
 from moldr.mol2vec.model import Mol2Vec
-from moldr.core.reassemble import merge_edge, merge_node
-from moldr.core.molgraph import sanitize_molgraph
+from moldr.chemistry import CandidateGenerator
+from moldr.scoring import ScoringService
 
 
 class MolEnvValueMax(gym.Env):
@@ -19,6 +19,14 @@ class MolEnvValueMax(gym.Env):
         self.observation_space = env_config["OBS_SPACE"]
         self.building_blocks = list(env_config["BUILDING_BLOCKS"])
         self.scoring_function = env_config["SCORE_FUNCTION"]
+        self.candidate_generator = CandidateGenerator(env_config.get("CHEMISTRY"))
+        scoring = dict(env_config.get("SCORING", {}))
+        scoring.setdefault("objective", self.scoring_function)
+        self.scorer = ScoringService(**scoring)
+        self.reward_mode = env_config.get("REWARD_MODE", "sparse")
+        if self.reward_mode not in {"sparse", "improvement"}:
+            raise ValueError("REWARD_MODE must be sparse or improvement")
+        self.terminate_on_score_decrease = env_config.get("TERMINATE_ON_SCORE_DECREASE", True)
         self.final_weight = env_config["FINAL_WEIGHT"]
         self.length = env_config["LENGTH"]
         self.max_episode_steps = int(env_config.get("MAX_EPISODE_STEPS", self.length))
@@ -117,11 +125,9 @@ class MolEnvValueMax(gym.Env):
 
     def _reassemble(self, action):
         attached_mol = self.mols[action]
-        _mol1 = merge_node(self.base_mol, attached_mol)
-        _mol2 = merge_edge(self.base_mol, attached_mol)
-        _mol1.extend(_mol2)
-        gen_mols = sanitize_molgraph(_mol1)
-        smiles = [get_smiles(mol) for mol in gen_mols]
+        candidates = self.candidate_generator.generate(self.base_mol, attached_mol)
+        gen_mols = [candidate.mol for candidate in candidates]
+        smiles = [candidate.smiles for candidate in candidates]
         return gen_mols, smiles
 
     def step(self, action: int) -> Tuple[ndarray, float, bool, bool, dict]:
@@ -144,7 +150,7 @@ class MolEnvValueMax(gym.Env):
             infos["score"] = self.prev_reward
             return self._observation(), self.prev_reward * self.final_weight, True, False, infos
 
-        rewards = self.compute_score(gen_smiles)
+        rewards = self.compute_score(gen_mols if self.scorer.input_mode == "mol" else gen_smiles)
 
         # TODO: SELECT NEW NODE BASED ON VF
         idx = np.argmax(rewards)
@@ -159,14 +165,18 @@ class MolEnvValueMax(gym.Env):
         reward = float(rewards[idx])
         done = self.is_done(reward)
         truncated = not done and self.env_step >= self.max_episode_steps
+        improvement = reward - self.prev_reward
         self.prev_reward = reward
         infos["score"] = reward
         # A time limit is a truncation, with no completion bonus. PPO can
         # bootstrap from the actual final observation.
-        return obs, reward * self.final_weight if done else 0.0, done, truncated, infos
+        step_reward = reward * self.final_weight if done else 0.0
+        if self.reward_mode == "improvement":
+            step_reward += improvement
+        return obs, step_reward, done, truncated, infos
 
     def compute_score(self, smiles) -> ndarray:
-        scores = np.array([self.scoring_function(s) for s in smiles], dtype=np.float64)
+        scores = np.array(self.scorer.score_many(smiles), dtype=np.float64)
         if not np.isfinite(scores).all():
             raise ValueError("SCORE_FUNCTION must return finite scores.")
         return scores
@@ -174,7 +184,7 @@ class MolEnvValueMax(gym.Env):
     def is_done(self, reward):
         if reward >= self.threshold:
             return True
-        if self.prev_reward > reward:
+        if self.terminate_on_score_decrease and self.prev_reward > reward:
             return True
         if len(self.base_mol.GetAtoms()) > self.length:
             return True
