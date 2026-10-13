@@ -6,7 +6,9 @@ import rdkit.Chem as Chem
 from moldr.chemutils import (
     get_mol,
     get_smiles,
+    mol_from_adj,
     mol_from_graph,
+    mol_to_adj,
     mol_to_graph,
     sanitize,
 )
@@ -17,10 +19,22 @@ class MolGraph:
     def __init__(self, smiles):
         self.smiles = smiles
         self.mol = get_mol(smiles)
-        self.graph = self._mol_to_graph(self.mol)
+        self._graph = None
+        self._graph_built = False
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.smiles})"
+
+    @property
+    def graph(self):
+        # Built lazily: the reassembly hot path creates thousands of MolGraph
+        # candidates but only reads ``.mol``. Deferring the (expensive)
+        # networkx conversion until ``.graph`` is first accessed avoids that
+        # wasted work while keeping the attribute available for other callers.
+        if not self._graph_built:
+            self._graph = self._mol_to_graph(self.mol)
+            self._graph_built = True
+        return self._graph
 
     def _mol_to_graph(self, mol):
         if mol is not None:
@@ -90,8 +104,11 @@ class MolToGraph:
 
 
 def sanitize_molgraph(m_graphs: List[MolGraph]):
-    graphs = [mol_to_graph(m.mol) for m in m_graphs if m.mol is not None]
-    mols = [sanitize(mol_from_graph(g)) for g in graphs]
+    # Rebuild each candidate as a plain-atom mol (same effect as the former
+    # mol_to_graph -> mol_from_graph networkx round trip), sanitize, then
+    # dedup by canonical kekulé SMILES. Uses the networkx-free fast path.
+    rebuilt = [mol_from_adj(*mol_to_adj(m.mol)) for m in m_graphs if m.mol is not None]
+    mols = [sanitize(m) for m in rebuilt]
     smiles = np.unique([get_smiles(m) for m in mols])
     mols = [get_mol(s) for s in smiles]
     return mols

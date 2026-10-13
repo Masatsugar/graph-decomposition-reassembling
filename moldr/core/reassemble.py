@@ -14,11 +14,10 @@ RDLogger.DisableLog("rdApp.deprecation")
 
 
 from moldr.chemutils import (
-    _set_edge_label,
-    _set_node_label,
     get_mol,
     get_smiles,
-    mol_from_graph,
+    mol_from_adj,
+    mol_to_adj,
     mol_to_graph,
     mol_with_atom_index,
     sanitize,
@@ -79,11 +78,10 @@ def adj_list_to_mat(adj_list):
 
 
 def _reconstruct(adj_mat, nodes):
-    graph = nx.from_numpy_array(adj_mat)
-    edges = adj_mat_to_list(adj_mat)
-    _set_node_label(graph, nodes)
-    _set_edge_label(graph, edges)
-    return mol_from_graph(graph)
+    # Direct numpy -> RWMol build. Equivalent to the previous networkx round
+    # trip (nx.from_numpy_array + _set_*_label + mol_from_graph) but ~10x
+    # cheaper; see moldr.chemutils.mol_from_adj.
+    return mol_from_adj(adj_mat, nodes)
 
 
 def num_rings(mol):
@@ -97,9 +95,7 @@ def merge_mol_from_node(mol1, mol2, id1, id2, direction=""):
         mol = Chem.CombineMols(mol1, mol2)
     else:
         mol = mol1
-    graph = mol_to_graph(mol)
-    nodes = [node[LABEL] for node in graph.nodes.values()]
-    new_adj = copy.deepcopy(nx.adjacency_matrix(graph).toarray())
+    new_adj, nodes = mol_to_adj(mol)
     tmp = new_adj[id1, :] + new_adj[id2, :]
     rep_vars = np.vstack([tmp, tmp])
     new_adj[[id1, id2], :] = rep_vars
@@ -124,9 +120,7 @@ def merge_mol_from_edge(mol1, mol2, edge_type1: tuple, edge_type2: tuple, direct
     else:
         mol = mol1
 
-    graph = mol_to_graph(mol)
-    _new_adj = copy.deepcopy(nx.adjacency_matrix(graph).toarray())
-    nodes = [node[LABEL] for node in graph.nodes.values()]
+    _new_adj, nodes = mol_to_adj(mol)
 
     id11, id12 = edge_type1
     id21, id22 = edge_type2
@@ -384,7 +378,10 @@ def merge_edge(base_mol, attach_mol):
                         smi = get_smiles(res)
                         smis.append(smi)
         else:
-            return
+            # No ring on either side -> no edge merge is possible. Stop and
+            # return an empty list instead of None, so callers can safely
+            # ``extend`` the result (see MolEnvValueMax._reassemble).
+            break
 
     smis = np.unique(smis)
     mol_graphs = [MolGraph(smi) for smi in smis]
