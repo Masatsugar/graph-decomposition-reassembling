@@ -221,7 +221,7 @@ def _trace_iteration(algo, config, directory):
         span,
     )
     from scripts.profile_analysis import analyze_trace, merge_trace
-    from scripts.profile_viewer import build_viewer
+    from scripts.profile_viewer import COMPACT_EVENT_THRESHOLD, build_viewer
 
     epoch = time.time_ns()
     enable_workers(algo, epoch, max_events=config.profiling.max_events)
@@ -247,7 +247,10 @@ def _trace_iteration(algo, config, directory):
         raise RuntimeError("Trace capacity exceeded; increase profiling.max_events")
     write_json(directory / "trace.json", trace)
     write_json(directory / "trace_analysis.json", analyze_trace(trace))
-    build_viewer(directory / "trace.json", directory / "timeline.html", directory / "trace_analysis.json")
+    build_viewer(
+        directory / "trace.json", directory / "timeline.html", directory / "trace_analysis.json",
+        compact=len(trace["traceEvents"]) >= COMPACT_EVENT_THRESHOLD,
+    )
 
 
 def run_evaluation(config, checkpoint=None):

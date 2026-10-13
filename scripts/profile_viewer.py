@@ -52,6 +52,8 @@ _RAW_CATEGORIES = {
     "gpu_user_annotation",
     "overhead",
 }
+_COMPACT_CPU_CATEGORIES = frozenset({"cpu_op", "cuda_runtime", "cuda_driver"})
+COMPACT_EVENT_THRESHOLD = 200_000
 _CATEGORY_COLORS = {
     "iteration": "#2563eb",
     "driver": "#2563eb",
@@ -128,7 +130,7 @@ def _is_detail_category(category: str) -> bool:
     )
 
 
-def _prepare_trace(trace_path: str | Path) -> dict[str, Any]:
+def _prepare_trace(trace_path: str | Path, *, compact: bool = False) -> dict[str, Any]:
     trace = _read_json(trace_path)
     source_events = trace if isinstance(trace, list) else trace.get("traceEvents", [])
     if not isinstance(source_events, list):
@@ -153,6 +155,9 @@ def _prepare_trace(trace_path: str | Path) -> dict[str, Any]:
 
     events: list[dict[str, Any]] = []
     counters: list[dict[str, Any]] = []
+    omitted_categories: dict[str, int] = defaultdict(int)
+    source_duration_events = 0
+    start, end = float("inf"), float("-inf")
     begins: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for event in source_events:
         if not isinstance(event, dict):
@@ -178,35 +183,48 @@ def _prepare_trace(trace_path: str | Path) -> dict[str, Any]:
         processes.setdefault(pid, {"id": pid, "name": f"Process {pid}"})
         threads.setdefault((pid, tid), {"id": tid, "name": f"Thread {tid}"})
         category = str(event.get("cat", "uncategorized")) or "uncategorized"
-        compact = {
+        timestamp = _finite_number(event.get("ts"))
+        duration = max(0.0, _finite_number(event.get("dur")))
+        args = event.get("args") or {}
+        if phase == "X":
+            source_duration_events += 1
+            # Keep the complete trace's envelope even when its first or last
+            # CPU operator is omitted. GPU busy percentages remain comparable.
+            start, end = min(start, timestamp), max(end, timestamp + duration)
+            logical = isinstance(args, dict) and (
+                args.get("source_type") == "custom" or "self_us" in args
+            )
+            if compact and category.lower() in _COMPACT_CPU_CATEGORIES and not logical:
+                omitted_categories[category] += 1
+                continue
+        row = {
             "n": str(event.get("name", "unnamed")),
             "c": category,
-            "s": _finite_number(event.get("ts")),
-            "d": max(0.0, _finite_number(event.get("dur"))),
+            "s": timestamp,
+            "d": duration,
             "p": pid,
             "t": tid,
-            "a": event.get("args") or {},
+            "a": args,
             "g": _is_gpu(event, processes[pid]["name"]),
         }
         if phase == "C":
             # Chrome counters use a numeric value for each args key.
             values = {
                 str(key): float(value)
-                for key, value in compact["a"].items()
+                for key, value in row["a"].items()
                 if isinstance(value, (int, float)) and math.isfinite(value)
             }
             if values:
-                compact["a"] = values
-                counters.append(compact)
+                row["a"] = values
+                counters.append(row)
+                start, end = min(start, timestamp), max(end, timestamp + duration)
         else:
-            events.append(compact)
+            events.append(row)
     events.sort(key=lambda event: (event["s"], -event["d"]))
     counters.sort(key=lambda event: event["s"])
-    if not events and not counters:
+    if not source_duration_events and not counters:
         raise ValueError("The trace contains no complete duration or counter events")
 
-    start = min(event["s"] for event in events + counters)
-    end = max(event["s"] + event["d"] for event in events + counters)
     duration = max(1.0, end - start)
     categories = sorted({event["c"] for event in events})
     active_processes = {event["p"] for event in events + counters}
@@ -260,6 +278,13 @@ def _prepare_trace(trace_path: str | Path) -> dict[str, Any]:
         "duration": duration,
         "gpuBusy": _union_duration(gpu_intervals),
         "source": Path(trace_path).name,
+        "viewFilter": {
+            "mode": "compact" if compact else "full",
+            "omittedEvents": sum(omitted_categories.values()),
+            "omittedCategories": dict(sorted(omitted_categories.items())),
+            "sourceDurationEvents": source_duration_events,
+            "retainedDurationEvents": len(events),
+        },
         "traceMetadata": {
             key: value for key, value in trace.items() if key != "traceEvents"
         }
@@ -272,10 +297,21 @@ def build_viewer(
     trace_path: str | Path,
     output_html: str | Path,
     summary_path: str | Path | None = None,
+    *,
+    compact: bool = False,
 ) -> Path:
-    """Write an offline HTML viewer; every bar comes from the supplied trace."""
-    data = _prepare_trace(trace_path)
+    """Write a viewer, optionally omitting only raw CPU operator/runtime spans.
+
+    Compact mode retains logical spans, device events and counters, and never
+    modifies the complete trace or analysis. Full detail remains the default.
+    """
+    data = _prepare_trace(trace_path, compact=compact)
     data["summary"] = _read_json(summary_path) if summary_path else None
+    output = Path(output_html)
+    data["fullTraceLink"] = quote(
+        Path(os.path.relpath(Path(trace_path).resolve(), output.parent.resolve())).as_posix(),
+        safe="/",
+    )
     # Script data is JSON, not interpolated JavaScript. Escape the HTML parser's
     # closing-tag characters as well as JavaScript's legacy line separators.
     payload = json.dumps(
@@ -285,7 +321,6 @@ def build_viewer(
         payload.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     )
     payload = payload.replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
-    output = Path(output_html)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         _HTML_TEMPLATE.replace("__TRACE_DATA__", payload), encoding="utf-8"
@@ -685,7 +720,8 @@ main{padding:18px 28px 28px;max-width:2000px;margin:auto}.stats{display:grid;gri
 <body>
 <header><h1>GPU 学習・実行プロファイル</h1><p id="subtitle"></p></header>
 <main>
-<div class="stats"><div class="stat"><b id="total"></b><span>実測トレース区間</span></div><div class="stat"><b id="gpu"></b><span>GPU kernel / copy の実行区間</span></div><div class="stat"><b id="count"></b><span>記録した処理区間</span></div><div class="stat"><b id="workers"></b><span>記録したプロセス</span></div></div>
+<p class="note" id="trace-omissions" hidden></p>
+<div class="stats"><div class="stat"><b id="total"></b><span>実測トレース区間</span></div><div class="stat"><b id="gpu"></b><span>GPU kernel / copy の実行区間</span></div><div class="stat"><b id="count"></b><span id="count-label">記録した処理区間</span></div><div class="stat"><b id="workers"></b><span>記録したプロセス</span></div></div>
 <div class="lower" id="measured-summary" hidden><section class="detail-card"><h2>学習イテレーションの内訳</h2><p id="phase-help"></p><div id="phase-bars"></div></section><section class="detail-card"><h2>worker の処理時間と内訳</h2><p id="worker-help"></p><div id="worker-bars"></div><div id="worker-legend" class="legend"></div></section></div>
 <div class="panel">
 <div class="toolbar"><button id="reset">全体に戻す</button><button id="zoom-in" aria-label="拡大">＋ 拡大</button><button id="zoom-out" aria-label="縮小">− 縮小</button><span id="range" class="range-label"></span><input id="search" type="search" placeholder="処理名で絞り込み" aria-label="処理名で絞り込み"><label><input id="details" type="checkbox">演算・化学処理の詳細</label></div>
@@ -718,7 +754,14 @@ const countFmt=n=>n.toLocaleString('ja-JP');
 $('subtitle').textContent=D.source+' · 実測データを埋め込んだオフラインビューア';
 $('total').textContent=fmt(D.duration,3);$('gpu').textContent=fmt(D.gpuBusy,3)+' · '+(100*D.gpuBusy/D.duration).toFixed(1)+'%';
 $('count').textContent=countFmt(D.events.length);$('workers').textContent=D.processes.length;
-$('metadata').textContent=JSON.stringify({trace:D.traceMetadata,measurement:D.summary},null,2);
+$('metadata').textContent=JSON.stringify({trace:D.traceMetadata,measurement:D.summary,display:D.viewFilter},null,2);
+if(D.viewFilter&&D.viewFilter.mode==='compact'){
+ $('count').textContent=countFmt(D.events.length)+' / '+countFmt(D.viewFilter.sourceDurationEvents);$('count-label').textContent='表示区間 / 完全トレースの区間数';
+ const note=$('trace-omissions');note.hidden=false;
+ const omitted=Object.entries(D.viewFilter.omittedCategories).map(([name,count])=>name+' '+countFmt(count)).join('、')||'なし';
+ note.append(document.createTextNode('軽量表示：低水準 CPU イベント '+countFmt(D.viewFilter.omittedEvents)+' 区間を省略（'+omitted+'）。全 logical scopes・GPU kernel / copy / memset・counters を保持しています。完全なトレース：'));
+ const link=document.createElement('a');link.href=D.fullTraceLink;link.download=D.source;link.textContent=D.source;note.append(link,document.createTextNode('（Perfetto / Chrome Trace で全演算を確認できます）。'));
+}
 
 function summaryBar(parent,name,number,segments){
  const row=document.createElement('div');row.className='bar-row';const label=document.createElement('span');label.className='bar-name';label.textContent=name;label.title=name;const track=document.createElement('div');track.className='bar-track';
@@ -837,8 +880,12 @@ def main() -> None:
     parser.add_argument(
         "--summary", type=Path, help="Optional measurement metadata JSON"
     )
+    parser.add_argument(
+        "--compact", action="store_true",
+        help="Omit raw CPU operator/runtime spans from HTML, keeping all logical and GPU spans and counters",
+    )
     args = parser.parse_args()
-    print(build_viewer(args.trace, args.html, args.summary))
+    print(build_viewer(args.trace, args.html, args.summary, compact=args.compact))
     if args.svg:
         print(build_overview(args.trace, args.svg, args.summary))
 
