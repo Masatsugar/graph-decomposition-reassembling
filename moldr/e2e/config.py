@@ -25,8 +25,8 @@ def e2e_env_creator(env_config):
 
 def get_e2e_config(
     sc,
-    building_blocks_smiles: List[str],
-    model_path: str,
+    building_blocks_smiles: Optional[List[str]] = None,
+    model_path: str = "models/model_300dim.pkl",
     base_smiles: str = "C",
     num_workers: int = 8,
     num_gpus: int = 0,
@@ -37,13 +37,20 @@ def get_e2e_config(
     option_pool_size: Optional[int] = None,
     reward_mode: str = "improvement",
     hidden: int = 256,
+    proposer=None,
+    recond_every: str = "episode",
 ):
     """Build a PPOConfig for the end-to-end reassembly environment.
 
     ``option_pool_size`` controls phase A: ``None`` offers every building block
-    each step (faithful fixed-table baseline); an int ``K`` samples K blocks
-    (used by the generative pool variant). ``sc`` is a GuacaMol benchmark whose
-    ``wrapped_objective.score`` is the scoring function.
+    each step (faithful fixed-table baseline); an int ``K`` samples K blocks.
+    ``sc`` is a GuacaMol benchmark whose ``wrapped_objective.score`` is the
+    scoring function.
+
+    Generative variant: pass ``proposer`` (a :class:`VAEProposer` or a
+    ``{"dir": ...}`` spec). Phase A then offers *generated* building blocks,
+    re-decoded per ``recond_every`` in {"never", "episode", "step"}. The action
+    space stays ``Discrete`` of the proposer's N, so PPO is unchanged.
     """
     register_env(ENV_NAME, e2e_env_creator)
     register_pointer_model()
@@ -53,8 +60,14 @@ def get_e2e_config(
 
     scoring_function = sc.wrapped_objective.score
 
+    if proposer is None and building_blocks_smiles is None:
+        raise ValueError("Pass either building_blocks_smiles or a proposer.")
+
+    # The env derives the pool from the proposer when one is given; otherwise it
+    # uses the fixed table. A placeholder table keeps the env_config schema
+    # uniform when a proposer is supplied.
     env_config = {
-        "BUILDING_BLOCKS": list(building_blocks_smiles),
+        "BUILDING_BLOCKS": list(building_blocks_smiles or ["C"]),
         "SCORE_FUNCTION": scoring_function,
         "MODEL_PATH": model_path,
         "BASE_SMILES": base_smiles,
@@ -66,6 +79,9 @@ def get_e2e_config(
         "REWARD_MODE": reward_mode,
         "FINAL_WEIGHT": 1.0,
     }
+    if proposer is not None:
+        env_config["PROPOSER"] = proposer
+        env_config["RECOND_EVERY"] = recond_every
 
     config = (
         PPOConfig()

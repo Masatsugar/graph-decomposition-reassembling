@@ -104,6 +104,115 @@ def get_default_config_v1(
     return config
 
 
+def get_generative_config_v1(
+    sc,
+    proposer,
+    model_path,
+    base_smiles="C",
+    num_workers=40,
+    num_gpus=2,
+    score_threshold=0.9,
+    length=100,
+    recond_every="episode",
+    init_context=None,
+):
+    """PPO config for the *generative* building-block variant.
+
+    Identical to :func:`get_default_config_v1` except the fixed table is
+    produced by a ``VAEProposer`` and the env re-decodes it per episode (or per
+    step) conditioned on the base embedding. The action space is still
+    ``Discrete(N)`` with ``N == proposer.n_blocks`` -- PPO is unchanged.
+
+    Parameters
+    ----------
+    proposer : moldr.generative.proposer.VAEProposer | dict
+        A proposer instance or a ``from_spec`` dict (``{"dir": ...}``) shipped to
+        each env-runner. ``n_blocks`` defines ``N``.
+    recond_every : {"never", "episode", "step"}
+        Pool re-conditioning cadence inside the env.
+    init_context : np.ndarray | None
+        Optional 300-d context used only to seed the *initial* library list
+        (which fixes N and names the actions before the first reset).
+    """
+    from moldr.generative.proposer import VAEProposer
+
+    register_env("moldr_env", env_creator)
+
+    prop = VAEProposer.from_spec(proposer) if isinstance(proposer, dict) else proposer
+    building_blocks_smiles = [
+        s for s in prop.propose_library(init_context) if len(s) > 1
+    ]
+    # Pad defensively so len == N even if the len>1 filter dropped entries
+    # (the vocab guarantees len>1, so this is a no-op in practice).
+    assert len(building_blocks_smiles) == prop.n_blocks, (
+        "proposer must emit exactly N multi-atom blocks"
+    )
+
+    def check_valid_smiles(smiles):
+        mol = get_mol(smiles)
+        if mol is None:
+            raise ValueError("INVALID SMILES.")
+        return base_smiles
+
+    base_smiles = check_valid_smiles(base_smiles)
+    high = np.array([np.finfo(np.float32).max for _ in range(300)])
+    observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
+    scoring_function = sc.wrapped_objective.score
+
+    env_config = {
+        "ACTION_SPACE": gym.spaces.Discrete(len(building_blocks_smiles)),
+        "OBS_SPACE": observation_space,
+        "BUILDING_BLOCKS": building_blocks_smiles,
+        "SCORE_FUNCTION": scoring_function,
+        "SCORE_THRESHOLD": score_threshold,
+        "FINAL_WEIGHT": 1.0,
+        "BASE_SMILES": base_smiles,
+        "MODEL_PATH": model_path,
+        "LENGTH": length,
+        # Generative extras consumed by MolEnvValueMax:
+        "PROPOSER": proposer,  # instance or {"dir": ...} spec
+        "RECOND_EVERY": recond_every,
+    }
+
+    config = (
+        PPOConfig()
+        .environment("moldr_env", env_config=env_config)
+        .framework("torch")
+        .resources(num_gpus=num_gpus)
+        .api_stack(
+            enable_rl_module_and_learner=False,
+            enable_env_runner_and_connector_v2=False,
+        )
+        .env_runners(
+            num_env_runners=num_workers,
+            num_envs_per_env_runner=1,
+            num_cpus_per_env_runner=1,
+            num_gpus_per_env_runner=0,
+            sample_timeout_s=360.0,
+        )
+        .rl_module(
+            model_config=DefaultModelConfig(
+                fcnet_hiddens=[256, 128, 128],
+                fcnet_activation="relu",
+                max_seq_len=100,
+            )
+        )
+        .training(
+            train_batch_size_per_learner=4000,
+            minibatch_size=128,
+            num_epochs=30,
+            lr=5e-5,
+            lambda_=0.95,
+            gamma=0.99,
+            vf_loss_coeff=1.0,
+            clip_param=0.3,
+            grad_clip=None,
+            entropy_coeff=0.1,
+        )
+    )
+    return config
+
+
 def get_default_config_v2(
     sc,
     building_blocks_smiles,

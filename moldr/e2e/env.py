@@ -76,6 +76,8 @@ class MolEnvE2E(gym.Env):
         self.building_blocks: List[str] = list(env_config["BUILDING_BLOCKS"])
         self.scoring_function = env_config["SCORE_FUNCTION"]
         self.obs_dim: int = int(env_config.get("OBS_DIM", 300))
+        # Finite obs bound (see observation_space); embeddings are clipped to it.
+        self._obs_bound: float = 1.0e4
         self.max_attach: int = int(env_config.get("MAX_ATTACH", 128))
         # None -> every building block is an option each step (faithful
         # fixed-table baseline). An int K -> sample K blocks per step (used by
@@ -91,22 +93,43 @@ class MolEnvE2E(gym.Env):
 
         self.mol2vec = Mol2Vec(model_path=env_config["MODEL_PATH"])
 
+        # Optional generative building-block pool (Phase 3). When a PROPOSER is
+        # supplied, the fixed table is replaced by a learned fragment decoder
+        # whose N blocks become phase-A options; the pointer policy then selects
+        # among *generated* building blocks (end-to-end + generative). The pool
+        # can be re-decoded conditioned on the current molecule (RECOND_EVERY).
+        self._proposer = None
+        self.recond_every = env_config.get("RECOND_EVERY", "episode")
+        proposer_spec = env_config.get("PROPOSER", None)
+        if proposer_spec is not None:
+            from moldr.generative.proposer import VAEProposer
+
+            self._proposer = VAEProposer.from_spec(proposer_spec)
+            # The proposer owns N; its initial (context-free) library fixes the
+            # action semantics and overrides any passed-in table.
+            self.building_blocks = list(self._proposer.propose_library(None))
+
         self.bb_mols = [get_mol(s) for s in self.building_blocks]
         self.n_bb = len(self.building_blocks)
-        # Precompute building-block embeddings once (static for the fixed table).
+        # Precompute building-block embeddings once (static for the fixed table;
+        # refreshed per episode/step when a proposer re-decodes the pool).
         self._bb_embeddings = self._embed([m for m in self.bb_mols])
 
         n_bb_options = self.option_pool_size or self.n_bb
         self.n_options = int(max(n_bb_options, self.max_attach))
 
-        high = np.full(self.obs_dim, np.finfo(np.float32).max, dtype=np.float32)
+        # Finite bound (not finfo.max) so RLlib's obs statistics never overflow
+        # float32; mol2vec embeddings sit well within this range and are clipped
+        # to it in _embed() so observations always lie inside the space.
+        bound = self._obs_bound
+        high = np.full(self.obs_dim, bound, dtype=np.float32)
         self.observation_space = gym.spaces.Dict(
             {
                 "base": gym.spaces.Box(-high, high, dtype=np.float32),
                 "phase": gym.spaces.Box(0.0, 1.0, shape=(2,), dtype=np.float32),
                 "options": gym.spaces.Box(
-                    low=np.finfo(np.float32).min,
-                    high=np.finfo(np.float32).max,
+                    low=-bound,
+                    high=bound,
                     shape=(self.n_options, self.obs_dim),
                     dtype=np.float32,
                 ),
@@ -132,7 +155,20 @@ class MolEnvE2E(gym.Env):
         if len(mols) == 0:
             return np.zeros((0, self.obs_dim), dtype=np.float32)
         vecs = np.asarray(self.mol2vec.fit_transform(mols), dtype=np.float32)
+        vecs = np.nan_to_num(vecs, nan=0.0, posinf=self._obs_bound, neginf=-self._obs_bound)
+        np.clip(vecs, -self._obs_bound, self._obs_bound, out=vecs)
         return vecs.reshape(len(mols), self.obs_dim)
+
+    def _refresh_bb_pool(self, context: Optional[ndarray] = None):
+        """Re-decode the N building blocks from the proposer, conditioned on
+        ``context`` (the current base embedding), and refresh their cached
+        embeddings. N stays fixed; only which SMILES sit behind each index
+        changes. No-op without a proposer."""
+        if self._proposer is None:
+            return
+        self.building_blocks = list(self._proposer.propose(context))
+        self.bb_mols = [get_mol(s) for s in self.building_blocks]
+        self._bb_embeddings = self._embed(self.bb_mols)
 
     def _pad_options(self, embeddings: ndarray, count: int):
         options = np.zeros((self.n_options, self.obs_dim), dtype=np.float32)
@@ -190,6 +226,11 @@ class MolEnvE2E(gym.Env):
         self.prev_score = float(self.scoring_function(self.base_smiles))
         self._candidates = []
         self._candidate_smiles = []
+        if self._proposer is not None and self.recond_every in ("episode", "step"):
+            # Re-decode the pool conditioned on the reset-state base. For the
+            # "episode" cadence it then stays fixed for the whole episode.
+            base_vec = self._embed([self.base_mol])[0]
+            self._refresh_bb_pool(base_vec)
         return self._make_obs(), {}
 
     def step(self, action):
@@ -258,6 +299,10 @@ class MolEnvE2E(gym.Env):
         self.phase = Phase.SELECT_BB
         self._candidates = []
         self._candidate_smiles = []
+        if not done and self._proposer is not None and self.recond_every == "step":
+            # Maximally adaptive: re-decode the pool against the new base before
+            # the next building-block choice.
+            self._refresh_bb_pool(self._embed([self.base_mol])[0])
         return self._make_obs(), float(reward), done, False, info
 
     def _is_done(self, score: float) -> bool:

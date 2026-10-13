@@ -18,7 +18,11 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-FLOAT_MIN = torch.finfo(torch.float32).min
+# Large *finite* negative used to mask invalid action logits. softmax drives
+# these to ~0 probability (exp(-1e9) underflows to 0) while, unlike
+# torch.finfo.min, never overflowing float32 when RLlib reduces the stored
+# action-distribution inputs (e.g. its debug batch summary).
+FLOAT_MIN = -1.0e9
 
 
 class PointerPolicyNet(nn.Module):

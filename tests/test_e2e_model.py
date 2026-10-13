@@ -29,8 +29,10 @@ def test_pointer_net_masks_logits():
     mask = torch.ones(b, a)
     mask[:, 3:] = 0.0  # last two slots invalid
     logits, _ = net(base, phase, options, mask)
-    # masked slots must be driven to FLOAT_MIN...
-    assert torch.all(logits[:, 3:] <= FLOAT_MIN + 1.0)
+    # masked slots must be driven to a very large negative (near the mask fill),
+    # well below any real score...
+    assert torch.all(logits[:, 3:] <= FLOAT_MIN + 1e3)
+    assert torch.all(logits[:, :3] > FLOAT_MIN + 1e3)
     # ...and never selected by argmax or by sampling.
     assert torch.all(logits.argmax(dim=-1) < 3)
     probs = torch.softmax(logits, dim=-1)
@@ -79,6 +81,52 @@ def test_rllib_ppo_smoke():
             num_workers=0,  # drive the env in the local process
             num_gpus=0,
             max_attach=16,
+        )
+        config = config.training(train_batch_size=64, minibatch_size=16, num_epochs=1)
+        algo = config.build()
+        result = algo.train()
+        assert result is not None
+        algo.stop()
+    finally:
+        ray.shutdown()
+
+
+def test_rllib_ppo_generative_smoke():
+    """End-to-end + generative: PPO on MolEnvE2E whose phase-A pool is produced
+    by the VAE proposer (built, trained tiny, run one iteration on CPU)."""
+    pytest.importorskip("ray")
+    import ray
+    from moldr.e2e.config import get_e2e_config
+    from moldr.generative.producer import build_proposer_from_smiles
+
+    class _FakeObjective:
+        class _Wrapped:
+            @staticmethod
+            def score(smiles):
+                from moldr.chemutils import get_mol
+
+                mol = get_mol(smiles)
+                return 0.0 if mol is None else min(1.0, mol.GetNumAtoms() / 50.0)
+
+        name = "smoke-gen"
+        wrapped_objective = _Wrapped()
+
+    proposer = build_proposer_from_smiles(
+        ["CCO", "CC(=O)O", "c1ccccc1", "C1CCCCC1", "c1ccncc1", "CCN"],
+        n_blocks=8,
+        hidden_dim=16,
+        epochs=5,
+    )
+    ray.init(ignore_reinit_error=True, num_cpus=2, log_to_driver=False)
+    try:
+        config = get_e2e_config(
+            _FakeObjective(),
+            model_path="models/model_300dim.pkl",
+            num_workers=0,
+            num_gpus=0,
+            max_attach=16,
+            proposer=proposer,
+            recond_every="episode",
         )
         config = config.training(train_batch_size=64, minibatch_size=16, num_epochs=1)
         algo = config.build()

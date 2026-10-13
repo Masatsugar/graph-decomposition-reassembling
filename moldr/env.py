@@ -31,6 +31,33 @@ class MolEnvValueMax(gym.Env):
         self.base_mol = get_mol(self._base_smiles)
         self.action_mask = np.ones(len(self.building_blocks))
 
+        # --- Generative building-block proposer (optional, backward compatible) ---
+        # When env_config carries a "PROPOSER" (a VAEProposer or a spec dict, see
+        # moldr.generative.proposer.VAEProposer.from_spec), the fixed table is
+        # replaced by a learned fragment decoder. The action space stays
+        # Discrete(N) with N == proposer.n_blocks == len(building_blocks); only
+        # *which* SMILES sit behind each stable index is re-decoded, conditioned
+        # on the current base embedding. RECOND_EVERY in {"never","episode","step"}.
+        self._proposer = None
+        self.recond_every = env_config.get("RECOND_EVERY", "episode")
+        proposer_spec = env_config.get("PROPOSER", None)
+        if proposer_spec is not None:
+            from moldr.generative.proposer import VAEProposer
+
+            self._proposer = VAEProposer.from_spec(proposer_spec)
+            assert self._proposer.n_blocks == self.action_space.n, (
+                "PROPOSER.n_blocks must equal the Discrete(N) action-space size."
+            )
+
+    def _decode_pool(self, context):
+        """Re-decode the N building blocks from the proposer, conditioned on
+        ``context`` (the 300-d Mol2Vec embedding of the current base). Keeps N
+        fixed; refreshes self.building_blocks / self.mols in place."""
+        if self._proposer is None:
+            return
+        self.building_blocks = self._proposer.propose(context)
+        self.mols = [get_mol(s) for s in self.building_blocks]
+
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         self.base_smiles = copy.deepcopy(self._base_smiles)
@@ -39,6 +66,12 @@ class MolEnvValueMax(gym.Env):
         self.prev_reward = 0.0
         self.prev_smiles = self.base_smiles
         vec = self.mol2vec.fit_transform([self.base_mol])
+        if self._proposer is not None and self.recond_every in ("episode", "step"):
+            # Rebuild the per-episode pool conditioned on the reset-state base.
+            # Within the episode self.mols is then held fixed (matching the env's
+            # "built once, constant within an episode" contract) unless
+            # recond_every == "step" re-decodes again inside step().
+            self._decode_pool(vec.flatten())
         return vec.flatten(), {}
 
     def render(self, mode="human"):
@@ -90,6 +123,10 @@ class MolEnvValueMax(gym.Env):
         self.base_mol = gen_mols[idx]
         self.base_smiles = get_smiles(self.base_mol)
         obs = self.mol2vec.fit_transform([self.base_mol]).flatten()
+        if self._proposer is not None and self.recond_every == "step":
+            # Maximally adaptive: re-decode the pool against the new base. Note
+            # the index->block map is then only stable across episodes.
+            self._decode_pool(obs)
         reward = float(rewards[idx])
         done = self.is_done(reward)
         truncated = False  # This environment doesn't use truncation
