@@ -153,3 +153,4 @@ mlruns
 .vscode/
 /outputs/
 /ray_results/
+/artifacts/

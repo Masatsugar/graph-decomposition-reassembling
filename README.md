@@ -179,6 +179,23 @@ tetrahedral or bond stereochemistry is currently unsupported by the adjacency
 merge implementation: environments reject it, and fragment vocabularies filter
 it out rather than silently discarding it.
 
+### CPU/GPU timelines and distributed rollout profiling
+
+Capture real Chrome/Perfetto timelines and compare 1, 2, 4 and 8 CPU rollout
+workers with the same global batch:
+
+```shell
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  uv run python -m scripts.profile_training
+```
+
+Open `artifacts/profiling/2026-10-13/index.html` for the comparison and offline
+interactive timelines; each `trace.json` also opens in Perfetto or Chrome
+Tracing. The collector records CPU chemistry/scoring/embedding and CUDA kernels
+on a shared single-host clock. Throughput trials run without tracing overhead.
+See [the profiling report](docs/performance_profiling.md) for measured scaling,
+worker balance, clock limits and reproduction settings.
+
 
 ### For Paper Reproducibility
 
