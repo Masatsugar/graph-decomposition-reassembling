@@ -127,6 +127,57 @@ def test_reward_modes_differ():
         assert reward_sparse == 0.0
 
 
+def test_dead_end_pays_completion_bonus():
+    """A zero-candidate (dead-end) building block must terminate while still
+    paying the completion bonus for the molecule built so far - not a silent 0.0
+    that erases the whole sparse-mode training signal."""
+    # CF4 has no open valence and no ring -> it can never attach to base "C".
+    env = _make_env(BUILDING_BLOCKS=["FC(F)(F)F"], REWARD_MODE="sparse", FINAL_WEIGHT=1.0)
+    obs, _ = env.reset(seed=0)
+    base_score = _num_atoms_score("C")
+    obs, reward, done, trunc, info = env.step(0)
+    assert info["n_candidates"] == 0  # genuine dead end
+    assert done is True
+    assert reward == pytest.approx(base_score)  # bonus paid, not 0.0
+    assert reward > 0.0
+
+
+def test_max_attach_zero_normalizes_to_default():
+    """MAX_ATTACH=0 must mean 'use the default cap', not 'no cap' (which used to
+    collapse n_options and crash obs padding)."""
+    env = _make_env(BUILDING_BLOCKS=["c1ccccc1"], MAX_ATTACH=0)
+    assert env.max_attach == 128
+    assert env.n_options == 128
+    # A ring base + benzene enumerates several candidates; must not crash.
+    env2 = _make_env(BUILDING_BLOCKS=["c1ccccc1"], MAX_ATTACH=0, BASE_SMILES="CC1CCC2=CC=CC=C2O1")
+    obs, _ = env2.reset(seed=0)
+    obs, reward, done, trunc, info = env2.step(0)
+    assert info["n_candidates"] > 0
+    assert env2.observation_space.contains(obs)
+
+
+def test_max_attach_caps_candidates():
+    env = _make_env(BUILDING_BLOCKS=["c1ccccc1"], MAX_ATTACH=3, BASE_SMILES="CC1CCC2=CC=CC=C2O1")
+    obs, _ = env.reset(seed=0)
+    obs, reward, done, trunc, info = env.step(0)
+    assert info["n_candidates"] <= 3
+
+
+def test_prev_smiles_is_pre_transition():
+    """info['prev_smiles'] on an attach step must be the molecule BEFORE the
+    attach, not the newly formed one."""
+    env = _make_env()
+    rng = np.random.default_rng(0)
+    obs, _ = env.reset(seed=0)
+    base_before = env.base_smiles  # "C"
+    obs, _, _, _, _ = env.step(BUILDING_BLOCKS.index("c1ccccc1"))  # -> phase B
+    act = _sample_valid_action(env, obs, rng)
+    obs, _, _, _, info = env.step(act)  # attach
+    assert info["phase"] == "select_attach"
+    assert info["prev_smiles"] == base_before
+    assert info["prev_smiles"] != env.base_smiles  # the base actually changed
+
+
 def test_reassemble_candidates_helper():
     base = get_mol("C")
     attach = get_mol("c1ccccc1")

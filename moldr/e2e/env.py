@@ -78,7 +78,11 @@ class MolEnvE2E(gym.Env):
         self.obs_dim: int = int(env_config.get("OBS_DIM", 300))
         # Finite obs bound (see observation_space); embeddings are clipped to it.
         self._obs_bound: float = 1.0e4
-        self.max_attach: int = int(env_config.get("MAX_ATTACH", 128))
+        # The fixed-size action space cannot represent an unbounded number of
+        # attachments, so MAX_ATTACH always resolves to a positive cap; 0/None
+        # mean "use the default" (not "no cap", which the guard used to misread).
+        _ma = env_config.get("MAX_ATTACH", 128)
+        self.max_attach: int = int(_ma) if _ma and int(_ma) > 0 else 128
         # None -> every building block is an option each step (faithful
         # fixed-table baseline). An int K -> sample K blocks per step (used by
         # the generative pool variant, Phase 3).
@@ -173,6 +177,10 @@ class MolEnvE2E(gym.Env):
     def _pad_options(self, embeddings: ndarray, count: int):
         options = np.zeros((self.n_options, self.obs_dim), dtype=np.float32)
         mask = np.zeros((self.n_options,), dtype=np.float32)
+        # Defense-in-depth: never over-fill the fixed buffer. count should
+        # already be <= n_options (max_attach <= n_options and the bb pool is
+        # sized to fit), so this only guards against future misconfiguration.
+        count = min(count, self.n_options)
         if count > 0:
             options[:count] = embeddings[:count]
             mask[:count] = 1.0
@@ -246,7 +254,7 @@ class MolEnvE2E(gym.Env):
         attach_mol = self.bb_mols[bb_index]
 
         candidates = reassemble_candidates(self.base_mol, attach_mol)
-        if self.max_attach and len(candidates) > self.max_attach:
+        if len(candidates) > self.max_attach:
             candidates = candidates[: self.max_attach]
 
         info = {
@@ -259,10 +267,14 @@ class MolEnvE2E(gym.Env):
 
         if len(candidates) == 0:
             # Dead end: the chosen block cannot attach. Terminate with the
-            # molecule built so far (matches the original "no candidates ->
-            # done" behaviour, but keeps the running score as the signal).
+            # molecule built so far and pay the same completion bonus a terminal
+            # attach step would (the molecule is unchanged, so there is no
+            # incremental improvement to add). prev_score holds the score of the
+            # molecule built so far, so both reward modes reduce to the bonus.
+            info["score"] = self.prev_score
+            reward = self.prev_score * self.final_weight
             obs = self._make_obs()
-            return obs, 0.0, True, False, info
+            return obs, float(reward), True, False, info
 
         self._candidates = candidates
         self._candidate_smiles = [get_smiles(m) for m in candidates]
@@ -271,6 +283,7 @@ class MolEnvE2E(gym.Env):
 
     def _step_select_attach(self, action):
         idx = self._resolve_action(action, len(self._candidates))
+        prev_smiles = self.base_smiles  # snapshot BEFORE the transition
         chosen = self._candidates[idx]
         self.base_mol = chosen
         self.base_smiles = self._candidate_smiles[idx]
@@ -290,7 +303,7 @@ class MolEnvE2E(gym.Env):
             "phase": "select_attach",
             "chosen_attach": idx,
             "gen_smiles": self._candidate_smiles,
-            "prev_smiles": self.base_smiles,
+            "prev_smiles": prev_smiles,
             "score": score,
             "improvement": improvement,
         }

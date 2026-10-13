@@ -55,6 +55,25 @@ def test_from_spec_passthrough_instance():
     assert VAEProposer.from_spec({"instance": prop}) is prop
 
 
+def test_ring_fraction_unsatisfiable_raises():
+    """The ring-fraction guarantee must fail fast when the vocabulary has no
+    ring fragments, rather than silently returning a ring-free library."""
+    from moldr.generative.vocab import FragmentVocab
+    from moldr.generative.vae import train_fragment_vae
+
+    acyclic = ["CCO", "CCN", "CC=O", "CCOC", "CN", "CC(=O)O"]
+    vocab = FragmentVocab.from_smiles_list(acyclic)
+    assert not vocab.ring_mask.any()
+    vae = train_fragment_vae(vocab, latent_dim=8, hidden_dim=16, epochs=2, seed=0)
+
+    with pytest.raises(ValueError):
+        VAEProposer(vae, vocab, n_blocks=8, min_ring_fraction=0.3)
+
+    # min_ring_fraction=0.0 is satisfiable even with a ring-free vocab.
+    prop = VAEProposer(vae, vocab, n_blocks=8, min_ring_fraction=0.0)
+    assert len(prop.propose_library(None)) == 8
+
+
 def test_e2e_env_uses_generated_pool():
     from moldr.e2e.env import MolEnvE2E, Phase
 

@@ -84,6 +84,17 @@ class VAEProposer:
         self.min_ring_fraction = float(min_ring_fraction)
         self.dedup = bool(dedup)
         self.anchor_seed = int(anchor_seed)
+        # Fail fast if the ring-fraction guarantee is unsatisfiable: a single
+        # ring entry suffices (Pass 2 duplicates ring ids up to `need`), so the
+        # only impossible case is a vocabulary with zero ring fragments.
+        need = int(np.ceil(self.min_ring_fraction * self.n_blocks))
+        if need > 0 and not vocab.ring_mask.any():
+            raise ValueError(
+                f"min_ring_fraction={self.min_ring_fraction} requires >={need} "
+                "ring-bearing blocks, but the vocabulary contains no ring "
+                "fragments. Pass min_ring_fraction=0.0 or supply a vocabulary "
+                "with at least one ring fragment."
+            )
         # Frozen anchors: shape (N, latent_dim). Sampled once, never updated.
         g = torch.Generator().manual_seed(anchor_seed)
         self.anchors = torch.randn(
