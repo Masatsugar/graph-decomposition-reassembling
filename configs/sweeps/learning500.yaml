@@ -1,0 +1,54 @@
+# Run with --config configs/short.yaml. Five fresh seed-0 runs, exactly 500
+# PPO iterations each; profiling warmup/measurement budgets are not used.
+# Preserve the previous short comparison's full catalog and model settings.
+command: train
+jobs:
+  - name: mol2vec_actor_seed0_workers8
+    set:
+      - training.seed=0
+      - training.iterations=500
+      - training.num_workers=8
+      - output.checkpoint=null
+      - output.checkpoint_every=100
+      - output.logger=local
+      - profiling.trace=false
+  - name: actor_value_seed0_workers8
+    config: ../ablations/actor_value.yaml
+    set:
+      - training.seed=0
+      - training.iterations=500
+      - training.num_workers=8
+      - output.checkpoint=null
+      - output.checkpoint_every=100
+      - output.logger=local
+      - profiling.trace=false
+  - name: auxiliary_only_seed0_workers8
+    config: ../ablations/auxiliary_only.yaml
+    set:
+      - training.seed=0
+      - training.iterations=500
+      - training.num_workers=8
+      - output.checkpoint=null
+      - output.checkpoint_every=100
+      - output.logger=local
+      - profiling.trace=false
+  - name: mpnn_frozen_seed0_workers8
+    config: ../ablations/mpnn_frozen.yaml
+    set:
+      - training.seed=0
+      - training.iterations=500
+      - training.num_workers=8
+      - output.checkpoint=null
+      - output.checkpoint_every=100
+      - output.logger=local
+      - profiling.trace=false
+  - name: mpnn_trainable_seed0_workers8
+    config: ../ablations/mpnn_trainable.yaml
+    set:
+      - training.seed=0
+      - training.iterations=500
+      - training.num_workers=8
+      - output.checkpoint=null
+      - output.checkpoint_every=100
+      - output.logger=local
+      - profiling.trace=false
