@@ -293,6 +293,24 @@ def test_trainable_mol2vec_rejected():
         E2EPolicyNetV2(trainable=True)
 
 
+def test_kl_diagnostics_are_exact_cumulative_counts_outside_weight_state():
+    model = MoldrPointerModelV2(
+        gym.spaces.Box(-1, 1, (8,)), gym.spaces.Discrete(4), 4,
+        {"custom_model_config": {"obs_dim": 8, "hidden": 16}}, "kl_reporting",
+    )
+    weights = set(model.state_dict())
+    assert model.kl_diagnostics() == {
+        "finite_logit_underflow_terms": 0, "mask_mismatch_rows": 0,
+    }
+    model._record_kl_diagnostics(torch.tensor(2), torch.tensor(0))
+    model._record_kl_diagnostics(torch.tensor(3), torch.tensor(1))
+    assert model.kl_diagnostics() == {
+        "finite_logit_underflow_terms": 5, "mask_mismatch_rows": 1,
+    }
+    assert set(model.state_dict()) == weights
+    assert model.metrics() == {}
+
+
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA hardware unavailable")
 def test_mpnn_cpu_cuda_numerical_agreement_and_update():
     cpu = _graph_net(True, candidate_value=True)

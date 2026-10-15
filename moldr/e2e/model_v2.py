@@ -266,6 +266,7 @@ class MoldrPointerModelV2(TorchModelV2, nn.Module):
         self.net = E2EPolicyNetV2(**(model_config or {}).get("custom_model_config", {}))
         self._value = None
         self._auxiliary_loss = None
+        self._kl_counts = None
 
     def forward(self, input_dict, state, seq_lens):
         logits, self._value = self.net(input_dict["obs"])
@@ -295,9 +296,33 @@ class MoldrPointerModelV2(TorchModelV2, nn.Module):
         # its tensor loss statistics; exporting a CUDA tensor breaks training.
         return {} if self._auxiliary_loss is None else {"candidate_value_loss": self._auxiliary_loss.item()}
 
+    def _record_kl_diagnostics(self, underflow_terms, mask_mismatch_rows):
+        """Accumulate device counters without synchronizing each PPO minibatch."""
+        values = (underflow_terms.detach(), mask_mismatch_rows.detach())
+        if self._kl_counts is None:
+            self._kl_counts = [value.clone() for value in values]
+        else:
+            for total, value in zip(self._kl_counts, values, strict=True):
+                total.add_(value)
+
+    def kl_diagnostics(self):
+        """Exact cumulative counts, read once after each completed train call.
+
+        Counts include repeated KL evaluations across PPO epochs; they are not
+        counts of distinct samples. They are deliberately excluded from model
+        metrics, which RLlib averages across minibatches.
+        """
+        names = ("finite_logit_underflow_terms", "mask_mismatch_rows")
+        values = self._kl_counts if self._kl_counts is not None else (0, 0)
+        return {name: int(value.item()) if torch.is_tensor(value) else value
+                for name, value in zip(names, values, strict=True)}
+
 
 def register_pointer_model_v2():
     if not _HAS_RAY:
         raise RuntimeError("Ray RLlib is not available; cannot register model.")
     ModelCatalog.register_custom_model(MODEL_NAME, MoldrPointerModelV2)
+    from .action_dist import register_stable_action_dist
+
+    register_stable_action_dist()
     return MODEL_NAME

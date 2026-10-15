@@ -163,13 +163,14 @@ def make_ppo_config(config: ExperimentConfig):
         register_env(name, env_creator)
         model = {"fcnet_hiddens": [config.training.hidden, 128, 128], "fcnet_activation": "relu", "max_seq_len": 100}
     else:
+        from moldr.e2e.action_dist import ACTION_DIST_NAME
         from moldr.e2e.model_v2 import MODEL_NAME_V2, register_pointer_model_v2
 
         name = ENV_NAME_V2
         register_env(name, e2e_v2_env_creator)
         register_pointer_model_v2()
         representation = config.representation
-        model = {"custom_model": MODEL_NAME_V2, "custom_model_config": {
+        model = {"custom_model": MODEL_NAME_V2, "custom_action_dist": ACTION_DIST_NAME, "custom_model_config": {
             "representation": representation.name, "trainable": representation.trainable,
             "obs_dim": representation.obs_dim, "hidden": config.training.hidden,
             "layers": representation.layers, "graph_hidden": representation.hidden,

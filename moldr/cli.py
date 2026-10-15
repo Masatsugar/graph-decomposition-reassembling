@@ -168,7 +168,15 @@ def run_training(config, *, profile=False):
             if profile and result["num_env_steps_sampled_this_iter"] != config.training.train_batch_size:
                 raise RuntimeError("Profiling requires an exact common train batch; configure a fragment length that divides it")
             stats = result["info"]["learner"]["default_policy"]["learner_stats"]
+            diagnostics = getattr(policy.model, "kl_diagnostics", None)
+            kl_diagnostics = diagnostics() if callable(diagnostics) else None
             if not all(np.isfinite(stats[key]) for key in ("total_loss", "policy_loss", "vf_loss", "entropy", "kl")):
+                write_json(directory / "numerical_failure.json", {
+                    "iteration": index + 1,
+                    "learner_stats": {key: repr(value) if isinstance(value, (float, np.floating)) and not np.isfinite(value) else value
+                                      for key, value in stats.items()},
+                    "kl_diagnostics": kl_diagnostics,
+                })
                 raise RuntimeError(f"Nonfinite learner statistics: {stats}")
             # Explained variance is undefined for constant return targets.
             # Preserve that as JSON null after verifying the actual losses.
@@ -180,6 +188,7 @@ def run_training(config, *, profile=False):
             record = {"iteration": index + 1, "measured": measuring, "seconds": elapsed,
                       "sampled_steps": result["num_env_steps_sampled_this_iter"],
                       "learner_stats": stats, "timers": result.get("timers", {}),
+                      "kl_diagnostics": kl_diagnostics,
                       "chemistry": metric_delta(before, after, elapsed),
                       "peak_gpu_memory_mib": torch.cuda.max_memory_allocated() / 2**20 if config.training.num_gpus else None}
             records.append(record)

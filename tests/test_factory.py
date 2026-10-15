@@ -39,9 +39,12 @@ def config(tmp_path):
 
 
 def test_new_factory_default_is_versioned_e2e_old_rllib_stack(config):
+    from moldr.e2e.action_dist import ACTION_DIST_NAME
+
     ppo = make_ppo_config(config)
     assert ppo.env == "moldr_e2e_v2"
     assert ppo.model["custom_model"] == "moldr_pointer_v2"
+    assert ppo.model["custom_action_dist"] == ACTION_DIST_NAME
     assert not ppo.enable_rl_module_and_learner
     assert not ppo.enable_env_runner_and_connector_v2
     assert ppo._disable_preprocessor_api
@@ -60,6 +63,7 @@ def test_explicit_legacy_factory_keeps_original_network_and_reward(config):
     ppo = make_ppo_config(config)
     assert ppo.env == "moldr_env"
     assert ppo.model["custom_model"] is None
+    assert ppo.model["custom_action_dist"] is None
     assert ppo.model["fcnet_hiddens"] == [256, 128, 128]
     assert ppo.model["fcnet_activation"] == "relu"
     assert ppo.env_config["REWARD_MODE"] == "sparse"
@@ -97,8 +101,48 @@ def test_old_python_config_names_and_api_generations_unchanged():
     assert v2.enable_rl_module_and_learner
     assert old_e2e.env == "moldr_e2e"
     assert old_e2e.model["custom_model"] == "moldr_pointer"
+    assert all(ppo.model["custom_action_dist"] is None for ppo in (v1, v2, old_e2e))
     assert "context" not in old_e2e.model["custom_model_config"]
     assert "SCORING" not in v1.env_config
+
+
+@pytest.mark.parametrize("representation", ["mol2vec", "mpnn"])
+@pytest.mark.parametrize("max_attach", [1, 8])
+def test_v2_factory_resolves_actual_registered_distribution_and_action_width(
+    config, representation, max_attach
+):
+    import torch
+    from ray.rllib.models import ModelCatalog
+
+    from moldr.e2e.action_dist import ACTION_DIST_NAME, StableMaskedTorchCategorical
+
+    config.representation.name = representation
+    config.environment.max_attach = max_attach
+    ppo = make_ppo_config(config)
+    actions = max(len(config.fragments.smiles), max_attach)
+    space = gym.spaces.Discrete(actions)
+    distribution, width = ModelCatalog.get_action_dist(space, ppo.model, framework="torch")
+    assert ppo.model["custom_action_dist"] == ACTION_DIST_NAME
+    assert distribution is StableMaskedTorchCategorical
+    assert width == actions
+    assert distribution.required_model_output_shape(space, ppo.model) == actions
+    actual = distribution(torch.zeros(2, width), model=None)
+    assert actual.dist.probs.shape == (2, actions)
+    assert actual.deterministic_sample().shape == (2,)
+
+
+def test_v2_registration_leaves_default_legacy_distribution_unchanged(config):
+    from ray.rllib.models import ModelCatalog
+    from ray.rllib.models.torch.torch_action_dist import TorchCategorical
+
+    make_ppo_config(config)
+    config.environment.mode = "legacy"
+    legacy = make_ppo_config(config)
+    distribution, width = ModelCatalog.get_action_dist(
+        gym.spaces.Discrete(2), legacy.model, framework="torch"
+    )
+    assert legacy.model["custom_action_dist"] is None
+    assert distribution is TorchCategorical and width == 2
 
 
 @pytest.mark.parametrize("mode,cls", [("e2e", MolEnvE2EV2), ("legacy", MolEnvValueMax)])
