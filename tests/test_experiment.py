@@ -92,3 +92,33 @@ def test_yaml_roundtrip(tmp_path):
     path = tmp_path / "config.yaml"
     path.write_text(yaml.safe_dump(config.to_dict()))
     assert load_config(path) == config
+
+
+def test_object_store_memory_yaml_and_override_precedence(tmp_path):
+    assert load_config().training.object_store_memory_mib is None
+    path = tmp_path / "object_store.yaml"
+    path.write_text("training:\n  object_store_memory_mib: 4096\n")
+    assert load_config(path).training.object_store_memory_mib == 4096
+    assert load_config(path, ["training.object_store_memory_mib=16384"]).training.object_store_memory_mib == 16384
+    assert load_config(path, ["training.object_store_memory_mib=null"]).training.object_store_memory_mib is None
+    assert load_config("configs/short.yaml").training.object_store_memory_mib == 16384
+
+
+@pytest.mark.parametrize("value", [True, False, 0, -1, 1.0, 16384.0, "16384"])
+def test_object_store_memory_rejects_nonpositive_or_noninteger_values(tmp_path, value):
+    with pytest.raises(ValueError, match="training.object_store_memory_mib"):
+        config_from_dict({"training": {"object_store_memory_mib": value}})
+    config = ExperimentConfig()
+    config.training.object_store_memory_mib = value
+    with pytest.raises(ValueError, match="training.object_store_memory_mib"):
+        config.validate()
+    path = tmp_path / "invalid_object_store.yaml"
+    path.write_text(yaml.safe_dump({"training": {"object_store_memory_mib": value}}))
+    with pytest.raises(ValueError, match="training.object_store_memory_mib"):
+        load_config(path)
+
+
+@pytest.mark.parametrize("value", ["true", "false", "0", "-1", "1.0", '"16384"'])
+def test_object_store_memory_rejects_invalid_set_overrides(value):
+    with pytest.raises(ValueError, match="training.object_store_memory_mib"):
+        load_config(overrides=[f"training.object_store_memory_mib={value}"])

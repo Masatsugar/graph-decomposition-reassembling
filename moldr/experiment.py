@@ -91,6 +91,7 @@ class TrainingConfig:
     num_workers: int = 8
     num_cpus: int | None = None
     num_gpus: float = 0.0
+    object_store_memory_mib: int | None = None
     train_batch_size: int = 4000
     minibatch_size: int = 128
     num_epochs: int = 30
@@ -187,7 +188,7 @@ class ExperimentConfig:
                     "fragments.pool_size", "representation.obs_dim", "representation.layers",
                     "representation.hidden", "representation.output", "representation.max_atoms",
                     "representation.max_bonds", "representation.atom_chunk_size", "selection.temperature",
-                    "training.num_cpus", "training.train_batch_size", "training.minibatch_size",
+                    "training.num_cpus", "training.object_store_memory_mib", "training.train_batch_size", "training.minibatch_size",
                     "training.num_epochs", "training.hidden", "training.lr", "training.sample_timeout_s",
                     "training.rollout_fragment_length", "training.torch_num_threads", "evaluation.episodes",
                     "profiling.measured_iterations", "profiling.time_budget_seconds", "profiling.max_events",

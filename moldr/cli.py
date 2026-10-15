@@ -90,12 +90,15 @@ def _init_ray(config):
     RDLogger.DisableLog("rdApp.*")
     if config.training.num_gpus and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but no working CUDA device is visible")
+    ray_options = {}
+    if config.training.object_store_memory_mib is not None:
+        ray_options["object_store_memory"] = config.training.object_store_memory_mib * 2**20
     ray.init(num_cpus=config.training.num_cpus or max(2, config.training.num_workers + 2),
              num_gpus=config.training.num_gpus, include_dashboard=False, log_to_driver=False,
-             object_store_memory=512 * 2**20,
              runtime_env={"worker_process_setup_hook": _worker_setup,
                           "env_vars": {"OMP_NUM_THREADS": str(config.training.torch_num_threads),
-                                       "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}})
+                                       "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}},
+             **ray_options)
 
 
 def _worker_setup():
@@ -160,11 +163,13 @@ def run_training(config, *, profile=False):
                 measured_start = time.perf_counter()
             if config.training.num_gpus:
                 torch.cuda.synchronize()
+            wall_start = time.time()
             start = time.perf_counter()
             result = algo.train()
             if config.training.num_gpus:
                 torch.cuda.synchronize()
             elapsed = time.perf_counter() - start
+            wall_end = time.time()
             if profile and result["num_env_steps_sampled_this_iter"] != config.training.train_batch_size:
                 raise RuntimeError("Profiling requires an exact common train batch; configure a fragment length that divides it")
             stats = result["info"]["learner"]["default_policy"]["learner_stats"]
@@ -186,6 +191,7 @@ def run_training(config, *, profile=False):
                 raise RuntimeError("Nonfinite policy parameters")
             after = collect_metrics(algo)
             record = {"iteration": index + 1, "measured": measuring, "seconds": elapsed,
+                      "wall_start_unix_seconds": wall_start, "wall_end_unix_seconds": wall_end,
                       "sampled_steps": result["num_env_steps_sampled_this_iter"],
                       "learner_stats": stats, "timers": result.get("timers", {}),
                       "kl_diagnostics": kl_diagnostics,

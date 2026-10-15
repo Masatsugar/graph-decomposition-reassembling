@@ -52,6 +52,7 @@ training:
   iterations: 13
   num_workers: 8
   num_gpus: 1.0
+  object_store_memory_mib: 16384
   train_batch_size: 1024
   minibatch_size: 32
   num_epochs: 3

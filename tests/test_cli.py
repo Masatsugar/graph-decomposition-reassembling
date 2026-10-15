@@ -266,3 +266,37 @@ def test_sweep_execution_must_be_explicit_and_serial(dispatch, monkeypatch, tmp_
     cli.main(["sweep", "--sweep", str(path), "--dry-run"])
     assert len(calls) == 1 and calls[0][1:] == (Path(path), True)
     assert not dispatch
+
+
+@pytest.mark.parametrize("memory_mib", [None, 1, 16384])
+def test_ray_initialization_omits_auto_memory_or_converts_explicit_mib(monkeypatch, memory_mib):
+    import ray
+    import torch
+
+    calls = []
+    monkeypatch.setattr(ray, "init", lambda **kwargs: calls.append(kwargs))
+    monkeypatch.setattr(torch, "set_num_threads", lambda value: None)
+    config = load_config(overrides=["training.num_gpus=0"])
+    config.training.object_store_memory_mib = memory_mib
+    cli._init_ray(config)
+    assert len(calls) == 1
+    kwargs = calls[0]
+    if memory_mib is None:
+        assert "object_store_memory" not in kwargs
+    else:
+        assert kwargs["object_store_memory"] == memory_mib * 2**20
+        assert type(kwargs["object_store_memory"]) is int
+    assert kwargs["num_cpus"] == 10 and kwargs["num_gpus"] == 0
+    assert kwargs["runtime_env"]["worker_process_setup_hook"] is cli._worker_setup
+
+
+def test_saved_checkpoint_allows_object_store_resource_override(saved_run, dispatch):
+    _, _, checkpoint = saved_run
+    config = cli.main([
+        "train", "--checkpoint", str(checkpoint),
+        "--set", "training.object_store_memory_mib=16384",
+    ])
+    assert config.training.object_store_memory_mib == 16384
+    prepare_restored_config(config)
+    assert config.training.object_store_memory_mib == 16384
+    assert dispatch == [("train", config, str(checkpoint))]
