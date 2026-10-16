@@ -45,6 +45,9 @@ and old E2E registration names remain available for existing checkpoints.
 The [GPU validation](docs/experiment_validation.md) and
 [short comparison results](docs/experiment_results.md) record the measured
 behavior and its limits.
+The [five-configuration, 500-iteration comparison](docs/experiment_learning500.md)
+reports training time, checkpoint evaluations, and quality/diversity limits
+for training seed 0, with [plots and extracted data](docs/learning500/index.html).
 
 ### Decomposition
 In the decomposition step, molecules are decomposed into subgraphs using gSpan.  

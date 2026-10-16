@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-16T07:39:51.006648+00:00",
+  "scope": "Top 3 final canonical molecules by sampled frequency for each 500-iteration checkpoint; 1000 stochastic episodes per configuration",
+  "rdkit_version": "2025.03.6",
+  "layout": {
+    "columns": 3,
+    "rows": 5,
+    "panel_pixels": [
+      540,
+      400
+    ],
+    "canvas_pixels": [
+      1620,
+      2000
+    ]
+  },
+  "ordering": "Configuration order listed below; descending sample_count then ascending canonical_smiles, top 3 per configuration",
+  "configuration_order": [
+    "mol2vec_actor",
+    "actor_value",
+    "auxiliary_only",
+    "mpnn_frozen",
+    "mpnn_trainable"
+  ],
+  "qed_source": "Existing cached molecular diagnostic scalar; not recalculated for drawing",
+  "source_comparison": {
+    "path": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/comparison.json",
+    "sha256": "b6339630672fbc4f35859686bfda1d7dc13fb6833f31ec1a5d2a48df712cbe7d"
+  },
+  "selected_molecules": [
+    {
+      "configuration": "mol2vec_actor",
+      "rank": 1,
+      "canonical_smiles": "Cc1ccccc1OC1(c2ccccc2)CCN(C)CC1N",
+      "sample_count": 570,
+      "episodes": 1000,
+      "frequency": 0.57,
+      "qed_cached": 0.9462052985012878,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mol2vec_actor_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "c7cad71a55c2525f5683c7dccd835f0fda670b0f2119e2139bfd83ccc2f6eaed",
+      "legend": "Mol2Vec actor | rank 1\n570/1000 (57.0%) | QED 0.9462"
+    },
+    {
+      "configuration": "mol2vec_actor",
+      "rank": 2,
+      "canonical_smiles": "Cc1ccccc1OC1(c2ccccc2)CC(N)CN(C)C1",
+      "sample_count": 429,
+      "episodes": 1000,
+      "frequency": 0.429,
+      "qed_cached": 0.9462052985012878,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mol2vec_actor_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "c7cad71a55c2525f5683c7dccd835f0fda670b0f2119e2139bfd83ccc2f6eaed",
+      "legend": "Mol2Vec actor | rank 2\n429/1000 (42.9%) | QED 0.9462"
+    },
+    {
+      "configuration": "mol2vec_actor",
+      "rank": 3,
+      "canonical_smiles": "CN1CC(N)CC(c2ccccc2Oc2ccccc2)C1",
+      "sample_count": 1,
+      "episodes": 1000,
+      "frequency": 0.001,
+      "qed_cached": 0.9390625196244188,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mol2vec_actor_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "c7cad71a55c2525f5683c7dccd835f0fda670b0f2119e2139bfd83ccc2f6eaed",
+      "legend": "Mol2Vec actor | rank 3\n1/1000 (0.1%) | QED 0.9391"
+    },
+    {
+      "configuration": "actor_value",
+      "rank": 1,
+      "canonical_smiles": "Cc1ccccc1OC1(c2ccccc2)CC(N)CN(C)C1",
+      "sample_count": 526,
+      "episodes": 1000,
+      "frequency": 0.526,
+      "qed_cached": 0.9462052985012878,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/actor_value_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "f6d4e184a4fc1bcfa8c6666c23cea1a03af5659c0cd585f3cf0821da17a7c88f",
+      "legend": "Mol2Vec actor + value | rank 1\n526/1000 (52.6%) | QED 0.9462"
+    },
+    {
+      "configuration": "actor_value",
+      "rank": 2,
+      "canonical_smiles": "Cc1ccccc1OC1(c2ccccc2)CCN(C)CC1N",
+      "sample_count": 429,
+      "episodes": 1000,
+      "frequency": 0.429,
+      "qed_cached": 0.9462052985012878,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/actor_value_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "f6d4e184a4fc1bcfa8c6666c23cea1a03af5659c0cd585f3cf0821da17a7c88f",
+      "legend": "Mol2Vec actor + value | rank 2\n429/1000 (42.9%) | QED 0.9462"
+    },
+    {
+      "configuration": "actor_value",
+      "rank": 3,
+      "canonical_smiles": "CN1CC(N)CC(c2ccccc2OCc2ccccc2)C1",
+      "sample_count": 13,
+      "episodes": 1000,
+      "frequency": 0.013,
+      "qed_cached": 0.9423254555800192,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/actor_value_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "f6d4e184a4fc1bcfa8c6666c23cea1a03af5659c0cd585f3cf0821da17a7c88f",
+      "legend": "Mol2Vec actor + value | rank 3\n13/1000 (1.3%) | QED 0.9423"
+    },
+    {
+      "configuration": "auxiliary_only",
+      "rank": 1,
+      "canonical_smiles": "O=S(=O)(Nc1ccccc1)c1ccc2cccc(S(=O)(=O)Nc3ccccc3)c2c1",
+      "sample_count": 93,
+      "episodes": 1000,
+      "frequency": 0.093,
+      "qed_cached": 0.4654378040811922,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/auxiliary_only_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "b5b949941c6f3f1c1c922b7a46f3402848cc66c5893c20b127b5e06e0922930a",
+      "legend": "Mol2Vec auxiliary only | rank 1\n93/1000 (9.3%) | QED 0.4654"
+    },
+    {
+      "configuration": "auxiliary_only",
+      "rank": 2,
+      "canonical_smiles": "O=S(=O)(Nc1ccc2cccc(S(=O)(=O)Nc3ccccc3)c2c1)c1ccccc1",
+      "sample_count": 82,
+      "episodes": 1000,
+      "frequency": 0.082,
+      "qed_cached": 0.4654378040811922,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/auxiliary_only_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "b5b949941c6f3f1c1c922b7a46f3402848cc66c5893c20b127b5e06e0922930a",
+      "legend": "Mol2Vec auxiliary only | rank 2\n82/1000 (8.2%) | QED 0.4654"
+    },
+    {
+      "configuration": "auxiliary_only",
+      "rank": 3,
+      "canonical_smiles": "O=S(=O)(Nc1ccccc1)c1ccc2cccc(NS(=O)(=O)c3ccccc3)c2c1",
+      "sample_count": 82,
+      "episodes": 1000,
+      "frequency": 0.082,
+      "qed_cached": 0.4654378040811922,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/auxiliary_only_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "b5b949941c6f3f1c1c922b7a46f3402848cc66c5893c20b127b5e06e0922930a",
+      "legend": "Mol2Vec auxiliary only | rank 3\n82/1000 (8.2%) | QED 0.4654"
+    },
+    {
+      "configuration": "mpnn_frozen",
+      "rank": 1,
+      "canonical_smiles": "O=Cc1ccc(F)c2ccc(NC(=O)c3ccccc3)cc12",
+      "sample_count": 19,
+      "episodes": 1000,
+      "frequency": 0.019,
+      "qed_cached": 0.7406163297805209,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mpnn_frozen_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "242c6845eaba6d8d6d840adfa189618e9facd1aac1a54be52aa5ca79f6c6e01f",
+      "legend": "MPNN frozen | rank 1\n19/1000 (1.9%) | QED 0.7406"
+    },
+    {
+      "configuration": "mpnn_frozen",
+      "rank": 2,
+      "canonical_smiles": "COc1cc2c(C(=O)Nc3ccccc3)cccc2cc1F",
+      "sample_count": 14,
+      "episodes": 1000,
+      "frequency": 0.014,
+      "qed_cached": 0.7845543566540596,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mpnn_frozen_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "242c6845eaba6d8d6d840adfa189618e9facd1aac1a54be52aa5ca79f6c6e01f",
+      "legend": "MPNN frozen | rank 2\n14/1000 (1.4%) | QED 0.7846"
+    },
+    {
+      "configuration": "mpnn_frozen",
+      "rank": 3,
+      "canonical_smiles": "COc1cc2ccc(NC(=O)c3ccccc3)cc2cc1F",
+      "sample_count": 14,
+      "episodes": 1000,
+      "frequency": 0.014,
+      "qed_cached": 0.7845543566540596,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mpnn_frozen_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "242c6845eaba6d8d6d840adfa189618e9facd1aac1a54be52aa5ca79f6c6e01f",
+      "legend": "MPNN frozen | rank 3\n14/1000 (1.4%) | QED 0.7846"
+    },
+    {
+      "configuration": "mpnn_trainable",
+      "rank": 1,
+      "canonical_smiles": "COc1cccc(-c2cccc(C3CC(O)COC3C)c2)c1",
+      "sample_count": 45,
+      "episodes": 1000,
+      "frequency": 0.045,
+      "qed_cached": 0.9404102992050939,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mpnn_trainable_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "f71d0872bb1e82324778cbed0ab1d81d8ce628baf1c1311fad84a953faba53aa",
+      "legend": "MPNN trainable | rank 1\n45/1000 (4.5%) | QED 0.9404"
+    },
+    {
+      "configuration": "mpnn_trainable",
+      "rank": 2,
+      "canonical_smiles": "COc1cccc(-c2cccc(C3CCOC(C)C3O)c2)c1",
+      "sample_count": 41,
+      "episodes": 1000,
+      "frequency": 0.041,
+      "qed_cached": 0.9404102992050939,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mpnn_trainable_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "f71d0872bb1e82324778cbed0ab1d81d8ce628baf1c1311fad84a953faba53aa",
+      "legend": "MPNN trainable | rank 2\n41/1000 (4.1%) | QED 0.9404"
+    },
+    {
+      "configuration": "mpnn_trainable",
+      "rank": 3,
+      "canonical_smiles": "COc1cccc(-c2cccc(C3COC(C)C(O)C3)c2)c1",
+      "sample_count": 36,
+      "episodes": 1000,
+      "frequency": 0.036,
+      "qed_cached": 0.9404102992050939,
+      "source": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/runs/mpnn_trainable_seed0_workers8/molecular_diagnostics.json",
+      "source_sha256": "f71d0872bb1e82324778cbed0ab1d81d8ce628baf1c1311fad84a953faba53aa",
+      "legend": "MPNN trainable | rank 3\n36/1000 (3.6%) | QED 0.9404"
+    }
+  ],
+  "outputs": {
+    "png": {
+      "path": "artifacts/experiments_learning500_report/top_molecules.png",
+      "sha256": "3fe0218180fa0c124b0f3b6229433af44530e059f79750c94f97cc4dc34d2db2",
+      "bytes": 408227
+    },
+    "svg": {
+      "path": "artifacts/experiments_learning500_report/top_molecules.svg",
+      "sha256": "bbb759d18df8de9224e1cc3a6fae129e7b40f15468ccd0eaaf2a4cf8d96e5de4",
+      "bytes": 483458
+    }
+  },
+  "notes": [
+    "Frequency is within each configuration, not across configurations. The third Mol2Vec actor molecule occurred once.",
+    "Ranked examples are not a representative diversity sample or an architecture superiority claim.",
+    "Only these 15 cached canonical SMILES were parsed for drawing; no model, scoring, descriptor or evaluation computation was rerun."
+  ],
+  "visual_review": {
+    "png_inspected": true,
+    "all_15_structures_and_two_line_legends_visible": true,
+    "no_clipped_labels_or_structures_observed": true,
+    "SVG_uses_same_molecules_legends_and_grid_options": true
+  }
+}

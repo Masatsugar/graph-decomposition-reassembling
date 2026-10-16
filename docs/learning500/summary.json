@@ -1,0 +1,2970 @@
+{
+ "schema_version": 1,
+ "generated_utc": "2026-10-16T07:49:28.573204+00:00",
+ "purpose": "Compact extracted final results with local source identities; full detail remains in referenced artifacts.",
+ "training_seed_count": 1,
+ "training_seeds": [
+  0
+ ],
+ "completion": {
+  "all_required_output_execution_identity_checks_passed": true,
+  "verified_stage_count": 7,
+  "verified_checkpoint_evaluations": 35,
+  "distinct_checkpoint_directories": 30,
+  "verified_molecule_episode_records": 12050,
+  "verified_diagnostic_episode_records": 12050,
+  "finite_qed_values_verified": 12050,
+  "issues": []
+ },
+ "conditions": {
+  "training_revision": "b5a9e41d5fe7f8fabb22f8739cdeb43ec175bd2a",
+  "common_training": {
+   "num_workers": 8,
+   "train_batch_size": 1024,
+   "minibatch_size": 32,
+   "num_epochs": 3,
+   "atom_limit": 20,
+   "max_attach": 128,
+   "full_fragment_catalog": true,
+   "object_store_memory_mib": 16384
+  },
+  "iterations_per_configuration": 500,
+  "warmup_is_additional": false,
+  "fragment_catalog": {
+   "rows": 1709,
+   "aromatic_canonical_unique": 1684,
+   "maximum_fragment_atoms": 16,
+   "graph_capacity_atoms": 36,
+   "graph_capacity_bonds": 630
+  },
+  "evaluation_workers": 0,
+  "evaluation_num_gpus": 1,
+  "evaluation_num_cpus": 2,
+  "evaluation_selector": "actor",
+  "evaluation_random": false,
+  "evaluation_diagnostics": true
+ },
+ "training_500": {
+  "source": "completed_five_training_comparison",
+  "rows": [
+   {
+    "configuration": "mol2vec_actor",
+    "run": "mol2vec_actor_seed0_workers8",
+    "training_seed": 0,
+    "completed_training_episodes": 93462,
+    "representation_design": {
+     "encoder_initialization": "pretrained fixed Mol2Vec",
+     "encoder_trainable_as_configured": false,
+     "persistent_mpnn_embedding_cache_size_as_configured": null
+    },
+    "iterations": 500,
+    "total_algo_train_seconds": 2893.165138441138,
+    "mean_seconds_per_iteration": 5.786330276882276,
+    "molecule_updates": 255986,
+    "molecule_updates_per_second": 88.47956744630466,
+    "episode_weighted_training_final_qed": 0.9211813022633887,
+    "first_underflow_iteration": 429,
+    "last_kl_diagnostics": {
+     "finite_logit_underflow_terms": 13354,
+     "mask_mismatch_rows": 0
+    },
+    "largest_kl": {
+     "iteration": 452,
+     "kl": 0.4133800370133016
+    },
+    "peak_gpu_memory_mib": 8255.29833984375,
+    "audit_source": "completed_training_audit_mol2vec_actor",
+    "all_training_audit_gates_passed": true,
+    "model_weight_absolute_change": 3775.8146227784455,
+    "last50": {
+     "first_iteration": 451,
+     "last_iteration": 500,
+     "completed_training_episodes": 12680,
+     "episode_weighted_mean_final_training_qed": 0.9445699460263276,
+     "aggregate_molecule_updates_per_second": 72.42234841708927
+    }
+   },
+   {
+    "configuration": "actor_value",
+    "run": "actor_value_seed0_workers8",
+    "training_seed": 0,
+    "completed_training_episodes": 101978,
+    "representation_design": {
+     "encoder_initialization": "pretrained fixed Mol2Vec",
+     "encoder_trainable_as_configured": false,
+     "persistent_mpnn_embedding_cache_size_as_configured": null
+    },
+    "iterations": 500,
+    "total_algo_train_seconds": 3417.943072281778,
+    "mean_seconds_per_iteration": 6.835886144563556,
+    "molecule_updates": 255986,
+    "molecule_updates_per_second": 74.89475236610855,
+    "episode_weighted_training_final_qed": 0.9214249344986358,
+    "first_underflow_iteration": null,
+    "last_kl_diagnostics": {
+     "finite_logit_underflow_terms": 0,
+     "mask_mismatch_rows": 0
+    },
+    "largest_kl": {
+     "iteration": 395,
+     "kl": 0.22494772253356032
+    },
+    "peak_gpu_memory_mib": 12467.4873046875,
+    "audit_source": "completed_training_audit_actor_value",
+    "all_training_audit_gates_passed": true,
+    "model_weight_absolute_change": 4101.716286201961,
+    "last50": {
+     "first_iteration": 451,
+     "last_iteration": 500,
+     "completed_training_episodes": 12680,
+     "episode_weighted_mean_final_training_qed": 0.9406537510794731,
+     "aggregate_molecule_updates_per_second": 71.50664607302859
+    }
+   },
+   {
+    "configuration": "auxiliary_only",
+    "run": "auxiliary_only_seed0_workers8",
+    "training_seed": 0,
+    "completed_training_episodes": 110938,
+    "representation_design": {
+     "encoder_initialization": "pretrained fixed Mol2Vec",
+     "encoder_trainable_as_configured": false,
+     "persistent_mpnn_embedding_cache_size_as_configured": null
+    },
+    "iterations": 500,
+    "total_algo_train_seconds": 3636.1915132803842,
+    "mean_seconds_per_iteration": 7.272383026560768,
+    "molecule_updates": 255987,
+    "molecule_updates_per_second": 70.39975729140343,
+    "episode_weighted_training_final_qed": 0.8729166719888842,
+    "first_underflow_iteration": 318,
+    "last_kl_diagnostics": {
+     "finite_logit_underflow_terms": 122607,
+     "mask_mismatch_rows": 0
+    },
+    "largest_kl": {
+     "iteration": 376,
+     "kl": 2.0486249900116333
+    },
+    "peak_gpu_memory_mib": 12469.49755859375,
+    "audit_source": "completed_training_audit_auxiliary_only",
+    "all_training_audit_gates_passed": true,
+    "model_weight_absolute_change": 3839.3331812964752,
+    "last50": {
+     "first_iteration": 451,
+     "last_iteration": 500,
+     "completed_training_episodes": 12800,
+     "episode_weighted_mean_final_training_qed": 0.5248287089622272,
+     "aggregate_molecule_updates_per_second": 67.57692648181879
+    }
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "run": "mpnn_frozen_seed0_workers8",
+    "training_seed": 0,
+    "completed_training_episodes": 118364,
+    "representation_design": {
+     "encoder_initialization": "randomly initialized MPNN",
+     "encoder_trainable_as_configured": false,
+     "persistent_mpnn_embedding_cache_size_as_configured": 0
+    },
+    "iterations": 500,
+    "total_algo_train_seconds": 21587.32313166,
+    "mean_seconds_per_iteration": 43.17464626332,
+    "molecule_updates": 255887,
+    "molecule_updates_per_second": 11.853577140591172,
+    "episode_weighted_training_final_qed": 0.8687494300430311,
+    "first_underflow_iteration": 279,
+    "last_kl_diagnostics": {
+     "finite_logit_underflow_terms": 175181,
+     "mask_mismatch_rows": 0
+    },
+    "largest_kl": {
+     "iteration": 479,
+     "kl": 2.545082109608084
+    },
+    "peak_gpu_memory_mib": 8761.95068359375,
+    "audit_source": "completed_training_audit_mpnn_frozen",
+    "all_training_audit_gates_passed": true,
+    "model_weight_absolute_change": 2924.749337883666,
+    "last50": {
+     "first_iteration": 451,
+     "last_iteration": 500,
+     "completed_training_episodes": 12530,
+     "episode_weighted_mean_final_training_qed": 0.8190388468287433,
+     "aggregate_molecule_updates_per_second": 11.587425999570765
+    }
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "run": "mpnn_trainable_seed0_workers8",
+    "training_seed": 0,
+    "completed_training_episodes": 118116,
+    "representation_design": {
+     "encoder_initialization": "randomly initialized MPNN",
+     "encoder_trainable_as_configured": true,
+     "persistent_mpnn_embedding_cache_size_as_configured": 0
+    },
+    "iterations": 500,
+    "total_algo_train_seconds": 23478.125460800715,
+    "mean_seconds_per_iteration": 46.95625092160143,
+    "molecule_updates": 255985,
+    "molecule_updates_per_second": 10.903127697626235,
+    "episode_weighted_training_final_qed": 0.9060657804438467,
+    "first_underflow_iteration": 221,
+    "last_kl_diagnostics": {
+     "finite_logit_underflow_terms": 25720,
+     "mask_mismatch_rows": 0
+    },
+    "largest_kl": {
+     "iteration": 465,
+     "kl": 2.789063676118533
+    },
+    "peak_gpu_memory_mib": 13451.7353515625,
+    "audit_source": "completed_training_audit_mpnn_trainable",
+    "all_training_audit_gates_passed": true,
+    "model_weight_absolute_change": 5904.756135744974,
+    "last50": {
+     "first_iteration": 451,
+     "last_iteration": 500,
+     "completed_training_episodes": 12741,
+     "episode_weighted_mean_final_training_qed": 0.9025298628747014,
+     "aggregate_molecule_updates_per_second": 10.994433179329407
+    }
+   }
+  ]
+ },
+ "checkpoint_evaluations": {
+  "rows": [
+   {
+    "configuration": "mol2vec_actor",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.9461981557224113,
+    "validity": 1.0,
+    "unique_fraction": 0.003,
+    "fingerprint_diversity": 0.23169136737110596,
+    "seconds": 44.66078190691769,
+    "episodes_per_second": 22.3910096801307,
+    "score_requests": 3000,
+    "score_computations": 3000,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_stochastic"
+   },
+   {
+    "configuration": "actor_value",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.9457705352832073,
+    "validity": 1.0,
+    "unique_fraction": 0.018,
+    "fingerprint_diversity": 0.2660067979275379,
+    "seconds": 45.73559124954045,
+    "episodes_per_second": 21.864809717750134,
+    "score_requests": 3004,
+    "score_computations": 3004,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_stochastic"
+   },
+   {
+    "configuration": "auxiliary_only",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.46543780408119234,
+    "validity": 1.0,
+    "unique_fraction": 0.02,
+    "fingerprint_diversity": 0.39331574958743354,
+    "seconds": 54.106248918920755,
+    "episodes_per_second": 18.482153540130255,
+    "score_requests": 3000,
+    "score_computations": 3000,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_stochastic"
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.7752380132353458,
+    "validity": 1.0,
+    "unique_fraction": 0.325,
+    "fingerprint_diversity": 0.7217484521542358,
+    "seconds": 234.78503690380603,
+    "episodes_per_second": 4.259215208887911,
+    "score_requests": 3008,
+    "score_computations": 3008,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_stochastic"
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.9402483617661294,
+    "validity": 1.0,
+    "unique_fraction": 0.074,
+    "fingerprint_diversity": 0.5041931051112709,
+    "seconds": 243.27335085906088,
+    "episodes_per_second": 4.1106023182101215,
+    "score_requests": 3000,
+    "score_computations": 3000,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_stochastic"
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": false,
+    "episodes": 10,
+    "mean_score": 0.9462052985012879,
+    "validity": 1.0,
+    "unique_fraction": 0.1,
+    "fingerprint_diversity": 0.0,
+    "seconds": 0.44483889266848564,
+    "episodes_per_second": 22.48004876554816,
+    "score_requests": 30,
+    "score_computations": 30,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_greedy"
+   },
+   {
+    "configuration": "actor_value",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": false,
+    "episodes": 10,
+    "mean_score": 0.9462052985012879,
+    "validity": 1.0,
+    "unique_fraction": 0.1,
+    "fingerprint_diversity": 0.0,
+    "seconds": 0.45120234973728657,
+    "episodes_per_second": 22.163005147961925,
+    "score_requests": 30,
+    "score_computations": 30,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_greedy"
+   },
+   {
+    "configuration": "auxiliary_only",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": false,
+    "episodes": 10,
+    "mean_score": 0.46543780408119223,
+    "validity": 1.0,
+    "unique_fraction": 0.1,
+    "fingerprint_diversity": 0.0,
+    "seconds": 0.5192113574594259,
+    "episodes_per_second": 19.25997930579062,
+    "score_requests": 30,
+    "score_computations": 30,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_greedy"
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": false,
+    "episodes": 10,
+    "mean_score": 0.7745121775743361,
+    "validity": 1.0,
+    "unique_fraction": 0.1,
+    "fingerprint_diversity": 0.0,
+    "seconds": 2.393549616448581,
+    "episodes_per_second": 4.17789542831264,
+    "score_requests": 30,
+    "score_computations": 30,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_greedy"
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "explore": false,
+    "episodes": 10,
+    "mean_score": 0.9404102992050939,
+    "validity": 1.0,
+    "unique_fraction": 0.1,
+    "fingerprint_diversity": 0.0,
+    "seconds": 2.468303743749857,
+    "episodes_per_second": 4.051365244379511,
+    "score_requests": 30,
+    "score_computations": 30,
+    "score_hits": 0,
+    "source": "evaluation_iteration_500_greedy"
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "training_seed": 0,
+    "checkpoint_iteration": 100,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9158234924141111,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.838093530090544,
+    "seconds": 4.965793265029788,
+    "episodes_per_second": 20.137769468620867,
+    "score_requests": 402,
+    "score_computations": 402,
+    "score_hits": 0,
+    "source": "evaluation_iteration_100_stochastic"
+   },
+   {
+    "configuration": "actor_value",
+    "training_seed": 0,
+    "checkpoint_iteration": 100,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9032381156000546,
+    "validity": 1.0,
+    "unique_fraction": 0.99,
+    "fingerprint_diversity": 0.8422060612086865,
+    "seconds": 5.708760133013129,
+    "episodes_per_second": 17.516938471755196,
+    "score_requests": 396,
+    "score_computations": 396,
+    "score_hits": 0,
+    "source": "evaluation_iteration_100_stochastic"
+   },
+   {
+    "configuration": "auxiliary_only",
+    "training_seed": 0,
+    "checkpoint_iteration": 100,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.892005141900311,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.851809805521939,
+    "seconds": 5.801617552526295,
+    "episodes_per_second": 17.236572230869534,
+    "score_requests": 406,
+    "score_computations": 406,
+    "score_hits": 0,
+    "source": "evaluation_iteration_100_stochastic"
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "training_seed": 0,
+    "checkpoint_iteration": 100,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.8747953704666332,
+    "validity": 1.0,
+    "unique_fraction": 0.91,
+    "fingerprint_diversity": 0.7549875861994688,
+    "seconds": 25.983460263349116,
+    "episodes_per_second": 3.8486021102068024,
+    "score_requests": 305,
+    "score_computations": 305,
+    "score_hits": 0,
+    "source": "evaluation_iteration_100_stochastic"
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "training_seed": 0,
+    "checkpoint_iteration": 100,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9229927359450778,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.7249710158076443,
+    "seconds": 27.88627581857145,
+    "episodes_per_second": 3.5859933628499405,
+    "score_requests": 315,
+    "score_computations": 315,
+    "score_hits": 0,
+    "source": "evaluation_iteration_100_stochastic"
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "training_seed": 0,
+    "checkpoint_iteration": 200,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9315872922563985,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.8249498630205516,
+    "seconds": 4.815138354897499,
+    "episodes_per_second": 20.767835237442252,
+    "score_requests": 401,
+    "score_computations": 401,
+    "score_hits": 0,
+    "source": "evaluation_iteration_200_stochastic"
+   },
+   {
+    "configuration": "actor_value",
+    "training_seed": 0,
+    "checkpoint_iteration": 200,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9323826356698031,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.8136979304405931,
+    "seconds": 4.936616766266525,
+    "episodes_per_second": 20.256788147569377,
+    "score_requests": 401,
+    "score_computations": 401,
+    "score_hits": 0,
+    "source": "evaluation_iteration_200_stochastic"
+   },
+   {
+    "configuration": "auxiliary_only",
+    "training_seed": 0,
+    "checkpoint_iteration": 200,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9444922279895691,
+    "validity": 1.0,
+    "unique_fraction": 0.15,
+    "fingerprint_diversity": 0.3496259496785735,
+    "seconds": 4.549080970697105,
+    "episodes_per_second": 21.98246209380527,
+    "score_requests": 301,
+    "score_computations": 301,
+    "score_hits": 0,
+    "source": "evaluation_iteration_200_stochastic"
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "training_seed": 0,
+    "checkpoint_iteration": 200,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.8678725527539026,
+    "validity": 1.0,
+    "unique_fraction": 0.97,
+    "fingerprint_diversity": 0.7705481937454467,
+    "seconds": 30.248399480246007,
+    "episodes_per_second": 3.305960041466191,
+    "score_requests": 355,
+    "score_computations": 355,
+    "score_hits": 0,
+    "source": "evaluation_iteration_200_stochastic"
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "training_seed": 0,
+    "checkpoint_iteration": 200,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9285586106874504,
+    "validity": 1.0,
+    "unique_fraction": 0.81,
+    "fingerprint_diversity": 0.5994874067755791,
+    "seconds": 24.458934233523905,
+    "episodes_per_second": 4.088485583437156,
+    "score_requests": 302,
+    "score_computations": 302,
+    "score_hits": 0,
+    "source": "evaluation_iteration_200_stochastic"
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "training_seed": 0,
+    "checkpoint_iteration": 300,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9363080043233315,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.828508901093792,
+    "seconds": 4.582231866195798,
+    "episodes_per_second": 21.823426426262607,
+    "score_requests": 401,
+    "score_computations": 401,
+    "score_hits": 0,
+    "source": "evaluation_iteration_300_stochastic"
+   },
+   {
+    "configuration": "actor_value",
+    "training_seed": 0,
+    "checkpoint_iteration": 300,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9366573146687852,
+    "validity": 1.0,
+    "unique_fraction": 0.64,
+    "fingerprint_diversity": 0.7216637766647338,
+    "seconds": 4.3595336601138115,
+    "episodes_per_second": 22.93823325988252,
+    "score_requests": 323,
+    "score_computations": 323,
+    "score_hits": 0,
+    "source": "evaluation_iteration_300_stochastic"
+   },
+   {
+    "configuration": "auxiliary_only",
+    "training_seed": 0,
+    "checkpoint_iteration": 300,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9462052985012878,
+    "validity": 1.0,
+    "unique_fraction": 0.02,
+    "fingerprint_diversity": 0.2376708259061201,
+    "seconds": 4.461034629493952,
+    "episodes_per_second": 22.41632453127667,
+    "score_requests": 300,
+    "score_computations": 300,
+    "score_hits": 0,
+    "source": "evaluation_iteration_300_stochastic"
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "training_seed": 0,
+    "checkpoint_iteration": 300,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.7560396233258448,
+    "validity": 1.0,
+    "unique_fraction": 0.95,
+    "fingerprint_diversity": 0.7608512958085176,
+    "seconds": 35.9287282275036,
+    "episodes_per_second": 2.7832880520232153,
+    "score_requests": 415,
+    "score_computations": 415,
+    "score_hits": 0,
+    "source": "evaluation_iteration_300_stochastic"
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "training_seed": 0,
+    "checkpoint_iteration": 300,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9291227117191204,
+    "validity": 1.0,
+    "unique_fraction": 0.81,
+    "fingerprint_diversity": 0.6202909730276633,
+    "seconds": 24.941301598213613,
+    "episodes_per_second": 4.009413847397698,
+    "score_requests": 305,
+    "score_computations": 305,
+    "score_hits": 0,
+    "source": "evaluation_iteration_300_stochastic"
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "training_seed": 0,
+    "checkpoint_iteration": 400,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9411117764074696,
+    "validity": 1.0,
+    "unique_fraction": 0.58,
+    "fingerprint_diversity": 0.6690597111965695,
+    "seconds": 4.443776972591877,
+    "episodes_per_second": 22.50337958380346,
+    "score_requests": 313,
+    "score_computations": 313,
+    "score_hits": 0,
+    "source": "evaluation_iteration_400_stochastic"
+   },
+   {
+    "configuration": "actor_value",
+    "training_seed": 0,
+    "checkpoint_iteration": 400,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9261557315924515,
+    "validity": 1.0,
+    "unique_fraction": 0.13,
+    "fingerprint_diversity": 0.3851417569704647,
+    "seconds": 4.262108338065445,
+    "episodes_per_second": 23.462566426781542,
+    "score_requests": 300,
+    "score_computations": 300,
+    "score_hits": 0,
+    "source": "evaluation_iteration_400_stochastic"
+   },
+   {
+    "configuration": "auxiliary_only",
+    "training_seed": 0,
+    "checkpoint_iteration": 400,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9462052985012878,
+    "validity": 1.0,
+    "unique_fraction": 0.02,
+    "fingerprint_diversity": 0.23757575757575766,
+    "seconds": 4.433927247300744,
+    "episodes_per_second": 22.553369602732502,
+    "score_requests": 300,
+    "score_computations": 300,
+    "score_hits": 0,
+    "source": "evaluation_iteration_400_stochastic"
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "training_seed": 0,
+    "checkpoint_iteration": 400,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9293200849979145,
+    "validity": 1.0,
+    "unique_fraction": 0.07,
+    "fingerprint_diversity": 0.13168669226310759,
+    "seconds": 23.785699256695807,
+    "episodes_per_second": 4.204206860634944,
+    "score_requests": 300,
+    "score_computations": 300,
+    "score_hits": 0,
+    "source": "evaluation_iteration_400_stochastic"
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "training_seed": 0,
+    "checkpoint_iteration": 400,
+    "explore": true,
+    "episodes": 100,
+    "mean_score": 0.9028039839309683,
+    "validity": 1.0,
+    "unique_fraction": 0.91,
+    "fingerprint_diversity": 0.6605311175878839,
+    "seconds": 26.451439196243882,
+    "episodes_per_second": 3.780512631395877,
+    "score_requests": 308,
+    "score_computations": 308,
+    "score_hits": 0,
+    "source": "evaluation_iteration_400_stochastic"
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "training_seed": 0,
+    "checkpoint_iteration": 13,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.801629991134439,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.8822756158666902,
+    "seconds": 63.16205277014524,
+    "episodes_per_second": 15.832291006106585,
+    "score_requests": 4310,
+    "score_computations": 4310,
+    "score_hits": 0,
+    "source": "evaluation_iteration_13_stochastic"
+   },
+   {
+    "configuration": "actor_value",
+    "training_seed": 0,
+    "checkpoint_iteration": 13,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.7910670510109488,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.8792275936673168,
+    "seconds": 62.09741193987429,
+    "episodes_per_second": 16.103730715351684,
+    "score_requests": 4138,
+    "score_computations": 4138,
+    "score_hits": 0,
+    "source": "evaluation_iteration_13_stochastic"
+   },
+   {
+    "configuration": "auxiliary_only",
+    "training_seed": 0,
+    "checkpoint_iteration": 13,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.8008069682991634,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.8771925791198482,
+    "seconds": 62.89690157305449,
+    "episodes_per_second": 15.899034371963523,
+    "score_requests": 4172,
+    "score_computations": 4172,
+    "score_hits": 0,
+    "source": "evaluation_iteration_13_stochastic"
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "training_seed": 0,
+    "checkpoint_iteration": 13,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.6400188646071919,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.878473846709281,
+    "seconds": 380.26531952712685,
+    "episodes_per_second": 2.6297428365109257,
+    "score_requests": 4107,
+    "score_computations": 4107,
+    "score_hits": 0,
+    "source": "evaluation_iteration_13_stochastic"
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "training_seed": 0,
+    "checkpoint_iteration": 13,
+    "explore": true,
+    "episodes": 1000,
+    "mean_score": 0.6579845881983724,
+    "validity": 1.0,
+    "unique_fraction": 1.0,
+    "fingerprint_diversity": 0.8776152575815317,
+    "seconds": 373.1050868984312,
+    "episodes_per_second": 2.6802100403209614,
+    "score_requests": 4070,
+    "score_computations": 4070,
+    "score_hits": 0,
+    "source": "evaluation_iteration_13_stochastic"
+   }
+  ],
+  "timing_scope": "Saved episode seconds and episodes/s, including diagnostic capture; startup/restore/output/offline analysis excluded."
+ },
+ "matched_checkpoint100": {
+  "source": "matched_checkpoint100_comparison",
+  "episodes_per_checkpoint": 100,
+  "evaluation_seed_first": 0,
+  "evaluation_seed_last": 99,
+  "explore": true,
+  "rows": [
+   {
+    "configuration": "mol2vec_actor",
+    "checkpoint_iteration": 100,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9158234924141112,
+    "canonical_unique_molecules": 100,
+    "canonical_unique_fraction_of_all100": 1.0,
+    "canonical_top1_fraction_of_all100": 0.01,
+    "canonical_top5_fraction_of_all100": 0.05,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 77,
+      "unique_canonical_qualifying_molecules": 77,
+      "unique_qualifying_yield_per100": 0.77
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 26,
+      "unique_canonical_qualifying_molecules": 26,
+      "unique_qualifying_yield_per100": 0.26
+     }
+    }
+   },
+   {
+    "configuration": "actor_value",
+    "checkpoint_iteration": 100,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9032381156000546,
+    "canonical_unique_molecules": 99,
+    "canonical_unique_fraction_of_all100": 0.99,
+    "canonical_top1_fraction_of_all100": 0.02,
+    "canonical_top5_fraction_of_all100": 0.06,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 68,
+      "unique_canonical_qualifying_molecules": 67,
+      "unique_qualifying_yield_per100": 0.67
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 14,
+      "unique_canonical_qualifying_molecules": 14,
+      "unique_qualifying_yield_per100": 0.14
+     }
+    }
+   },
+   {
+    "configuration": "auxiliary_only",
+    "checkpoint_iteration": 100,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.892005141900311,
+    "canonical_unique_molecules": 100,
+    "canonical_unique_fraction_of_all100": 1.0,
+    "canonical_top1_fraction_of_all100": 0.01,
+    "canonical_top5_fraction_of_all100": 0.05,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 56,
+      "unique_canonical_qualifying_molecules": 56,
+      "unique_qualifying_yield_per100": 0.56
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 12,
+      "unique_canonical_qualifying_molecules": 12,
+      "unique_qualifying_yield_per100": 0.12
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "checkpoint_iteration": 100,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.8747953704666336,
+    "canonical_unique_molecules": 91,
+    "canonical_unique_fraction_of_all100": 0.91,
+    "canonical_top1_fraction_of_all100": 0.04,
+    "canonical_top5_fraction_of_all100": 0.13,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 52,
+      "unique_canonical_qualifying_molecules": 44,
+      "unique_qualifying_yield_per100": 0.44
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 3,
+      "unique_canonical_qualifying_molecules": 3,
+      "unique_qualifying_yield_per100": 0.03
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "checkpoint_iteration": 100,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9229927359450781,
+    "canonical_unique_molecules": 100,
+    "canonical_unique_fraction_of_all100": 1.0,
+    "canonical_top1_fraction_of_all100": 0.01,
+    "canonical_top5_fraction_of_all100": 0.05,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 88,
+      "unique_canonical_qualifying_molecules": 88,
+      "unique_qualifying_yield_per100": 0.88
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 11,
+      "unique_canonical_qualifying_molecules": 11,
+      "unique_qualifying_yield_per100": 0.11
+     }
+    }
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "checkpoint_iteration": 200,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9315872922563984,
+    "canonical_unique_molecules": 100,
+    "canonical_unique_fraction_of_all100": 1.0,
+    "canonical_top1_fraction_of_all100": 0.01,
+    "canonical_top5_fraction_of_all100": 0.05,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 92,
+      "unique_canonical_qualifying_molecules": 92,
+      "unique_qualifying_yield_per100": 0.92
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 41,
+      "unique_canonical_qualifying_molecules": 41,
+      "unique_qualifying_yield_per100": 0.41
+     }
+    }
+   },
+   {
+    "configuration": "actor_value",
+    "checkpoint_iteration": 200,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.932382635669803,
+    "canonical_unique_molecules": 100,
+    "canonical_unique_fraction_of_all100": 1.0,
+    "canonical_top1_fraction_of_all100": 0.01,
+    "canonical_top5_fraction_of_all100": 0.05,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 95,
+      "unique_canonical_qualifying_molecules": 95,
+      "unique_qualifying_yield_per100": 0.95
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 41,
+      "unique_canonical_qualifying_molecules": 41,
+      "unique_qualifying_yield_per100": 0.41
+     }
+    }
+   },
+   {
+    "configuration": "auxiliary_only",
+    "checkpoint_iteration": 200,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9444922279895691,
+    "canonical_unique_molecules": 15,
+    "canonical_unique_fraction_of_all100": 0.15,
+    "canonical_top1_fraction_of_all100": 0.47,
+    "canonical_top5_fraction_of_all100": 0.89,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 99,
+      "unique_canonical_qualifying_molecules": 14,
+      "unique_qualifying_yield_per100": 0.14
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 95,
+      "unique_canonical_qualifying_molecules": 10,
+      "unique_qualifying_yield_per100": 0.1
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "checkpoint_iteration": 200,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.8678725527539026,
+    "canonical_unique_molecules": 97,
+    "canonical_unique_fraction_of_all100": 0.97,
+    "canonical_top1_fraction_of_all100": 0.02,
+    "canonical_top5_fraction_of_all100": 0.08,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 34,
+      "unique_canonical_qualifying_molecules": 31,
+      "unique_qualifying_yield_per100": 0.31
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 12,
+      "unique_canonical_qualifying_molecules": 10,
+      "unique_qualifying_yield_per100": 0.1
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "checkpoint_iteration": 200,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9285586106874504,
+    "canonical_unique_molecules": 81,
+    "canonical_unique_fraction_of_all100": 0.81,
+    "canonical_top1_fraction_of_all100": 0.04,
+    "canonical_top5_fraction_of_all100": 0.12,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 97,
+      "unique_canonical_qualifying_molecules": 78,
+      "unique_qualifying_yield_per100": 0.78
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 29,
+      "unique_canonical_qualifying_molecules": 22,
+      "unique_qualifying_yield_per100": 0.22
+     }
+    }
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "checkpoint_iteration": 300,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9363080043233313,
+    "canonical_unique_molecules": 100,
+    "canonical_unique_fraction_of_all100": 1.0,
+    "canonical_top1_fraction_of_all100": 0.01,
+    "canonical_top5_fraction_of_all100": 0.05,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 97,
+      "unique_canonical_qualifying_molecules": 97,
+      "unique_qualifying_yield_per100": 0.97
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 59,
+      "unique_canonical_qualifying_molecules": 59,
+      "unique_qualifying_yield_per100": 0.59
+     }
+    }
+   },
+   {
+    "configuration": "actor_value",
+    "checkpoint_iteration": 300,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9366573146687852,
+    "canonical_unique_molecules": 64,
+    "canonical_unique_fraction_of_all100": 0.64,
+    "canonical_top1_fraction_of_all100": 0.08,
+    "canonical_top5_fraction_of_all100": 0.3,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 97,
+      "unique_canonical_qualifying_molecules": 61,
+      "unique_qualifying_yield_per100": 0.61
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 66,
+      "unique_canonical_qualifying_molecules": 31,
+      "unique_qualifying_yield_per100": 0.31
+     }
+    }
+   },
+   {
+    "configuration": "auxiliary_only",
+    "checkpoint_iteration": 300,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9462052985012878,
+    "canonical_unique_molecules": 2,
+    "canonical_unique_fraction_of_all100": 0.02,
+    "canonical_top1_fraction_of_all100": 0.5,
+    "canonical_top5_fraction_of_all100": 1.0,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 100,
+      "unique_canonical_qualifying_molecules": 2,
+      "unique_qualifying_yield_per100": 0.02
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 100,
+      "unique_canonical_qualifying_molecules": 2,
+      "unique_qualifying_yield_per100": 0.02
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "checkpoint_iteration": 300,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.7560396233258451,
+    "canonical_unique_molecules": 95,
+    "canonical_unique_fraction_of_all100": 0.95,
+    "canonical_top1_fraction_of_all100": 0.04,
+    "canonical_top5_fraction_of_all100": 0.1,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 0,
+      "unique_canonical_qualifying_molecules": 0,
+      "unique_qualifying_yield_per100": 0.0
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 0,
+      "unique_canonical_qualifying_molecules": 0,
+      "unique_qualifying_yield_per100": 0.0
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "checkpoint_iteration": 300,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9291227117191204,
+    "canonical_unique_molecules": 81,
+    "canonical_unique_fraction_of_all100": 0.81,
+    "canonical_top1_fraction_of_all100": 0.03,
+    "canonical_top5_fraction_of_all100": 0.13,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 92,
+      "unique_canonical_qualifying_molecules": 73,
+      "unique_qualifying_yield_per100": 0.73
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 40,
+      "unique_canonical_qualifying_molecules": 30,
+      "unique_qualifying_yield_per100": 0.3
+     }
+    }
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "checkpoint_iteration": 400,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9411117764074696,
+    "canonical_unique_molecules": 58,
+    "canonical_unique_fraction_of_all100": 0.58,
+    "canonical_top1_fraction_of_all100": 0.22,
+    "canonical_top5_fraction_of_all100": 0.4,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 100,
+      "unique_canonical_qualifying_molecules": 58,
+      "unique_qualifying_yield_per100": 0.58
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 68,
+      "unique_canonical_qualifying_molecules": 30,
+      "unique_qualifying_yield_per100": 0.3
+     }
+    }
+   },
+   {
+    "configuration": "actor_value",
+    "checkpoint_iteration": 400,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9261557315924513,
+    "canonical_unique_molecules": 13,
+    "canonical_unique_fraction_of_all100": 0.13,
+    "canonical_top1_fraction_of_all100": 0.47,
+    "canonical_top5_fraction_of_all100": 0.92,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 89,
+      "unique_canonical_qualifying_molecules": 3,
+      "unique_qualifying_yield_per100": 0.03
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 89,
+      "unique_canonical_qualifying_molecules": 3,
+      "unique_qualifying_yield_per100": 0.03
+     }
+    }
+   },
+   {
+    "configuration": "auxiliary_only",
+    "checkpoint_iteration": 400,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9462052985012878,
+    "canonical_unique_molecules": 2,
+    "canonical_unique_fraction_of_all100": 0.02,
+    "canonical_top1_fraction_of_all100": 0.51,
+    "canonical_top5_fraction_of_all100": 1.0,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 100,
+      "unique_canonical_qualifying_molecules": 2,
+      "unique_qualifying_yield_per100": 0.02
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 100,
+      "unique_canonical_qualifying_molecules": 2,
+      "unique_qualifying_yield_per100": 0.02
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "checkpoint_iteration": 400,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.929320084997915,
+    "canonical_unique_molecules": 7,
+    "canonical_unique_fraction_of_all100": 0.07,
+    "canonical_top1_fraction_of_all100": 0.49,
+    "canonical_top5_fraction_of_all100": 0.98,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 99,
+      "unique_canonical_qualifying_molecules": 6,
+      "unique_qualifying_yield_per100": 0.06
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 0,
+      "unique_canonical_qualifying_molecules": 0,
+      "unique_qualifying_yield_per100": 0.0
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "checkpoint_iteration": 400,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 100,
+    "mean_qed": 0.9028039839309685,
+    "canonical_unique_molecules": 91,
+    "canonical_unique_fraction_of_all100": 0.91,
+    "canonical_top1_fraction_of_all100": 0.02,
+    "canonical_top5_fraction_of_all100": 0.1,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 79,
+      "unique_canonical_qualifying_molecules": 70,
+      "unique_qualifying_yield_per100": 0.7
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 24,
+      "unique_canonical_qualifying_molecules": 20,
+      "unique_qualifying_yield_per100": 0.2
+     }
+    }
+   },
+   {
+    "configuration": "mol2vec_actor",
+    "checkpoint_iteration": 500,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 1000,
+    "mean_qed": 0.9462052985012878,
+    "canonical_unique_molecules": 2,
+    "canonical_unique_fraction_of_all100": 0.02,
+    "canonical_top1_fraction_of_all100": 0.56,
+    "canonical_top5_fraction_of_all100": 1.0,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 100,
+      "unique_canonical_qualifying_molecules": 2,
+      "unique_qualifying_yield_per100": 0.02
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 100,
+      "unique_canonical_qualifying_molecules": 2,
+      "unique_qualifying_yield_per100": 0.02
+     }
+    }
+   },
+   {
+    "configuration": "actor_value",
+    "checkpoint_iteration": 500,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 1000,
+    "mean_qed": 0.944940961057063,
+    "canonical_unique_molecules": 8,
+    "canonical_unique_fraction_of_all100": 0.08,
+    "canonical_top1_fraction_of_all100": 0.48,
+    "canonical_top5_fraction_of_all100": 0.97,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 99,
+      "unique_canonical_qualifying_molecules": 7,
+      "unique_qualifying_yield_per100": 0.07
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 97,
+      "unique_canonical_qualifying_molecules": 5,
+      "unique_qualifying_yield_per100": 0.05
+     }
+    }
+   },
+   {
+    "configuration": "auxiliary_only",
+    "checkpoint_iteration": 500,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 1000,
+    "mean_qed": 0.4654378040811922,
+    "canonical_unique_molecules": 19,
+    "canonical_unique_fraction_of_all100": 0.19,
+    "canonical_top1_fraction_of_all100": 0.13,
+    "canonical_top5_fraction_of_all100": 0.49,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 0,
+      "unique_canonical_qualifying_molecules": 0,
+      "unique_qualifying_yield_per100": 0.0
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 0,
+      "unique_canonical_qualifying_molecules": 0,
+      "unique_qualifying_yield_per100": 0.0
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "checkpoint_iteration": 500,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 1000,
+    "mean_qed": 0.7687824714083004,
+    "canonical_unique_molecules": 85,
+    "canonical_unique_fraction_of_all100": 0.85,
+    "canonical_top1_fraction_of_all100": 0.03,
+    "canonical_top5_fraction_of_all100": 0.11,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 2,
+      "unique_canonical_qualifying_molecules": 2,
+      "unique_qualifying_yield_per100": 0.02
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 1,
+      "unique_canonical_qualifying_molecules": 1,
+      "unique_qualifying_yield_per100": 0.01
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "checkpoint_iteration": 500,
+    "episodes_compared": 100,
+    "source_evaluation_episodes": 1000,
+    "mean_qed": 0.9403624863717037,
+    "canonical_unique_molecules": 42,
+    "canonical_unique_fraction_of_all100": 0.42,
+    "canonical_top1_fraction_of_all100": 0.06,
+    "canonical_top5_fraction_of_all100": 0.25,
+    "quality_thresholds": {
+     "qed_ge_0_90": {
+      "threshold": 0.9,
+      "qualifying_episodes": 100,
+      "unique_canonical_qualifying_molecules": 42,
+      "unique_qualifying_yield_per100": 0.42
+     },
+     "qed_ge_0_94": {
+      "threshold": 0.94,
+      "qualifying_episodes": 99,
+      "unique_canonical_qualifying_molecules": 41,
+      "unique_qualifying_yield_per100": 0.41
+     }
+    }
+   }
+  ]
+ },
+ "old13_vs500": {
+  "source": "short_vs_long_molecular_comparison",
+  "rows": [
+   {
+    "configuration": "mol2vec_actor",
+    "short_13": {
+     "episodes": 1000,
+     "mean_final_qed": 0.801629991134439,
+     "validity": 1.0,
+     "canonical_unique_molecules": 1000,
+     "canonical_unique_fraction": 1.0,
+     "top1_fraction": 0.001,
+     "top5_fraction": 0.005,
+     "fingerprint_diversity_from_evaluation": 0.8822756158666902,
+     "evaluation_timing_reference": {
+      "seconds": 63.16205277014524,
+      "episodes_per_second": 15.832291006106585,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "long_500": {
+     "episodes": 1000,
+     "mean_final_qed": 0.9461981557224108,
+     "validity": 1.0,
+     "canonical_unique_molecules": 3,
+     "canonical_unique_fraction": 0.003,
+     "top1_fraction": 0.57,
+     "top5_fraction": 1.0,
+     "fingerprint_diversity_from_evaluation": 0.23169136737110596,
+     "evaluation_timing_reference": {
+      "seconds": 44.66078190691769,
+      "episodes_per_second": 22.3910096801307,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "observed_differences_500_minus_13": {
+     "mean_qed": 0.14456816458797184,
+     "canonical_unique_molecules": -997,
+     "top1_fraction": 0.569,
+     "top5_fraction": 0.995
+    }
+   },
+   {
+    "configuration": "actor_value",
+    "short_13": {
+     "episodes": 1000,
+     "mean_final_qed": 0.7910670510109488,
+     "validity": 1.0,
+     "canonical_unique_molecules": 1000,
+     "canonical_unique_fraction": 1.0,
+     "top1_fraction": 0.001,
+     "top5_fraction": 0.005,
+     "fingerprint_diversity_from_evaluation": 0.8792275936673168,
+     "evaluation_timing_reference": {
+      "seconds": 62.09741193987429,
+      "episodes_per_second": 16.103730715351684,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "long_500": {
+     "episodes": 1000,
+     "mean_final_qed": 0.945770535283207,
+     "validity": 1.0,
+     "canonical_unique_molecules": 18,
+     "canonical_unique_fraction": 0.018,
+     "top1_fraction": 0.526,
+     "top5_fraction": 0.98,
+     "fingerprint_diversity_from_evaluation": 0.2660067979275379,
+     "evaluation_timing_reference": {
+      "seconds": 45.73559124954045,
+      "episodes_per_second": 21.864809717750134,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "observed_differences_500_minus_13": {
+     "mean_qed": 0.15470348427225822,
+     "canonical_unique_molecules": -982,
+     "top1_fraction": 0.525,
+     "top5_fraction": 0.975
+    }
+   },
+   {
+    "configuration": "auxiliary_only",
+    "short_13": {
+     "episodes": 1000,
+     "mean_final_qed": 0.8008069682991634,
+     "validity": 1.0,
+     "canonical_unique_molecules": 1000,
+     "canonical_unique_fraction": 1.0,
+     "top1_fraction": 0.001,
+     "top5_fraction": 0.005,
+     "fingerprint_diversity_from_evaluation": 0.8771925791198482,
+     "evaluation_timing_reference": {
+      "seconds": 62.89690157305449,
+      "episodes_per_second": 15.899034371963523,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "long_500": {
+     "episodes": 1000,
+     "mean_final_qed": 0.4654378040811922,
+     "validity": 1.0,
+     "canonical_unique_molecules": 20,
+     "canonical_unique_fraction": 0.02,
+     "top1_fraction": 0.093,
+     "top5_fraction": 0.412,
+     "fingerprint_diversity_from_evaluation": 0.39331574958743354,
+     "evaluation_timing_reference": {
+      "seconds": 54.106248918920755,
+      "episodes_per_second": 18.482153540130255,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "observed_differences_500_minus_13": {
+     "mean_qed": -0.33536916421797125,
+     "canonical_unique_molecules": -980,
+     "top1_fraction": 0.092,
+     "top5_fraction": 0.407
+    }
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "short_13": {
+     "episodes": 1000,
+     "mean_final_qed": 0.6400188646071919,
+     "validity": 1.0,
+     "canonical_unique_molecules": 1000,
+     "canonical_unique_fraction": 1.0,
+     "top1_fraction": 0.001,
+     "top5_fraction": 0.005,
+     "fingerprint_diversity_from_evaluation": 0.878473846709281,
+     "evaluation_timing_reference": {
+      "seconds": 380.26531952712685,
+      "episodes_per_second": 2.6297428365109257,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "long_500": {
+     "episodes": 1000,
+     "mean_final_qed": 0.7752380132353459,
+     "validity": 1.0,
+     "canonical_unique_molecules": 325,
+     "canonical_unique_fraction": 0.325,
+     "top1_fraction": 0.019,
+     "top5_fraction": 0.073,
+     "fingerprint_diversity_from_evaluation": 0.7217484521542358,
+     "evaluation_timing_reference": {
+      "seconds": 234.78503690380603,
+      "episodes_per_second": 4.259215208887911,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "observed_differences_500_minus_13": {
+     "mean_qed": 0.13521914862815398,
+     "canonical_unique_molecules": -675,
+     "top1_fraction": 0.018,
+     "top5_fraction": 0.06799999999999999
+    }
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "short_13": {
+     "episodes": 1000,
+     "mean_final_qed": 0.6579845881983722,
+     "validity": 1.0,
+     "canonical_unique_molecules": 1000,
+     "canonical_unique_fraction": 1.0,
+     "top1_fraction": 0.001,
+     "top5_fraction": 0.005,
+     "fingerprint_diversity_from_evaluation": 0.8776152575815317,
+     "evaluation_timing_reference": {
+      "seconds": 373.1050868984312,
+      "episodes_per_second": 2.6802100403209614,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "long_500": {
+     "episodes": 1000,
+     "mean_final_qed": 0.9402483617661291,
+     "validity": 1.0,
+     "canonical_unique_molecules": 74,
+     "canonical_unique_fraction": 0.074,
+     "top1_fraction": 0.045,
+     "top5_fraction": 0.192,
+     "fingerprint_diversity_from_evaluation": 0.5041931051112709,
+     "evaluation_timing_reference": {
+      "seconds": 243.27335085906088,
+      "episodes_per_second": 4.1106023182101215,
+      "strict_speed_comparison_unsupported": true
+     }
+    },
+    "observed_differences_500_minus_13": {
+     "mean_qed": 0.2822637735677569,
+     "canonical_unique_molecules": -926,
+     "top1_fraction": 0.044,
+     "top5_fraction": 0.187
+    }
+   }
+  ]
+ },
+ "final500_molecular": {
+  "source": "final500_molecular_comparison",
+  "rows": [
+   {
+    "configuration": "mol2vec_actor",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "episodes": 1000,
+    "mean_final_qed": 0.9461981557224108,
+    "validity": 1.0,
+    "canonical_unique_molecules": 3,
+    "canonical_unique_fraction": 0.003,
+    "top1_fraction": 0.57,
+    "top5_fraction": 1.0,
+    "fingerprint_diversity_from_evaluation": 0.23169136737110596,
+    "selected_merge_kinds": {
+     "node": 2000
+    },
+    "quality_thresholds": [
+     {
+      "qed_threshold_inclusive": 0.9,
+      "qualified_valid_episodes": 1000,
+      "fraction_of_all_episodes": 1.0,
+      "fraction_of_valid_episodes": 1.0,
+      "canonical_unique_molecules": 3,
+      "canonical_unique_fraction_within_qualified": 0.003,
+      "top1_fraction_within_qualified": 0.57
+     },
+     {
+      "qed_threshold_inclusive": 0.94,
+      "qualified_valid_episodes": 999,
+      "fraction_of_all_episodes": 0.999,
+      "fraction_of_valid_episodes": 0.999,
+      "canonical_unique_molecules": 2,
+      "canonical_unique_fraction_within_qualified": 0.002002002002002002,
+      "top1_fraction_within_qualified": 0.5705705705705706
+     }
+    ],
+    "building_block_usage": {
+     "catalog_rows": 1709,
+     "catalog_canonical_unique_cached": 1684,
+     "choices": 2000,
+     "used_rows": 3,
+     "row_coverage": 0.0017554125219426564,
+     "used_canonical_cached": 3,
+     "canonical_coverage_cached": 0.0017814726840855108
+    },
+    "candidate_cap": {
+     "max_attach": 128,
+     "fragment_choices": 2000,
+     "capped_choices": 0,
+     "capped_choice_fraction": 0.0,
+     "generated_total": 45993,
+     "retained_total": 45993,
+     "generated_per_choice": {
+      "count": 2000,
+      "mean": 22.9965,
+      "min": 1.0,
+      "median": 19.5,
+      "p95": 45.0,
+      "max": 45.0
+     },
+     "offline_cap_audit_score_computations": 0
+    },
+    "best_visited_and_negative_transitions": {
+     "molecular_updates": 2000,
+     "negative_transitions": 0,
+     "episodes_with_negative_transitions": 0,
+     "recovered_negative_transitions": 0,
+     "unrecovered_negative_transitions": 0,
+     "best_visited_scores": {
+      "count": 1000,
+      "mean": 0.9461981557224108,
+      "min": 0.9390625196244188,
+      "median": 0.9462052985012878,
+      "p95": 0.9462052985012878,
+      "max": 0.9462052985012878
+     },
+     "final_gap_from_best_visited": {
+      "count": 1000,
+      "mean": 0.0,
+      "min": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+     },
+     "episodes_final_below_best_visited": 0
+    },
+    "termination": {
+     "end_reasons": {
+      "atom_limit": 1000
+     },
+     "end_flags": {
+      "terminated": 1000,
+      "truncated": 0,
+      "atom_limit_exceeded": 1000,
+      "score_threshold_met": 0,
+      "no_attachment_candidates": 0,
+      "empty_action_mask": 0
+     }
+    }
+   },
+   {
+    "configuration": "actor_value",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "episodes": 1000,
+    "mean_final_qed": 0.945770535283207,
+    "validity": 1.0,
+    "canonical_unique_molecules": 18,
+    "canonical_unique_fraction": 0.018,
+    "top1_fraction": 0.526,
+    "top5_fraction": 0.98,
+    "fingerprint_diversity_from_evaluation": 0.2660067979275379,
+    "selected_merge_kinds": {
+     "node": 2004
+    },
+    "quality_thresholds": [
+     {
+      "qed_threshold_inclusive": 0.9,
+      "qualified_valid_episodes": 997,
+      "fraction_of_all_episodes": 0.997,
+      "fraction_of_valid_episodes": 0.997,
+      "canonical_unique_molecules": 16,
+      "canonical_unique_fraction_within_qualified": 0.0160481444332999,
+      "top1_fraction_within_qualified": 0.5275827482447342
+     },
+     {
+      "qed_threshold_inclusive": 0.94,
+      "qualified_valid_episodes": 984,
+      "fraction_of_all_episodes": 0.984,
+      "fraction_of_valid_episodes": 0.984,
+      "canonical_unique_molecules": 9,
+      "canonical_unique_fraction_within_qualified": 0.009146341463414634,
+      "top1_fraction_within_qualified": 0.5345528455284553
+     }
+    ],
+    "building_block_usage": {
+     "catalog_rows": 1709,
+     "catalog_canonical_unique_cached": 1684,
+     "choices": 2004,
+     "used_rows": 7,
+     "row_coverage": 0.004095962551199532,
+     "used_canonical_cached": 7,
+     "canonical_coverage_cached": 0.004156769596199525
+    },
+    "candidate_cap": {
+     "max_attach": 128,
+     "fragment_choices": 2004,
+     "capped_choices": 0,
+     "capped_choice_fraction": 0.0,
+     "generated_total": 46158,
+     "retained_total": 46158,
+     "generated_per_choice": {
+      "count": 2004,
+      "mean": 23.03293413173653,
+      "min": 1.0,
+      "median": 29.0,
+      "p95": 45.0,
+      "max": 66.0
+     },
+     "offline_cap_audit_score_computations": 0
+    },
+    "best_visited_and_negative_transitions": {
+     "molecular_updates": 2004,
+     "negative_transitions": 3,
+     "episodes_with_negative_transitions": 3,
+     "recovered_negative_transitions": 0,
+     "unrecovered_negative_transitions": 3,
+     "best_visited_scores": {
+      "count": 1000,
+      "mean": 0.9458550639089155,
+      "min": 0.9051636872240523,
+      "median": 0.9462052985012878,
+      "p95": 0.9462052985012878,
+      "max": 0.9462052985012878
+     },
+     "final_gap_from_best_visited": {
+      "count": 1000,
+      "mean": 8.45286257084692e-05,
+      "min": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "max": 0.03012664594327874
+     },
+     "episodes_final_below_best_visited": 3
+    },
+    "termination": {
+     "end_reasons": {
+      "atom_limit": 1000
+     },
+     "end_flags": {
+      "terminated": 1000,
+      "truncated": 0,
+      "atom_limit_exceeded": 1000,
+      "score_threshold_met": 0,
+      "no_attachment_candidates": 0,
+      "empty_action_mask": 0
+     }
+    }
+   },
+   {
+    "configuration": "auxiliary_only",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "episodes": 1000,
+    "mean_final_qed": 0.4654378040811922,
+    "validity": 1.0,
+    "canonical_unique_molecules": 20,
+    "canonical_unique_fraction": 0.02,
+    "top1_fraction": 0.093,
+    "top5_fraction": 0.412,
+    "fingerprint_diversity_from_evaluation": 0.39331574958743354,
+    "selected_merge_kinds": {
+     "node": 1000,
+     "edge": 1000
+    },
+    "quality_thresholds": [
+     {
+      "qed_threshold_inclusive": 0.9,
+      "qualified_valid_episodes": 0,
+      "fraction_of_all_episodes": 0.0,
+      "fraction_of_valid_episodes": 0.0,
+      "canonical_unique_molecules": 0,
+      "canonical_unique_fraction_within_qualified": null,
+      "top1_fraction_within_qualified": null
+     },
+     {
+      "qed_threshold_inclusive": 0.94,
+      "qualified_valid_episodes": 0,
+      "fraction_of_all_episodes": 0.0,
+      "fraction_of_valid_episodes": 0.0,
+      "canonical_unique_molecules": 0,
+      "canonical_unique_fraction_within_qualified": null,
+      "top1_fraction_within_qualified": null
+     }
+    ],
+    "building_block_usage": {
+     "catalog_rows": 1709,
+     "catalog_canonical_unique_cached": 1684,
+     "choices": 2000,
+     "used_rows": 1,
+     "row_coverage": 0.0005851375073142189,
+     "used_canonical_cached": 1,
+     "canonical_coverage_cached": 0.0005938242280285036
+    },
+    "candidate_cap": {
+     "max_attach": 128,
+     "fragment_choices": 2000,
+     "capped_choices": 0,
+     "capped_choice_fraction": 0.0,
+     "generated_total": 28000,
+     "retained_total": 28000,
+     "generated_per_choice": {
+      "count": 2000,
+      "mean": 14.0,
+      "min": 2.0,
+      "median": 14.0,
+      "p95": 26.0,
+      "max": 26.0
+     },
+     "offline_cap_audit_score_computations": 0
+    },
+    "best_visited_and_negative_transitions": {
+     "molecular_updates": 2000,
+     "negative_transitions": 1000,
+     "episodes_with_negative_transitions": 1000,
+     "recovered_negative_transitions": 0,
+     "unrecovered_negative_transitions": 1000,
+     "best_visited_scores": {
+      "count": 1000,
+      "mean": 0.8848708809909923,
+      "min": 0.8848708809909923,
+      "median": 0.8848708809909923,
+      "p95": 0.8848708809909923,
+      "max": 0.8848708809909923
+     },
+     "final_gap_from_best_visited": {
+      "count": 1000,
+      "mean": 0.41943307690980014,
+      "min": 0.41943307690980014,
+      "median": 0.41943307690980014,
+      "p95": 0.41943307690980014,
+      "max": 0.41943307690980014
+     },
+     "episodes_final_below_best_visited": 1000
+    },
+    "termination": {
+     "end_reasons": {
+      "atom_limit": 1000
+     },
+     "end_flags": {
+      "terminated": 1000,
+      "truncated": 0,
+      "atom_limit_exceeded": 1000,
+      "score_threshold_met": 0,
+      "no_attachment_candidates": 0,
+      "empty_action_mask": 0
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_frozen",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "episodes": 1000,
+    "mean_final_qed": 0.7752380132353459,
+    "validity": 1.0,
+    "canonical_unique_molecules": 325,
+    "canonical_unique_fraction": 0.325,
+    "top1_fraction": 0.019,
+    "top5_fraction": 0.073,
+    "fingerprint_diversity_from_evaluation": 0.7217484521542358,
+    "selected_merge_kinds": {
+     "node": 1043,
+     "edge": 965
+    },
+    "quality_thresholds": [
+     {
+      "qed_threshold_inclusive": 0.9,
+      "qualified_valid_episodes": 20,
+      "fraction_of_all_episodes": 0.02,
+      "fraction_of_valid_episodes": 0.02,
+      "canonical_unique_molecules": 18,
+      "canonical_unique_fraction_within_qualified": 0.9,
+      "top1_fraction_within_qualified": 0.1
+     },
+     {
+      "qed_threshold_inclusive": 0.94,
+      "qualified_valid_episodes": 1,
+      "fraction_of_all_episodes": 0.001,
+      "fraction_of_valid_episodes": 0.001,
+      "canonical_unique_molecules": 1,
+      "canonical_unique_fraction_within_qualified": 1.0,
+      "top1_fraction_within_qualified": 1.0
+     }
+    ],
+    "building_block_usage": {
+     "catalog_rows": 1709,
+     "catalog_canonical_unique_cached": 1684,
+     "choices": 2008,
+     "used_rows": 51,
+     "row_coverage": 0.02984201287302516,
+     "used_canonical_cached": 49,
+     "canonical_coverage_cached": 0.029097387173396674
+    },
+    "candidate_cap": {
+     "max_attach": 128,
+     "fragment_choices": 2008,
+     "capped_choices": 0,
+     "capped_choice_fraction": 0.0,
+     "generated_total": 18966,
+     "retained_total": 18966,
+     "generated_per_choice": {
+      "count": 2008,
+      "mean": 9.445219123505977,
+      "min": 1.0,
+      "median": 8.0,
+      "p95": 22.0,
+      "max": 50.0
+     },
+     "offline_cap_audit_score_computations": 0
+    },
+    "best_visited_and_negative_transitions": {
+     "molecular_updates": 2008,
+     "negative_transitions": 799,
+     "episodes_with_negative_transitions": 799,
+     "recovered_negative_transitions": 0,
+     "unrecovered_negative_transitions": 799,
+     "best_visited_scores": {
+      "count": 1000,
+      "mean": 0.8302221401040787,
+      "min": 0.6676601259651622,
+      "median": 0.8112788228538134,
+      "p95": 0.8848708809909923,
+      "max": 0.9453045399410485
+     },
+     "final_gap_from_best_visited": {
+      "count": 1000,
+      "mean": 0.054984126868732774,
+      "min": 0.0,
+      "median": 0.04687505691235683,
+      "p95": 0.1408112874659555,
+      "max": 0.33665192299829455
+     },
+     "episodes_final_below_best_visited": 799
+    },
+    "termination": {
+     "end_reasons": {
+      "atom_limit": 1000
+     },
+     "end_flags": {
+      "terminated": 1000,
+      "truncated": 0,
+      "atom_limit_exceeded": 1000,
+      "score_threshold_met": 0,
+      "no_attachment_candidates": 0,
+      "empty_action_mask": 0
+     }
+    }
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "training_seed": 0,
+    "checkpoint_iteration": 500,
+    "episodes": 1000,
+    "mean_final_qed": 0.9402483617661291,
+    "validity": 1.0,
+    "canonical_unique_molecules": 74,
+    "canonical_unique_fraction": 0.074,
+    "top1_fraction": 0.045,
+    "top5_fraction": 0.192,
+    "fingerprint_diversity_from_evaluation": 0.5041931051112709,
+    "selected_merge_kinds": {
+     "node": 2000
+    },
+    "quality_thresholds": [
+     {
+      "qed_threshold_inclusive": 0.9,
+      "qualified_valid_episodes": 1000,
+      "fraction_of_all_episodes": 1.0,
+      "fraction_of_valid_episodes": 1.0,
+      "canonical_unique_molecules": 74,
+      "canonical_unique_fraction_within_qualified": 0.074,
+      "top1_fraction_within_qualified": 0.045
+     },
+     {
+      "qed_threshold_inclusive": 0.94,
+      "qualified_valid_episodes": 988,
+      "fraction_of_all_episodes": 0.988,
+      "fraction_of_valid_episodes": 0.988,
+      "canonical_unique_molecules": 63,
+      "canonical_unique_fraction_within_qualified": 0.06376518218623482,
+      "top1_fraction_within_qualified": 0.04554655870445344
+     }
+    ],
+    "building_block_usage": {
+     "catalog_rows": 1709,
+     "catalog_canonical_unique_cached": 1684,
+     "choices": 2000,
+     "used_rows": 11,
+     "row_coverage": 0.006436512580456407,
+     "used_canonical_cached": 11,
+     "canonical_coverage_cached": 0.006532066508313539
+    },
+    "candidate_cap": {
+     "max_attach": 128,
+     "fragment_choices": 2000,
+     "capped_choices": 0,
+     "capped_choice_fraction": 0.0,
+     "generated_total": 35914,
+     "retained_total": 35914,
+     "generated_per_choice": {
+      "count": 2000,
+      "mean": 17.957,
+      "min": 1.0,
+      "median": 7.0,
+      "p95": 40.0,
+      "max": 44.0
+     },
+     "offline_cap_audit_score_computations": 0
+    },
+    "best_visited_and_negative_transitions": {
+     "molecular_updates": 2000,
+     "negative_transitions": 0,
+     "episodes_with_negative_transitions": 0,
+     "recovered_negative_transitions": 0,
+     "unrecovered_negative_transitions": 0,
+     "best_visited_scores": {
+      "count": 1000,
+      "mean": 0.9402483617661291,
+      "min": 0.9140763892665639,
+      "median": 0.9404102992050939,
+      "p95": 0.940410299205094,
+      "max": 0.940410299205094
+     },
+     "final_gap_from_best_visited": {
+      "count": 1000,
+      "mean": 0.0,
+      "min": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+     },
+     "episodes_final_below_best_visited": 0
+    },
+    "termination": {
+     "end_reasons": {
+      "atom_limit": 1000
+     },
+     "end_flags": {
+      "terminated": 1000,
+      "truncated": 0,
+      "atom_limit_exceeded": 1000,
+      "score_threshold_met": 0,
+      "no_attachment_candidates": 0,
+      "empty_action_mask": 0
+     }
+    }
+   }
+  ]
+ },
+ "encoder_archived_states": {
+  "source": "encoder_checkpoint_audit",
+  "passed": true,
+  "catalog_buffers_equal_within_and_between_runs": true,
+  "rows": [
+   {
+    "configuration": "mpnn_frozen",
+    "configured_trainable_encoder": false,
+    "states": [
+     {
+      "iteration": 100,
+      "encoder_group_sha256": "20102d8e890f054724f8fc90203a7ae8ac8ae2d3026d4be4ffc47650799dab5f",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     },
+     {
+      "iteration": 200,
+      "encoder_group_sha256": "20102d8e890f054724f8fc90203a7ae8ac8ae2d3026d4be4ffc47650799dab5f",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     },
+     {
+      "iteration": 300,
+      "encoder_group_sha256": "20102d8e890f054724f8fc90203a7ae8ac8ae2d3026d4be4ffc47650799dab5f",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     },
+     {
+      "iteration": 400,
+      "encoder_group_sha256": "20102d8e890f054724f8fc90203a7ae8ac8ae2d3026d4be4ffc47650799dab5f",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     },
+     {
+      "iteration": 500,
+      "encoder_group_sha256": "20102d8e890f054724f8fc90203a7ae8ac8ae2d3026d4be4ffc47650799dab5f",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     }
+    ],
+    "comparisons_against_iteration_100": [
+     {
+      "iteration": 200,
+      "encoder": {
+       "byte_identical": true,
+       "arrays": 38,
+       "scalars": 400128,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0,
+       "l1": 0.0,
+       "l2": 0.0,
+       "max_absolute_difference": 0.0
+      },
+      "heads": {
+       "byte_identical": false,
+       "changed_arrays": 12,
+       "changed_numeric_scalars": 250036,
+       "l1": 848.1293189330681,
+       "l2": 3.1924046754054296,
+       "max_absolute_difference": 0.1256481222808361
+      },
+      "catalog": {
+       "byte_identical": true,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0
+      }
+     },
+     {
+      "iteration": 300,
+      "encoder": {
+       "byte_identical": true,
+       "arrays": 38,
+       "scalars": 400128,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0,
+       "l1": 0.0,
+       "l2": 0.0,
+       "max_absolute_difference": 0.0
+      },
+      "heads": {
+       "byte_identical": false,
+       "changed_arrays": 12,
+       "changed_numeric_scalars": 259926,
+       "l1": 1276.156516336267,
+       "l2": 4.490198756397568,
+       "max_absolute_difference": 0.1479649879038334
+      },
+      "catalog": {
+       "byte_identical": true,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0
+      }
+     },
+     {
+      "iteration": 400,
+      "encoder": {
+       "byte_identical": true,
+       "arrays": 38,
+       "scalars": 400128,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0,
+       "l1": 0.0,
+       "l2": 0.0,
+       "max_absolute_difference": 0.0
+      },
+      "heads": {
+       "byte_identical": false,
+       "changed_arrays": 12,
+       "changed_numeric_scalars": 260760,
+       "l1": 1577.4100864890038,
+       "l2": 5.33873288956009,
+       "max_absolute_difference": 0.16090885177254677
+      },
+      "catalog": {
+       "byte_identical": true,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0
+      }
+     },
+     {
+      "iteration": 500,
+      "encoder": {
+       "byte_identical": true,
+       "arrays": 38,
+       "scalars": 400128,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0,
+       "l1": 0.0,
+       "l2": 0.0,
+       "max_absolute_difference": 0.0
+      },
+      "heads": {
+       "byte_identical": false,
+       "changed_arrays": 12,
+       "changed_numeric_scalars": 263281,
+       "l1": 1853.1118484358742,
+       "l2": 6.195494149232048,
+       "max_absolute_difference": 0.18039554730057716
+      },
+      "catalog": {
+       "byte_identical": true,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0
+      }
+     }
+    ]
+   },
+   {
+    "configuration": "mpnn_trainable",
+    "configured_trainable_encoder": true,
+    "states": [
+     {
+      "iteration": 100,
+      "encoder_group_sha256": "39090c396a6cedba5856d3fa6feb0b42bf250cea1b7170f2c077e8c413a49a0e",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     },
+     {
+      "iteration": 200,
+      "encoder_group_sha256": "f391afab58306a8aca7c1a45cb1aec5f5fb7368aa66b44a6266e3239569c2167",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     },
+     {
+      "iteration": 300,
+      "encoder_group_sha256": "a9944be57551687869b57ef2252011d4e59807ac23e382b8649fc48b28b02b94",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     },
+     {
+      "iteration": 400,
+      "encoder_group_sha256": "6d8abe936901523bc8f0f4b9c8653d78006fb0bfb604ddeb44bcffc6a7c49003",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     },
+     {
+      "iteration": 500,
+      "encoder_group_sha256": "a4b0dd13a1c01c0a8f670a3ea92e87480525daf82b4951c1b80af452783c5b06",
+      "all_floating_model_arrays_finite": true,
+      "encoder_arrays": 38,
+      "encoder_scalar_parameters": 400128
+     }
+    ],
+    "comparisons_against_iteration_100": [
+     {
+      "iteration": 200,
+      "encoder": {
+       "byte_identical": false,
+       "arrays": 38,
+       "scalars": 400128,
+       "changed_arrays": 38,
+       "changed_numeric_scalars": 381824,
+       "l1": 1077.0911349462529,
+       "l2": 2.439096537491093,
+       "max_absolute_difference": 0.03219936043024063
+      },
+      "heads": {
+       "byte_identical": false,
+       "changed_arrays": 12,
+       "changed_numeric_scalars": 314663,
+       "l1": 841.1781507780009,
+       "l2": 2.2397608028874436,
+       "max_absolute_difference": 0.10705716535449028
+      },
+      "catalog": {
+       "byte_identical": true,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0
+      }
+     },
+     {
+      "iteration": 300,
+      "encoder": {
+       "byte_identical": false,
+       "arrays": 38,
+       "scalars": 400128,
+       "changed_arrays": 38,
+       "changed_numeric_scalars": 381823,
+       "l1": 1450.3109817543007,
+       "l2": 3.256535670380691,
+       "max_absolute_difference": 0.045368488878011703
+      },
+      "heads": {
+       "byte_identical": false,
+       "changed_arrays": 12,
+       "changed_numeric_scalars": 330058,
+       "l1": 1251.630966559555,
+       "l2": 3.1529160406962538,
+       "max_absolute_difference": 0.1171417348086834
+      },
+      "catalog": {
+       "byte_identical": true,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0
+      }
+     },
+     {
+      "iteration": 400,
+      "encoder": {
+       "byte_identical": false,
+       "arrays": 38,
+       "scalars": 400128,
+       "changed_arrays": 38,
+       "changed_numeric_scalars": 381824,
+       "l1": 1820.2903483523726,
+       "l2": 4.002817249497811,
+       "max_absolute_difference": 0.06113076210021973
+      },
+      "heads": {
+       "byte_identical": false,
+       "changed_arrays": 12,
+       "changed_numeric_scalars": 342587,
+       "l1": 1588.1423664814474,
+       "l2": 3.9176423959239073,
+       "max_absolute_difference": 0.12962864246219397
+      },
+      "catalog": {
+       "byte_identical": true,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0
+      }
+     },
+     {
+      "iteration": 500,
+      "encoder": {
+       "byte_identical": false,
+       "arrays": 38,
+       "scalars": 400128,
+       "changed_arrays": 38,
+       "changed_numeric_scalars": 381824,
+       "l1": 2096.727093176216,
+       "l2": 4.63041255274922,
+       "max_absolute_difference": 0.08369147032499313
+      },
+      "heads": {
+       "byte_identical": false,
+       "changed_arrays": 12,
+       "changed_numeric_scalars": 343604,
+       "l1": 1841.4656214114225,
+       "l2": 4.5259892899182175,
+       "max_absolute_difference": 0.14519951399415731
+      },
+      "catalog": {
+       "byte_identical": true,
+       "changed_arrays": 0,
+       "changed_numeric_scalars": 0
+      }
+     }
+    ]
+   }
+  ],
+  "scope": [
+   "Direct archived-state evidence covers iterations 100/200/300/400/500 only.",
+   "Initial weights were not persisted; no initial-to-final identity or every-optimizer-step immutability claim is made.",
+   "Encoder changes establish parameter updates between saved states, not direct gradient measurements or a cause of quality differences.",
+   "One training seed only; no training-seed variance, evaluation quality, or speed claim is supported by this audit.",
+   "Catalog graph buffers and policy heads are audited separately from learned encoder parameters; nonpersistent embedding caches are excluded.",
+   "Each inspected policy pickle and checkpoint metadata matches the completed training-file audit and every corresponding evaluation source-identity record; iteration 500 matches both stochastic and greedy evaluation sources."
+  ]
+ },
+ "ray_coverage": [
+  {
+   "run": "mpnn_frozen_seed0_workers8",
+   "node_id": "41be087d9713503d13d76d0cc3e849e988b1362c6d2e3f27a1b26fa9",
+   "raylet_start_token": "653620304",
+   "same_node_observations": 360,
+   "all_observed_object_store_capacity_bytes": 17179869184,
+   "all_observed_cumulative_spill_restore_zero": true,
+   "latest_saved_debug_minus_final_train_end_seconds": -8.307477712631226,
+   "saved_debug_dump_covers_final_train_end": false
+  },
+  {
+   "run": "mpnn_trainable_seed0_workers8",
+   "node_id": "5149258b960cb00620ceade6454a7d77985584cf63c9ed191f2b588b",
+   "raylet_start_token": "655780594",
+   "same_node_observations": 392,
+   "all_observed_object_store_capacity_bytes": 17179869184,
+   "all_observed_cumulative_spill_restore_zero": true,
+   "latest_saved_debug_minus_final_train_end_seconds": -9.35151219367981,
+   "saved_debug_dump_covers_final_train_end": false
+  }
+ ],
+ "provenance": {
+  "training_and_evaluation_runtime_revision": "b5a9e41d5fe7f8fabb22f8739cdeb43ec175bd2a",
+  "core_file_count": 49,
+  "core_files": {
+   "moldr/__init__.py": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "moldr/chemistry.py": {
+    "bytes": 6090,
+    "sha256": "94424ebf94741629f36bfb00f3bc89c2a601e17f22479621b4e4bcb7d93b21e6"
+   },
+   "moldr/chemutils.py": {
+    "bytes": 12285,
+    "sha256": "9e07935e0190bcb8ac43e16b343ca78c8d4accdd20d1d4aa6208460f3457a805"
+   },
+   "moldr/cli.py": {
+    "bytes": 21983,
+    "sha256": "a2ac8e149ecb9d0fe627dc80f86d90a091fd4c3d005a1cb3f97afd2d3b9fc8f5"
+   },
+   "moldr/config.py": {
+    "bytes": 9659,
+    "sha256": "a32757d60dcedc15b822dee7458775311f494784699c57706597143749ca2c9b"
+   },
+   "moldr/core/__init__.py": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "moldr/core/decompose.py": {
+    "bytes": 5356,
+    "sha256": "8a4c65fab428eb424b3d8d652a5c1ef15be3cb8ddf2a1eb9411c7b77fe0e205c"
+   },
+   "moldr/core/env.py": {
+    "bytes": 6179,
+    "sha256": "f0ee6f6d36da2e800080ac3915960fb5e261967b9911fb11897c253b790c4a45"
+   },
+   "moldr/core/molgraph.py": {
+    "bytes": 3818,
+    "sha256": "59a9638cf135c5f0e50a9c0f3c199751e39610dd1473dbf727c44349cc1ac2ae"
+   },
+   "moldr/core/moltree.py": {
+    "bytes": 6707,
+    "sha256": "37127a9e7f6654ef9a07a24c54ffe71b4958130203497cd0d0cb989d9879ae48"
+   },
+   "moldr/core/reassemble.py": {
+    "bytes": 19125,
+    "sha256": "a9b85571cbd1643ae50e2710d53dfcda08c04c5a4ee656cf7d14c966b353f30b"
+   },
+   "moldr/e2e/__init__.py": {
+    "bytes": 43,
+    "sha256": "50e06ea68d0fda778defaaf9c2b66ef9ea5f739012d5bb8d3bc3fd0f4870c94d"
+   },
+   "moldr/e2e/action_dist.py": {
+    "bytes": 3143,
+    "sha256": "1783d167b0486fb283e675778b5bbc0ce3b760af858211820debca58bbe0b304"
+   },
+   "moldr/e2e/config.py": {
+    "bytes": 4739,
+    "sha256": "88028d610cbeaf6a7e531e6723fa77b5dcb18212b21aadec671fa49e194a89ff"
+   },
+   "moldr/e2e/env.py": {
+    "bytes": 16403,
+    "sha256": "f676cfd09e1447d56ada26423d1c7a5b10d43b865027e6c457490075e07ef4c4"
+   },
+   "moldr/e2e/env_v2.py": {
+    "bytes": 21905,
+    "sha256": "07985f0ec17dfa911c3b37209fd857cde10c7c620d76ec1c45945310f64a524f"
+   },
+   "moldr/e2e/model.py": {
+    "bytes": 5733,
+    "sha256": "218c4e7109ac463ebcf0ebacc36706bc3aa412f9cd01dbaded1fcf983b09775d"
+   },
+   "moldr/e2e/model_v2.py": {
+    "bytes": 17260,
+    "sha256": "c71f9cba576fc6f7f40bb0095be65dbe20e649fc9604f22b199f1cce24b38d59"
+   },
+   "moldr/env.py": {
+    "bytes": 9184,
+    "sha256": "e3b99ea4631f1e570e435f262414312f886e510be639b6bf4e34db45e5f6f3d4"
+   },
+   "moldr/evaluation.py": {
+    "bytes": 3208,
+    "sha256": "5ac098ce4d8b0d3dae470b857d1467cc7c1d6c4f7d0b75fe2537de01b30b7e0f"
+   },
+   "moldr/experiment.py": {
+    "bytes": 13467,
+    "sha256": "e1637b99d300a5cb2cee7e2f1c26f260de68ef78e73a953caf19bd20d643c01c"
+   },
+   "moldr/factory.py": {
+    "bytes": 10178,
+    "sha256": "3feed41142022bb61eca2b243054c875d146dcb97a9151a03d750ce7c9200786"
+   },
+   "moldr/generative/__init__.py": {
+    "bytes": 1002,
+    "sha256": "2822e54cfff4d741bff66da7b6d64c8fc2a9706b62aefac82fd08d10cb66dd6c"
+   },
+   "moldr/generative/producer.py": {
+    "bytes": 3756,
+    "sha256": "69dedabfdc01b74d9dc123426ce5c34ed2fdc0875ed3b77edc3b1fbcc04cfd12"
+   },
+   "moldr/generative/proposer.py": {
+    "bytes": 12030,
+    "sha256": "56e9ded94c1bfa2fba8b581f1a5277f107f5d93dd0b83e913c9b52f820992eb0"
+   },
+   "moldr/generative/vae.py": {
+    "bytes": 7443,
+    "sha256": "3c548c2ad0dd38887010253b0657ade7e4e068bee480ce4f165bc8995cb29250"
+   },
+   "moldr/generative/vocab.py": {
+    "bytes": 7916,
+    "sha256": "5d2e95f02a3beca5c851e3877d064cdcfd285b36c7f881ea2cce10460717d50a"
+   },
+   "moldr/gnn.py": {
+    "bytes": 10525,
+    "sha256": "84a5d325198ed1d2003dc25203449b94dc3da024f53aa8096ae5a040a87a8abf"
+   },
+   "moldr/gspan/__init__.py": {
+    "bytes": 138,
+    "sha256": "37709996af212a73d4d4f6ac9951463153b80a919d832268b99ec42a1d94a930"
+   },
+   "moldr/gspan/__main__.py": {
+    "bytes": 151,
+    "sha256": "e8853a4ca11971bc6946020ec7c2b131e8709e39c53bab7286bd4f156d192ea9"
+   },
+   "moldr/gspan/config.py": {
+    "bytes": 1641,
+    "sha256": "fc2c65dccdec8b7b488ff2ec578d9d5e3a859313df0e833550bf9f0cdfb67aeb"
+   },
+   "moldr/gspan/graph.py": {
+    "bytes": 5709,
+    "sha256": "725f7a71a7343eebe68f88edb1ea68da8397f145542a613b7ea75d3fc9919536"
+   },
+   "moldr/gspan/gspan.py": {
+    "bytes": 20740,
+    "sha256": "c6ad62ef7396daf4dcfd986365d762e3e3d4780dca93efb209dd8a6084865c47"
+   },
+   "moldr/gspan/main.py": {
+    "bytes": 970,
+    "sha256": "2f5f1db37b18137bc1eb2c03597d4ecb7feef4343d52359a7772ab171d9ed2aa"
+   },
+   "moldr/gspan/utils.py": {
+    "bytes": 12589,
+    "sha256": "79f499fa934fccad6025290295afea7d281a43b4f96198395afadcb15f2fa68f"
+   },
+   "moldr/legacy.py": {
+    "bytes": 909,
+    "sha256": "5105701cd8f38905848234aaff9d9370f13b2cfa40198558472246200aeee178"
+   },
+   "moldr/metrics.py": {
+    "bytes": 2762,
+    "sha256": "d7907fc4e7c29d50a0e8b6acc6771f95fcee58986fe1bbf0daaa613cfbbce397"
+   },
+   "moldr/mol2vec/__init__.py": {
+    "bytes": 50,
+    "sha256": "de829334fa64353ae385600fee17ae1fb87d218f5d09733e325c14bf5204cf92"
+   },
+   "moldr/mol2vec/features.py": {
+    "bytes": 17400,
+    "sha256": "e9e394a242c5a90c35f8afdb97654f1385b9fc309920e7d2681d856779d51e45"
+   },
+   "moldr/mol2vec/helper.py": {
+    "bytes": 11612,
+    "sha256": "81d90a34773d2fc97168cf896668436a444fbd3e26f1d35fb866a935b81f1e66"
+   },
+   "moldr/mol2vec/model.py": {
+    "bytes": 5893,
+    "sha256": "cbfb13b61e8634983efa24082d97ef3a005fbb6e307fb055f9a2808634b1de3d"
+   },
+   "moldr/objective.py": {
+    "bytes": 2885,
+    "sha256": "51982cbdbd709529f2cf2e947f728a4dd5dd9e5b6ca2d436316e1cab77f012c8"
+   },
+   "moldr/profiling.py": {
+    "bytes": 20295,
+    "sha256": "f3404e0f91fb34b45ee02905451f777c34b14e5d29c3d51cc5eb5274f2979c54"
+   },
+   "moldr/provenance.py": {
+    "bytes": 12341,
+    "sha256": "10d1c3fcc6cf9957d2cd1a6eb67ec652da8c85360aa8f920e540d02133618c63"
+   },
+   "moldr/sampling.py": {
+    "bytes": 6878,
+    "sha256": "eca968909d3f152c51b5867b17e1b9458eab3dcccea8e76b1007f5370b797e73"
+   },
+   "moldr/sascore.py": {
+    "bytes": 5153,
+    "sha256": "f994172b1a81d992f37b5f36ad9bd0d47dffd4efca02658321043490915ecc0f"
+   },
+   "moldr/scoring.py": {
+    "bytes": 7290,
+    "sha256": "52ca6de4cbb94ceeab03c26e8c4eaf2836eff805c1393db8ae51a15ebda96060"
+   },
+   "moldr/train.py": {
+    "bytes": 7433,
+    "sha256": "8324e84b472c3ea7d69b39f1ab77a88ce5aa336b83f488b7fb4c9f59f40748ed"
+   },
+   "moldr/utils.py": {
+    "bytes": 1090,
+    "sha256": "d3245ce3d8d6fa253739e18b06bfb9cd9b70feb7c73671d1930c173211263e9f"
+   }
+  },
+  "evaluation_all61_sources_equal_current_disk": false,
+  "post_evaluation_report_source_changes": [
+   {
+    "type": "post_evaluation_report_source_change",
+    "path": "scripts/learning_report.py",
+    "evaluation_sha256": "c4f0764516bcb48a1f1fb502842175295f14548580f8e173e1aacc3078923629",
+    "current_disk_sha256": "5fcd2f4c1920177a1fc78b7eca3e344a4c503a4033f891f643158d67d7bc3aff",
+    "classification": "Known visualization-only change after completed GPU evaluations; evaluation/core runtime files are unchanged; no direct reference to learning_report in checked runtime modules.",
+    "current_file": {
+     "path": "scripts/learning_report.py",
+     "bytes": 31372,
+     "sha256": "5fcd2f4c1920177a1fc78b7eca3e344a4c503a4033f891f643158d67d7bc3aff"
+    }
+   }
+  ],
+  "first13_all_selected_metrics_exact_equal": true,
+  "first13_nonresource_task_shape_ppo_controls_exact_equal": true,
+  "final_result_commit_scope": "The training/evaluation runtime revision is pinned above; the later result/report commit is not inferred from this summary."
+ },
+ "scope": {
+  "n1": "One training seed. Episode samples are not training-seed replicates; sample SD across training seeds is undefined. No statistical superiority or causal claim is established.",
+  "matched_budget": "Matched100 uses explicit episode seeds0..99 for each checkpoint; final500 is the first100 of its saved1000 episodes. Compare unique fractions only with equal budgets. Old13 and final500 separately use1000 episodes each.",
+  "greedy": "Greedy10 uses the same initial molecule C and fixed table. Different reset seeds do not create independent greedy policy replicates.",
+  "training_vs_evaluation": "Training QED is episode-weighted within changing-policy training; fixed-checkpoint evaluation QED is a separate measurement. Decision steps are not molecular updates.",
+  "timing": "Evaluation episode time includes diagnostic capture overhead, excludes model startup/restore/output and offline chemistry analysis. Training speed is measured without this diagnostic capture.",
+  "resource_comparison": "Object-store capacity differs across old/new checkpoint groups. Evaluation uses no rollout workers; initialization is outside rollout timing, but memory conditions are not strictly matched. Do not claim a strictly matched inference speedup from these times.",
+  "gpu_memory": "Report observed shared-process allocated peaks. Do not attribute the actor_value versus actor peak difference solely to U architecture. Do not claim reserved-memory measurements or an isolated per-job memory benchmark.",
+  "initial_encoder_weights": "Initial weights were not persisted. Encoder identity/update evidence is limited to archived iterations100/200/300/400/500, and is not direct gradient observation or a proof about every intermediate optimizer step.",
+  "frozen_mpnn": "The frozen MPNN encoder is randomly initialized, not pretrained.",
+  "candidate_cap": "Cap frequency measures discarded candidates; it does not establish lost future return. Optional offline audits compare immediate QED only.",
+  "best_visited": "Includes the initial molecule and actually selected intermediates. Final score is primary. Gaps do not quantify the benefit of an untested STOP action.",
+  "no_candidate_end": "Only the chosen building-block and current-molecule pair has no candidates; this does not prove that every block is impossible or that stopping was intentional.",
+  "fragment_coverage": "Reports selected table rows and canonical structures; unused fragments are not demonstrated unreachable or unnecessary.",
+  "quality_thresholds": "QED>=.90 and>=.94 are inclusive post-hoc sensitivity cuts on saved scores. Conditional subset sizes differ; numerical quality does not establish synthetic feasibility or usefulness.",
+  "chemistry_and_diversity": "This file only extracts saved aggregates. No new canonicalization, QED, fingerprint, descriptor, scaffold, model or GPU computation.",
+  "ray_tail": "Coverage rows preserve signed dump-minus-final-end seconds. Negative values leave an explicitly unproven final interval; later observation time does not extend dump coverage.",
+  "source_identity": "All49 core hashes match archived audit/execution identities. The known learning_report.py visualization-only edit after evaluation is explicitly separate from runtime provenance."
+ },
+ "sources": {
+  "evaluation_completion_audit": {
+   "path": "artifacts/experiments_learning500_store16g/evaluation_completion_audit.json",
+   "bytes": 300074,
+   "sha256": "d7db70c19dfdf51386c038962115747fb9d5786df1daf45f19aef2b0cc61e1e1"
+  },
+  "execution_plan": {
+   "path": "artifacts/experiments_learning500_store16g/execution_plan.json",
+   "bytes": 9589,
+   "sha256": "22767eb78bac541d81cd536aee53d23bf34ff9f3ab1d8b8b94e35eaa03935571"
+  },
+  "completed_five_training_comparison": {
+   "path": "artifacts/experiments_learning500_store16g/completed_five_training_comparison.json",
+   "bytes": 116438,
+   "sha256": "0126dd660f0acfb1570c83c3a1ee604893b9e6320eda8875ef7780fbdb31d802"
+  },
+  "matched_checkpoint100_comparison": {
+   "path": "artifacts/experiments_learning500_store16g/matched_checkpoint100_comparison.json",
+   "bytes": 148111,
+   "sha256": "8adc71e886108961bc1fbf4e4d621b58caa1716ea459542468b8010a21790dd7"
+  },
+  "short_vs_long_molecular_comparison": {
+   "path": "artifacts/experiments_learning500_store16g/short_vs_long_molecular_comparison.json",
+   "bytes": 38828,
+   "sha256": "9792526b80ff919623a5c29d77811d1d822ab1f68230745782d2518507a9b1f8"
+  },
+  "final500_molecular_comparison": {
+   "path": "artifacts/experiments_learning500_store16g/final500_molecular_comparison.json",
+   "bytes": 76507,
+   "sha256": "47f8cbf26c6e9412f7bd1dd83c84c3f13a2d7067ae187e072b525e5ccbaafb1d"
+  },
+  "encoder_checkpoint_audit": {
+   "path": "artifacts/experiments_learning500_store16g/encoder_checkpoint_audit.json",
+   "bytes": 329247,
+   "sha256": "9e1468751f7ab862e4c78cde7248aaae3cf88374cb38ff26cda38c3e5b2c58c6"
+  },
+  "interpretation_constraints": {
+   "path": "artifacts/experiments_learning500_store16g/interpretation_constraints.json",
+   "bytes": 1978,
+   "sha256": "73cf508ef6014ee70695f6e2589d20fe0954150a93faecc5bb7c13547f850723"
+  },
+  "gpu_memory_review": {
+   "path": "artifacts/experiments_learning500_store16g/gpu_memory_review.json",
+   "bytes": 2031,
+   "sha256": "c631c8c751ebb358995cfbc37061b2b4ad2e93b18c1872eb68ae5bf9c57e2382"
+  },
+  "evaluation_resource_review": {
+   "path": "artifacts/experiments_learning500_store16g/evaluation_resource_review.json",
+   "bytes": 711,
+   "sha256": "f13811418c6d3afe310c3e5ce5084f2b731426a17bc30658c23284d3b2c4d126"
+  },
+  "comparison_short_current_prefix13": {
+   "path": "artifacts/experiments_learning500_store16g/comparison_short_current_prefix13.json",
+   "bytes": 100185,
+   "sha256": "006bc5236e808cccea73026f778e94f6dbb37da424c7c01cdae1f052cd4a1a98"
+  },
+  "catalog_capacity_verification": {
+   "path": "artifacts/experiments_learning500_store16g/catalog_capacity_verification.json",
+   "bytes": 876,
+   "sha256": "c93eaa21b5359724fd6af99ed43e150d80515deb7305bee936583e5dec8785b9"
+  },
+  "pipeline_complete": {
+   "path": "artifacts/experiments_learning500_store16g_evaluation/pipeline_complete.json",
+   "bytes": 10686,
+   "sha256": "94d6a8604c0bc3c5c4fa78871a228a1a7323a8e9b810d2e62569718a395b4d4d"
+  },
+  "completed_training_audit_mol2vec_actor": {
+   "path": "artifacts/experiments_learning500_store16g/completed_run_mol2vec_actor_audit.json",
+   "bytes": 1189,
+   "sha256": "483f1c88b51c0696a9db2668497f7b1b42597b2d4743924989a910d578a5bb27"
+  },
+  "completed_training_audit_actor_value": {
+   "path": "artifacts/experiments_learning500_store16g/completed_run_actor_value_audit.json",
+   "bytes": 1342,
+   "sha256": "607877b35a6660c27ec5c6178bc4662cb5597304d31ce80907400c121d0f7cda"
+  },
+  "completed_training_audit_auxiliary_only": {
+   "path": "artifacts/experiments_learning500_store16g/completed_run_auxiliary_only_audit.json",
+   "bytes": 1444,
+   "sha256": "49e81a9dbd8bb9cf1fa632eab5387e1bb9a825e46460810f355c154f41995f56"
+  },
+  "completed_training_audit_mpnn_frozen": {
+   "path": "artifacts/experiments_learning500_store16g/completed_run_mpnn_frozen_audit.json",
+   "bytes": 20010,
+   "sha256": "9617e7151c042c2fb8da1537f5fecda12af48ec215f423037957861619146a05"
+  },
+  "completed_training_audit_mpnn_trainable": {
+   "path": "artifacts/experiments_learning500_store16g/completed_run_mpnn_trainable_audit.json",
+   "bytes": 20157,
+   "sha256": "85a5c0ebca5604b24761cc99bd1d98ebea3387b164a849b11f541b3de12c2c4d"
+  },
+  "evaluation_iteration_500_stochastic": {
+   "path": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_stochastic/comparison.json",
+   "bytes": 21280,
+   "sha256": "b6339630672fbc4f35859686bfda1d7dc13fb6833f31ec1a5d2a48df712cbe7d"
+  },
+  "evaluation_iteration_500_greedy": {
+   "path": "artifacts/experiments_learning500_store16g_evaluation/iteration_500_greedy/comparison.json",
+   "bytes": 12232,
+   "sha256": "d68a33ba2b28f53974efc43a8d51c7aa541ee77617673a7704f94e99fd41bd0e"
+  },
+  "evaluation_iteration_100_stochastic": {
+   "path": "artifacts/experiments_learning500_store16g_evaluation/iteration_100_stochastic/comparison.json",
+   "bytes": 13125,
+   "sha256": "ce45e52d35d28699eb194e107325e94e7c9f62cd569d5368b2b69af09ec320f7"
+  },
+  "evaluation_iteration_200_stochastic": {
+   "path": "artifacts/experiments_learning500_store16g_evaluation/iteration_200_stochastic/comparison.json",
+   "bytes": 13129,
+   "sha256": "1401e431b99b772ba31e990a051cb27370f8ca476e8640d2b582c43e46bb48e4"
+  },
+  "evaluation_iteration_300_stochastic": {
+   "path": "artifacts/experiments_learning500_store16g_evaluation/iteration_300_stochastic/comparison.json",
+   "bytes": 13127,
+   "sha256": "6a8bd6a3713933efbff3ddef681b16ee7182f76ac8c805d859b28f526f4aa2c6"
+  },
+  "evaluation_iteration_400_stochastic": {
+   "path": "artifacts/experiments_learning500_store16g_evaluation/iteration_400_stochastic/comparison.json",
+   "bytes": 13137,
+   "sha256": "b62e82e28b5313fe08336454fb37b659c836f9f660431bfa7510dcbff3b33a98"
+  },
+  "evaluation_iteration_13_stochastic": {
+   "path": "artifacts/experiments_learning500_store16g_evaluation/iteration_13_stochastic/comparison.json",
+   "bytes": 21173,
+   "sha256": "756652c7f8ebf9e065e3361b5e5f6f3f4388182aced97b1db272236be1332026"
+  },
+  "ray_coverage_mpnn_frozen": {
+   "path": "artifacts/experiments_learning500_store16g/ray_coverage_mpnn_frozen_audit.json",
+   "bytes": 4703,
+   "sha256": "bf1addb720022e262ee6304cc19ad215c12730a07b50e3f144702b0dd024ae5f"
+  },
+  "ray_coverage_mpnn_trainable": {
+   "path": "artifacts/experiments_learning500_store16g/ray_coverage_mpnn_trainable_audit.json",
+   "bytes": 28094,
+   "sha256": "f7b56c7bc46be22d8944d2c3636f2801997a417fb5f7591485a0ffac6434e12e"
+  }
+ },
+ "report_files": {
+  "checkpoint_evaluations.png": {
+   "path": "docs/learning500/checkpoint_evaluations.png",
+   "bytes": 80591,
+   "sha256": "52d165d6b8d4fc4773198488918eed8bcaa381e56141c1ecc8bf695944be20e3"
+  },
+  "checkpoint_evaluations.svg": {
+   "path": "docs/learning500/checkpoint_evaluations.svg",
+   "bytes": 67968,
+   "sha256": "3c88741ad4eb2fa832608dbc64d6fe3e76e21ab07bc80cd8ceb8b6f748880a20"
+  },
+  "index.html": {
+   "path": "docs/learning500/index.html",
+   "bytes": 14736,
+   "sha256": "e91ce83f09186842255677b091a76c01e42ded0f3535a8573f1166c8697f2f3b"
+  },
+  "learning_curves.png": {
+   "path": "docs/learning500/learning_curves.png",
+   "bytes": 460636,
+   "sha256": "15e5eee6d5c9254010b28e02943a0f0bf4a1ae9f2d57674f844ac05ce85f6d76"
+  },
+  "learning_curves.svg": {
+   "path": "docs/learning500/learning_curves.svg",
+   "bytes": 303468,
+   "sha256": "014b035dffae791ad67a5fd9dc82d15f02c47733adba2a0085d6404861529595"
+  },
+  "learning_report.json": {
+   "path": "docs/learning500/learning_report.json",
+   "bytes": 2758816,
+   "sha256": "9ad39d2d60f439c1b18d3f9270d868f9b237091dc18a1801e626f1bbc6eb6ea3"
+  },
+  "optimization_diagnostics.png": {
+   "path": "docs/learning500/optimization_diagnostics.png",
+   "bytes": 440384,
+   "sha256": "d6996dbcad5bc5cfb68aa38fa35503bc55bad2a9626a07dc93443c5d9e857a1f"
+  },
+  "optimization_diagnostics.svg": {
+   "path": "docs/learning500/optimization_diagnostics.svg",
+   "bytes": 431497,
+   "sha256": "dbd7e0c2c9375a9cc49b3e1633d9d662ce9d2fd78d958650940b7a74a062eb08"
+  },
+  "top_molecules.png": {
+   "path": "docs/learning500/top_molecules.png",
+   "bytes": 408227,
+   "sha256": "3fe0218180fa0c124b0f3b6229433af44530e059f79750c94f97cc4dc34d2db2"
+  },
+  "top_molecules.svg": {
+   "path": "docs/learning500/top_molecules.svg",
+   "bytes": 483458,
+   "sha256": "bbb759d18df8de9224e1cc3a6fae129e7b40f15468ccd0eaaf2a4cf8d96e5de4"
+  },
+  "top_molecules_source_manifest.json": {
+   "path": "docs/learning500/top_molecules_source_manifest.json",
+   "bytes": 10698,
+   "sha256": "b0237c5f653eef5a781d7832233ccb59d592dbe46eda72c4782db59f476db0db"
+  }
+ },
+ "source_path_scope": "Paths are relative to the repository root. Source inventory excludes summary.json itself to avoid a recursive self-hash.",
+ "report_file_preparation": {
+  "operation": "Remove exporter-generated trailing whitespace from three SVG text files for Git storage. Raw report artifacts are unchanged; XML structure and whitespace-normalized attributes are identical. PNG images and numeric report data are unchanged.",
+  "files": [
+   {
+    "path": "docs/learning500/checkpoint_evaluations.svg",
+    "raw_source": "artifacts/experiments_learning500_report/checkpoint_evaluations.svg",
+    "raw_bytes": 68880,
+    "raw_sha256": "dd8f6dc7c9053bb2d26f3316cbb2a770fe8b5153baf70204f543908c5bff4f67",
+    "saved_bytes": 67968,
+    "saved_sha256": "3c88741ad4eb2fa832608dbc64d6fe3e76e21ab07bc80cd8ceb8b6f748880a20",
+    "xml_structure_and_geometry_attributes_equal_after_whitespace_normalization": true
+   },
+   {
+    "path": "docs/learning500/learning_curves.svg",
+    "raw_source": "artifacts/experiments_learning500_report/learning_curves.svg",
+    "raw_bytes": 312596,
+    "raw_sha256": "330498daa6b65c0cc29b3502c8ee1cf84eedbb625bb46dc56716b062186ea58f",
+    "saved_bytes": 303468,
+    "saved_sha256": "014b035dffae791ad67a5fd9dc82d15f02c47733adba2a0085d6404861529595",
+    "xml_structure_and_geometry_attributes_equal_after_whitespace_normalization": true
+   },
+   {
+    "path": "docs/learning500/optimization_diagnostics.svg",
+    "raw_source": "artifacts/experiments_learning500_report/optimization_diagnostics.svg",
+    "raw_bytes": 444095,
+    "raw_sha256": "e3621134382c513cf31fbf6229928737b74c39103dfb3b597f2b5a1a5185b8d9",
+    "saved_bytes": 431497,
+    "saved_sha256": "dbd7e0c2c9375a9cc49b3e1633d9d662ce9d2fd78d958650940b7a74a062eb08",
+    "xml_structure_and_geometry_attributes_equal_after_whitespace_normalization": true
+   }
+  ]
+ }
+}

@@ -452,6 +452,10 @@ def _plots(report, directory):
 
     outputs = []
     colors = plt.get_cmap("tab10")
+    run_colors = {
+        run["name"]: colors(index % 10)
+        for index, run in enumerate(report["runs"])
+    }
 
     def curve(axis, run, key, color, *, values=None, linestyle="-"):
         points = run["curve"]
@@ -579,19 +583,26 @@ def _plots(report, directory):
                         [row["mean_score"] for row in points],
                         marker="o",
                         linestyle="none",
-                        color=colors(index % 10),
+                        color=run_colors.get(points[0]["name"], colors(index % 10)),
                         label=f"{configuration}, seed {seed}",
                     )
-                    for row in points:
-                        axis.annotate(
-                            f"n={row.get('episodes', '?')}",
-                            (row["checkpoint_iteration"], row["mean_score"]),
-                            xytext=(3, 3),
-                            textcoords="offset points",
-                            fontsize=6,
-                        )
-        axes[0, 0].set_title("Checkpoint stochastic evaluation: mean final QED")
-        axes[0, 1].set_title("Checkpoint greedy evaluation: mean final QED")
+        for axis, explore in zip(axes.flat, (True, False), strict=True):
+            budgets = {}
+            for row in evaluation_rows:
+                iteration = row.get("checkpoint_iteration")
+                if row.get("explore") is explore and iteration is not None:
+                    budgets.setdefault(iteration, set()).add(
+                        str(row.get("episodes", "?"))
+                    )
+            positions = sorted(budgets)
+            axis.set_xticks(
+                positions,
+                [f"{iteration}\nn={'/'.join(sorted(budgets[iteration]))}"
+                 for iteration in positions],
+                fontsize=8,
+            )
+        axes[0, 0].set_title("Checkpoint stochastic evaluation:\nmean final QED")
+        axes[0, 1].set_title("Checkpoint greedy evaluation:\nmean final QED")
         figure.suptitle(
             "Independent saved-checkpoint evaluation; absent evaluations omitted"
         )
