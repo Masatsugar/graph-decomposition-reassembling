@@ -1,0 +1,80 @@
+# Common conditions for the requested short PPO comparison.
+# profile: 3 warmup iterations followed by 10 measured iterations.
+environment:
+  mode: e2e
+  base_smiles: C
+  atom_limit: 20
+  max_episode_steps: 40
+  reward: improvement
+  score_threshold: 1.1
+  final_weight: 1.0
+  terminate_on_score_decrease: false
+  max_attach: 128
+fragments:
+  source: fixed
+  path: data/building_blocks/guacamol/guacamol_s10000_l2.csv
+  pool_size: null
+chemistry:
+  map_storage: int
+  shared_preparation: true
+  bond_scan: nonzero
+  candidate_representation: mapped
+  dedup_key: kekule
+  mol_transfer: smiles
+scoring:
+  objective: QED
+  input_mode: smiles
+  cache_size: 0
+representation:
+  name: mol2vec
+  trainable: false
+  model_path: models/model_300dim.pkl
+  obs_dim: 300
+  layers: 3
+  hidden: 128
+  output: 128
+  max_atoms: null
+  max_bonds: null
+  atom_chunk_size: 4096
+  gradient_checkpointing: false
+  structure_cache_size: 1024
+  embedding_cache_size: 0
+  reuse_embeddings: true
+selection:
+  mode: actor
+  context: rich
+  candidate_value: false
+  auxiliary_loss_coeff: 0.5
+  alpha: 1.0
+  temperature: 1.0
+training:
+  seed: 0
+  iterations: 13
+  num_workers: 8
+  num_gpus: 1.0
+  object_store_memory_mib: 16384
+  train_batch_size: 1024
+  minibatch_size: 32
+  num_epochs: 3
+  hidden: 256
+  lr: 0.00005
+  gamma: 0.99
+  lambda_: 0.95
+  vf_loss_coeff: 1.0
+  clip_param: 0.3
+  grad_clip: null
+  entropy_coeff: 0.1
+  torch_num_threads: 1
+evaluation:
+  selector: actor
+  episodes: 12
+  explore: false
+  random: false
+profiling:
+  trace: false
+  warmup_iterations: 3
+  measured_iterations: 10
+  time_budget_seconds: null
+output:
+  directory: outputs/experiments
+  logger: local

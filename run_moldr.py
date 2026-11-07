@@ -1,22 +1,16 @@
-import os
+import inspect
 import multiprocessing
+import os
 import timeit
-
-import torch
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import ray
-
-from pathlib import Path
-from joblib import Parallel, delayed
-from tqdm import tqdm
-
-from guacamol.assess_distribution_learning import assess_distribution_learning
 from guacamol.standard_benchmarks import logP_benchmark
-
-from ray.tune.registry import register_env
+from joblib import Parallel, delayed
 from ray.rllib.algorithms.ppo import PPO
+from ray.tune.registry import register_env
+from tqdm import tqdm
 
 from moldr.env import MolEnvValueMax
 from moldr.utils import load
@@ -34,35 +28,47 @@ class Sampler:
         self.algo = algo
         self.env.reset()
 
+    def _reset(self, seed=None):
+        parameters = inspect.signature(self.env.reset).parameters
+        supports_seed = "seed" in parameters or any(
+            parameter.kind == inspect.Parameter.VAR_KEYWORD
+            for parameter in parameters.values()
+        )
+        return self.env.reset(seed=seed) if supports_seed else self.env.reset()
+
     def sampling(self, y):
-        x, seed = y
+        _, seed = y
         np.random.seed(seed)
-        obs, info = self.env.reset()
+        obs, info = self._reset(seed)
         done = False
-        prev_info = None
         while not done:
-            obs_tensor = torch.FloatTensor(obs).unsqueeze(0)
-            action = self.algo.compute_single_action(obs_tensor)
+            action = self.algo.compute_single_action(obs)
             obs, reward, done, truncated, info = self.env.step(action)
+            done = done or truncated
             if reward > self.threshold:
-                return prev_info
-            prev_info = info
-        return info
+                info = dict(info, final_smiles=self.env.base_smiles, gen_smiles=[self.env.base_smiles])
+                return info
+        return dict(info, final_smiles=self.env.base_smiles, gen_smiles=[self.env.base_smiles])
 
     def random(self, y):
-        x, seed = y
+        _, seed = y
         np.random.seed(seed)
-        obs, info = self.env.reset()
+        obs, _info = self._reset(seed)
         done = False
         # prev_info = None
         while not done:
-            action = np.random.choice(self.n_building_blocks)
-            obs, reward, done, truncated, info = self.env.step(action)
+            valid = (
+                np.flatnonzero(obs["action_mask"] > 0)
+                if isinstance(obs, dict) and "action_mask" in obs
+                else np.arange(self.env.action_space.n)
+            )
+            if not len(valid):
+                break
+            action = np.random.choice(valid)
+            obs, _reward, done, truncated, _info = self.env.step(action)
+            done = done or truncated
 
-        if info["gen_smiles"]:
-            return np.random.choice(info["gen_smiles"])
-        else:
-            return info["prev_smiles"]
+        return self.env.base_smiles
 
     def _generate(self, number_samples):
         with multiprocessing.Pool(self.n_jobs) as p:
@@ -98,21 +104,21 @@ class Sampler:
         rewards = 0.0
         info_list = []
         while not done:
-            obs_tensor = torch.FloatTensor(obs).unsqueeze(0)
-            action = self.algo.compute_single_action(obs_tensor)
+            action = self.algo.compute_single_action(obs)
             obs, reward, done, truncated, info = self.env.step(action)
+            done = done or truncated
             rewards += reward
             info_list.append(info)
 
-        final_scores = self.env.compute_score(info_list[-1]["gen_smiles"])
-        final_smiles = info_list[-1]["gen_smiles"][np.argmax(final_scores)]
-        rewards += np.max(final_scores)
-        info_list.append({"prev_smiles": final_smiles})
-        print("total reward:", rewards, "final reward:", np.max(final_scores))
+        # The environment has already selected and scored its final molecule.
+        # Dead ends have no candidates; a completion bonus was already paid
+        # by step(), and a time-limit truncation must not invent one here.
+        info_list.append({"prev_smiles": self.env.base_smiles})
+        print("total reward:", rewards, "final score:", self.env.prev_reward)
         return info_list
 
 
-if __name__ == "__main__":
+def legacy_main():
     objective = logP_benchmark(8.0)
     checkpoint_dir = (
         Path.cwd()
@@ -152,3 +158,9 @@ if __name__ == "__main__":
     print("Top 100 Score mean:", top100.score.mean())
     os.makedirs("outputs/results", exist_ok=True)
     _result.to_csv(f"outputs/results/{objective.name}.csv")
+
+
+if __name__ == "__main__":
+    from moldr.cli import main
+
+    main(default_command="sample")

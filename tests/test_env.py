@@ -1,94 +1,174 @@
-import os
-import torch
-import numpy as np
+"""Environment contracts without launching a Ray cluster or remote workers."""
+
+from types import SimpleNamespace
+
 import gymnasium as gym
+import numpy as np
+import pytest
+from gymnasium.utils.env_checker import check_env
 
-from guacamol.standard_benchmarks import logP_benchmark
-
-from moldr.env import MolEnvValueMax
-from moldr.config import get_default_config
+import moldr.env as env_mod
+from moldr.chemutils import get_mol, get_smiles
 
 
-def test_env():
-    objective = logP_benchmark(8.0)
-    building_blocks_smiles = ["CC", "CCO", "CCCC"]
-    config = get_default_config(
-        objective,
-        building_blocks_smiles,
-        model_path="models/model_300dim.pkl",
-    )
-    algo = config.build()
-    # env = MolEnvValueMax(config)
-    env = algo.env_creator(config.env_config)
-    obs, info = env.reset()
-    assert len(obs) == 300  # mol2vec dim
+class _Float64Mol2Vec:
+    def __init__(self, *args, **kwargs):
+        pass
 
-    rewards = 0.0
-    while True:
-        action = np.random.choice(len(building_blocks_smiles))
+    def fit_transform(self, mols):
+        return np.ones((len(mols), 300), dtype=np.float64)
+
+
+def _atom_score(smiles):
+    return get_mol(smiles).GetNumAtoms() / 100.0
+
+
+def _env_config(**overrides):
+    cfg = {
+        "BUILDING_BLOCKS": ["CC", "CCO", "CCCC"],
+        "OBS_SPACE": gym.spaces.Box(-1e10, 1e10, (300,), dtype=np.float32),
+        "SCORE_FUNCTION": _atom_score,
+        "SCORE_THRESHOLD": 0.9,
+        "FINAL_WEIGHT": 1.0,
+        "BASE_SMILES": "C",
+        "MODEL_PATH": "models/model_300dim.pkl",
+        "LENGTH": 100,
+    }
+    cfg.update(overrides)
+    cfg.setdefault("ACTION_SPACE", gym.spaces.Discrete(len(cfg["BUILDING_BLOCKS"])))
+    return cfg
+
+
+@pytest.fixture
+def make_env(monkeypatch):
+    monkeypatch.setattr(env_mod, "Mol2Vec", _Float64Mol2Vec)
+    return lambda **kwargs: env_mod.MolEnvValueMax(_env_config(**kwargs))
+
+
+def test_env_real_mol2vec():
+    env = env_mod.MolEnvValueMax(_env_config())
+    obs, _ = env.reset(seed=0)
+    assert env.observation_space.contains(obs)
+    for action in [0, 1, 2]:
         obs, reward, done, truncated, info = env.step(action)
-        rewards += reward
+        assert env.observation_space.contains(obs)
+        assert np.isfinite(reward)
+        assert get_mol(env.base_smiles) is not None
         if done or truncated:
             break
 
-    print(info)
+
+def test_gymnasium_contract(make_env):
+    check_env(make_env(), skip_render_check=True)
 
 
-def run_env():
-    cwd = os.getcwd()
-    building_blocks_smiles = ["CC", "CCC", "CO", "CN", "CF"]
-    objective = logP_benchmark(8.0)
-    config = get_default_config(
-        MolEnvValueMax,
-        objective,
-        building_blocks_smiles,
-        model_path=os.path.join(cwd, "models/model_300dim.pkl"),
-        num_workers=8,
-        num_gpus=1,
-    )
-    rl_module = RLModule.from_checkpoint(checkpoint_path)
-
-    env = MolEnvValueMax(config.env_config)
-
-    done = False
-    obs, info = env.reset()
-    episode_return = 0.0
-    while not done:
-        # Uncomment this line to render the env.
-        # env.render()
-
-        # Compute the next action from a batch (B=1) of observations.
-        obs_batch = torch.from_numpy(obs).unsqueeze(0)  # add batch B=1 dimension
-        model_outputs = rl_module.forward_inference({"obs": obs_batch})
-
-        # Extract the action distribution parameters from the output and dissolve batch dim.
-        action_dist_params = model_outputs["action_dist_inputs"][0].numpy()
-
-        if isinstance(env.action_space, gym.spaces.Box):
-            # We have continuous actions -> take the mean (max likelihood).
-            greedy_action = np.clip(
-                action_dist_params[
-                    0:1
-                ],  # 0=mean, 1=log(stddev), [0:1]=use mean, but keep shape=(1,)
-                a_min=env.action_space.low[0],
-                a_max=env.action_space.high[0],
-            )
-        elif isinstance(env.action_space, gym.spaces.Discrete):
-            # For discrete actions, you should take the argmax over the logits:
-            greedy_action = np.argmax(action_dist_params)
-        else:
-            raise TypeError(f"Unsupported action space: {env.action_space}")
-
-        # Send the action to the environment for the next step.
-        obs, reward, terminated, truncated, info = env.step(greedy_action)
-
-        # Perform env-loop bookkeeping.
-        episode_return += reward
-        done = terminated or truncated
-
-    print(f"Reached episode return of {episode_return}.")
-    print(info)
+def test_observations_follow_declared_dtype(make_env):
+    env = make_env()
+    obs, _ = env.reset()
+    assert obs.dtype == np.float32
+    obs, *_ = env.step(0)
+    assert env.observation_space.contains(obs)
 
 
-if __name__ == "__main__":
-    test_env()
+def test_dead_end_preserves_molecule_and_completion_reward(make_env):
+    env = make_env(BUILDING_BLOCKS=["FC(F)(F)F"], FINAL_WEIGHT=2.0)
+    before, _ = env.reset()
+    obs, reward, done, truncated, info = env.step(0)
+    assert done and not truncated
+    assert reward == pytest.approx(2.0 * _atom_score("C"))
+    assert info["gen_smiles"] == []
+    assert info["score"] == pytest.approx(_atom_score("C"))
+    assert np.array_equal(obs, before)
+    assert env.observation_space.contains(obs)
+
+
+def test_non_growing_episode_truncates_without_completion_bonus(make_env):
+    env = make_env(BUILDING_BLOCKS=["C"], MAX_EPISODE_STEPS=2)
+    env.reset()
+    _, reward, done, truncated, _ = env.step(0)
+    assert not done and not truncated and reward == 0.0
+    obs, reward, done, truncated, info = env.step(0)
+    assert not done and truncated and reward == 0.0
+    assert env.observation_space.contains(obs)
+    assert info["score"] == pytest.approx(_atom_score("C"))
+
+
+def test_terminal_reward_uses_final_weight(make_env):
+    env = make_env(BUILDING_BLOCKS=["CC"], LENGTH=1, FINAL_WEIGHT=3.0)
+    env.reset()
+    _, reward, done, truncated, info = env.step(0)
+    assert done and not truncated
+    assert reward == pytest.approx(info["score"] * 3.0)
+
+
+def test_score_regression_compares_with_reset_molecule(make_env):
+    env = make_env(SCORE_FUNCTION=lambda s: 0.8 if get_mol(s).GetNumAtoms() == 1 else 0.2)
+    env.reset()
+    _, reward, done, truncated, info = env.step(0)
+    assert done and not truncated
+    assert info["prev_score"] == pytest.approx(0.8)
+    assert reward == pytest.approx(0.2)
+
+
+@pytest.mark.parametrize("action", [-1, 3, None, [0]])
+def test_invalid_action_is_rejected(make_env, action):
+    env = make_env()
+    env.reset()
+    with pytest.raises(ValueError, match="ACTION_SPACE"):
+        env.step(action)
+    assert env.env_step == 0
+
+
+@pytest.mark.parametrize("overrides", [
+    {"BUILDING_BLOCKS": ["invalid"]},
+    {"BUILDING_BLOCKS": ["CC"], "ACTION_SPACE": gym.spaces.Discrete(2)},
+    {"BASE_SMILES": "invalid"},
+    {"RECOND_EVERY": "sometimes"},
+    {"MAX_EPISODE_STEPS": 0},
+    {"BUILDING_BLOCKS": ["C[C@H](O)F"]},
+    {"BASE_SMILES": "C/C=C/C"},
+])
+def test_invalid_config_is_rejected(make_env, overrides):
+    with pytest.raises(ValueError):
+        make_env(**overrides)
+
+
+def test_proposer_refresh_is_atomic_and_checks_pool_size(make_env):
+    env = make_env()
+    original = list(env.building_blocks)
+    env._proposer = SimpleNamespace(propose=lambda context: ["CC"])
+    with pytest.raises(ValueError, match="per action"):
+        env._decode_pool(np.zeros(300))
+    assert env.building_blocks == original
+    assert [get_smiles(m) for m in env.mols] == [get_smiles(get_mol(s)) for s in original]
+
+
+def test_nonfinite_scores_fail_before_entering_training(make_env):
+    env = make_env(SCORE_FUNCTION=lambda s: float("nan"))
+    with pytest.raises(ValueError, match="finite scores"):
+        env.reset()
+
+
+def _objective():
+    return SimpleNamespace(wrapped_objective=SimpleNamespace(score=_atom_score))
+
+
+def test_legacy_config_sets_model_used_by_policy():
+    from moldr.config import get_default_config_v1
+
+    config = get_default_config_v1(_objective(), ["CC"], "unused", num_workers=0, num_gpus=0)
+    config.validate()
+    assert not config.enable_rl_module_and_learner
+    assert config.model["fcnet_hiddens"] == [256, 128, 128]
+    assert config.train_batch_size == 4000
+    assert config.num_gpus == 0
+
+
+@pytest.mark.parametrize("num_gpus,learners,gpus_per_learner", [(0, 0, 0), (1, 0, 1), (2, 2, 1)])
+def test_new_stack_config_honors_gpu_budget(num_gpus, learners, gpus_per_learner):
+    from moldr.config import get_default_config_v2
+
+    config = get_default_config_v2(_objective(), ["CC"], "unused", num_workers=0, num_gpus=num_gpus)
+    config.validate()
+    assert config.num_learners == learners
+    assert config.num_gpus_per_learner == gpus_per_learner

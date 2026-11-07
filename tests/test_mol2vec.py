@@ -1,13 +1,13 @@
 import moldr.chemutils as chem
 from moldr.mol2vec import Mol2Vec
-from moldr.env import MolEnvValueMax
+from moldr.mol2vec.features import mol2alt_sentence
 
 
 def test_mol2alt_sentence(radius=2):
     sample_smiles = ["CC", "CCO", "CCC"]
     sample_mols = [chem.get_mol(s) for s in sample_smiles]
-    sentences = chem.mol2alt_sentence(sample_mols[0], radius)
-    return sentences
+    sentences = mol2alt_sentence(sample_mols[0], radius)
+    assert len(sentences) > 0
 
 
 def test_mol2vec():

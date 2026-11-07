@@ -1,0 +1,2232 @@
+{
+  "settings": {
+    "output_dir": "artifacts/profiling/2026-10-13",
+    "modes": [
+      "legacy",
+      "e2e"
+    ],
+    "workers": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "trace_workers": [
+      2,
+      8
+    ],
+    "train_batch_size": 1024,
+    "minibatch_size": 128,
+    "num_epochs": 3,
+    "warmup": 1,
+    "iterations": 3,
+    "length": 20,
+    "option_pool_size": 32,
+    "max_attach": 32,
+    "hidden": 128,
+    "seed": 31,
+    "max_events": 500000
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 4060 Ti",
+    "logical_cpus": 32,
+    "cpu": "Intel(R) Core(TM) i9-14900",
+    "platform": "Linux-6.8.0-136-generic-x86_64-with-glibc2.35",
+    "python": "3.12.7",
+    "torch": "2.7.1+cu126",
+    "ray": "2.47.1",
+    "cuda": "12.6"
+  },
+  "vocab_size": 1679,
+  "cases": [
+    {
+      "mode": "legacy",
+      "workers": 1,
+      "fragment_length": 1024,
+      "device": "cuda:0",
+      "unprofiled_runs": [
+        {
+          "seconds": 31.005937103182077,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 33.02593295575346,
+          "learner_stats": {
+            "cur_kl_coeff": 0.10000000000000002,
+            "cur_lr": 5e-05,
+            "total_loss": -0.5686496558288733,
+            "policy_loss": -0.025577025876070063,
+            "vf_loss": 0.1992630319048961,
+            "vf_explained_var": -0.9979073653618494,
+            "kl": 0.0006872522896860985,
+            "entropy": 7.424043695131938,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 30458.944,
+            "restore_workers_time_ms": 0.008,
+            "training_step_time_ms": 30458.919,
+            "sample_time_ms": 30335.145,
+            "load_time_ms": 10.581,
+            "load_throughput": 96778.181,
+            "learn_time_ms": 110.561,
+            "learn_throughput": 9261.874,
+            "synch_weights_time_ms": 2.527
+          }
+        },
+        {
+          "seconds": 30.517622931860387,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 33.554382734408335,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.5967208805183569,
+            "policy_loss": -0.05156879328812162,
+            "vf_loss": 0.1956810603539149,
+            "vf_explained_var": -1.0,
+            "kl": 0.0061343782466506775,
+            "entropy": 7.411398609479268,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 30474.144,
+            "restore_workers_time_ms": 0.007,
+            "training_step_time_ms": 30474.121,
+            "sample_time_ms": 30362.429,
+            "load_time_ms": 10.41,
+            "load_throughput": 98364.788,
+            "learn_time_ms": 98.801,
+            "learn_throughput": 10364.32,
+            "synch_weights_time_ms": 2.385
+          }
+        },
+        {
+          "seconds": 31.164010039530694,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 32.85841580403434,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.6104747640589873,
+            "policy_loss": -0.06405771368493636,
+            "vf_loss": 0.18812546196083227,
+            "vf_explained_var": -1.0,
+            "kl": 0.013085330584579133,
+            "entropy": 7.351967533429463,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 30641.046,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 30641.024,
+            "sample_time_ms": 30534.373,
+            "load_time_ms": 10.469,
+            "load_throughput": 97810.181,
+            "learn_time_ms": 93.514,
+            "learn_throughput": 10950.194,
+            "synch_weights_time_ms": 2.572
+          }
+        }
+      ],
+      "mean_seconds": 30.895856691524386,
+      "std_seconds": 0.27512705672548377,
+      "mean_steps_per_second": 33.146243831398714
+    },
+    {
+      "mode": "legacy",
+      "workers": 2,
+      "fragment_length": 512,
+      "device": "cuda:0",
+      "unprofiled_runs": [
+        {
+          "seconds": 15.737287282012403,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 65.06839340541391,
+          "learner_stats": {
+            "cur_kl_coeff": 0.10000000000000002,
+            "cur_lr": 5e-05,
+            "total_loss": -0.5619412151475748,
+            "policy_loss": -0.02203717199154198,
+            "vf_loss": 0.20246737574537596,
+            "vf_explained_var": -0.9952237755060196,
+            "kl": 0.0005314241225308584,
+            "entropy": 7.424245476722717,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 15442.28,
+            "restore_workers_time_ms": 0.005,
+            "training_step_time_ms": 15442.262,
+            "sample_time_ms": 15338.182,
+            "load_time_ms": 3.052,
+            "load_throughput": 335531.213,
+            "learn_time_ms": 98.001,
+            "learn_throughput": 10448.86,
+            "synch_weights_time_ms": 2.95
+          }
+        },
+        {
+          "seconds": 15.903197299689054,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 64.38956775188984,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.596873089671135,
+            "policy_loss": -0.053254666311355926,
+            "vf_loss": 0.1974341111878554,
+            "vf_explained_var": -1.0,
+            "kl": 0.005694753439883719,
+            "entropy": 7.413372576236725,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 15591.449,
+            "restore_workers_time_ms": 0.005,
+            "training_step_time_ms": 15591.433,
+            "sample_time_ms": 15494.045,
+            "load_time_ms": 3.394,
+            "load_throughput": 301697.618,
+            "learn_time_ms": 90.971,
+            "learn_throughput": 11256.355,
+            "synch_weights_time_ms": 2.942
+          }
+        },
+        {
+          "seconds": 15.754929195158184,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 64.99553170411559,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.6106802523136139,
+            "policy_loss": -0.06046012882143259,
+            "vf_loss": 0.1857339714964231,
+            "vf_explained_var": -1.0,
+            "kl": 0.010809912180549644,
+            "entropy": 7.364945848782857,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 15629.772,
+            "restore_workers_time_ms": 0.005,
+            "training_step_time_ms": 15629.754,
+            "sample_time_ms": 15535.513,
+            "load_time_ms": 3.558,
+            "load_throughput": 287803.749,
+            "learn_time_ms": 87.701,
+            "learn_throughput": 11676.072,
+            "synch_weights_time_ms": 2.904
+          }
+        }
+      ],
+      "mean_seconds": 15.798471258953214,
+      "std_seconds": 0.07440191297278385,
+      "mean_steps_per_second": 64.81783095380645,
+      "profile": {
+        "trace": "artifacts/profiling/2026-10-13/legacy-workers-2/trace.json",
+        "timeline": "artifacts/profiling/2026-10-13/legacy-workers-2/timeline.html",
+        "overview": "artifacts/profiling/2026-10-13/legacy-workers-2/overview.svg",
+        "summary": {
+          "iteration_wall_ms": 16017.916607000001,
+          "iteration_count": 1,
+          "elapsed_span_ms": 16017.916607000001,
+          "driver_phases": [
+            {
+              "name": "synchronous_parallel_sample",
+              "category": "sampling_wait",
+              "duration_ms": 15880.034861,
+              "self_ms": 15880.034861,
+              "count": 1,
+              "wall_percent": 99.13920299759991
+            },
+            {
+              "name": "multi_gpu_train_one_step",
+              "category": "optimization",
+              "duration_ms": 120.13629499999992,
+              "self_ms": 5.845225,
+              "count": 1,
+              "wall_percent": 0.7500119893713211
+            },
+            {
+              "name": "sync_weights",
+              "category": "sync",
+              "duration_ms": 3.92510899999924,
+              "self_ms": 3.925109,
+              "count": 1,
+              "wall_percent": 0.024504491416092934
+            }
+          ],
+          "workers": [
+            {
+              "worker_id": 1,
+              "pid": 934741,
+              "process_name": "rollout worker 1",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 15869.826917999999,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.8185669999999992,
+              "last_sample_end_ms": 15871.645485,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 7806.154171000002,
+                  "count": 1536
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 6422.871682999971,
+                  "count": 12477
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 635.1767439999998,
+                  "count": 1354
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 383.21386400000017,
+                  "count": 512
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 311.5703220000002,
+                  "count": 512
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 218.587729,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 92.25240499999995,
+                  "count": 677
+                }
+              ]
+            },
+            {
+              "worker_id": 2,
+              "pid": 934742,
+              "process_name": "rollout worker 2",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 14929.128755999998,
+              "sample_calls": 1,
+              "first_sample_start_ms": 2.032439,
+              "last_sample_end_ms": 14931.161194999999,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 7370.57654699999,
+                  "count": 1536
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 5948.660797999965,
+                  "count": 11625
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 630.0422260000001,
+                  "count": 1360
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 360.0324100000002,
+                  "count": 512
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 314.83726200000024,
+                  "count": 512
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 215.441422,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 89.53809099999997,
+                  "count": 680
+                }
+              ]
+            }
+          ],
+          "worker_balance": {
+            "scope": "traced fragment",
+            "fastest_sample_ms": 14929.128755999998,
+            "slowest_sample_ms": 15869.826917999999,
+            "sample_duration_spread_ms": 940.6981620000006,
+            "worker_start_spread_ms": 0.21387200000000095,
+            "completion_spread_ms": 940.4842900000003,
+            "worker_sample_sum_ms": 30798.955673999997,
+            "post_last_traced_scope_gap_ms": 9.513855000001058,
+            "post_last_sample_gap_ms": null,
+            "post_last_traced_fragment_gap_ms": 9.513855000001058,
+            "post_last_traced_scope_gap_note": "After the last measured worker scope: may include worker postprocessing, Ray serialization/transport and driver aggregation; this is not a direct network-time measurement."
+          },
+          "gpu": {
+            "busy_ms": 16.231870000662283,
+            "busy_percent_of_iteration": 0.1013357129950894,
+            "kernel_count": 6096,
+            "memcpy_count": 872,
+            "memset_count": 0,
+            "busy_by_process_ms": {
+              "935744": 16.231870000662283
+            },
+            "scope": "Union of traced GPU activity inside the profiled iteration; not whole-device utilization. CUDA runtime CPU calls are excluded."
+          },
+          "event_count": 95438,
+          "partial_exclusive_spans_omitted": 0,
+          "notes": [
+            "Driver phases use fresh measured scopes, not RLlib's smoothed timers.",
+            "Worker scope sum is concurrent CPU wall work, not iteration wall time; sample_scope identifies a full sample call or a traced fragment.",
+            "Exclusive categories use args.self_us and do not add parent/child time.",
+            "sync_weights measures driver publish/dispatch; remote updates are asynchronous."
+          ],
+          "dropped_events": 0,
+          "configuration": {
+            "mode": "legacy",
+            "workers": 2,
+            "clock_alignment": "single-host shared wall clock + monotonic per-process spans",
+            "global_train_batch": 1024,
+            "fragment_length": 512,
+            "minibatch_size": 128,
+            "optimization_epochs": 3,
+            "profiled_run": {
+              "seconds": 16.016777873970568,
+              "env_steps": 1024,
+              "trained_steps": 1024,
+              "steps_per_second": 63.932958804663116,
+              "learner_stats": {
+                "cur_kl_coeff": 0.10000000000000002,
+                "cur_lr": 5e-05,
+                "total_loss": -0.5619412151475748,
+                "policy_loss": -0.02203717199154198,
+                "vf_loss": 0.20246737574537596,
+                "vf_explained_var": -0.9952237755060196,
+                "kl": 0.0005314241225308584,
+                "entropy": 7.424245476722717,
+                "entropy_coeff": 0.10000000000000002
+              },
+              "ray_smoothed_timers": {
+                "training_iteration_time_ms": 15642.868,
+                "restore_workers_time_ms": 0.009,
+                "training_step_time_ms": 15642.839,
+                "sample_time_ms": 15501.957,
+                "load_time_ms": 3.285,
+                "load_throughput": 311703.846,
+                "learn_time_ms": 133.687,
+                "learn_throughput": 7659.675,
+                "synch_weights_time_ms": 3.757
+              }
+            },
+            "warmup_iterations": 1,
+            "prior_measured_iterations": 0,
+            "dropped_events": 0,
+            "note": "Instrumented iteration is separate from uninstrumented throughput trials. CPU+GPU spans overlap; nested inclusive durations are not additive."
+          }
+        }
+      }
+    },
+    {
+      "mode": "legacy",
+      "workers": 4,
+      "fragment_length": 256,
+      "device": "cuda:0",
+      "unprofiled_runs": [
+        {
+          "seconds": 9.278069693595171,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 110.3677848752189,
+          "learner_stats": {
+            "cur_kl_coeff": 0.10000000000000002,
+            "cur_lr": 5e-05,
+            "total_loss": -0.5695699391265711,
+            "policy_loss": -0.025904191580290597,
+            "vf_loss": 0.1986381442596515,
+            "vf_explained_var": -0.992665578921636,
+            "kl": 0.000687390212011659,
+            "entropy": 7.423726141452789,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 9003.699,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 9003.68,
+            "sample_time_ms": 8903.74,
+            "load_time_ms": 1.882,
+            "load_throughput": 544217.853,
+            "learn_time_ms": 93.247,
+            "learn_throughput": 10981.636,
+            "synch_weights_time_ms": 4.695
+          }
+        },
+        {
+          "seconds": 8.783351491205394,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 116.58419921203337,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.5974672188361486,
+            "policy_loss": -0.05399313623396059,
+            "vf_loss": 0.19732325213650861,
+            "vf_explained_var": -1.0,
+            "kl": 0.006486078612241523,
+            "entropy": 7.411216378211975,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 8926.815,
+            "restore_workers_time_ms": 0.008,
+            "training_step_time_ms": 8926.792,
+            "sample_time_ms": 8815.519,
+            "load_time_ms": 2.114,
+            "load_throughput": 484303.773,
+            "learn_time_ms": 104.532,
+            "learn_throughput": 9796.028,
+            "synch_weights_time_ms": 4.514
+          }
+        },
+        {
+          "seconds": 9.566238412633538,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 107.04311933598338,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.6059528713425001,
+            "policy_loss": -0.06444882865374287,
+            "vf_loss": 0.1934502093742291,
+            "vf_explained_var": -1.0,
+            "kl": 0.012036020286056251,
+            "entropy": 7.355560481548309,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 9084.338,
+            "restore_workers_time_ms": 0.007,
+            "training_step_time_ms": 9084.316,
+            "sample_time_ms": 8978.761,
+            "load_time_ms": 2.018,
+            "load_throughput": 507514.377,
+            "learn_time_ms": 99.06,
+            "learn_throughput": 10337.138,
+            "synch_weights_time_ms": 4.369
+          }
+        }
+      ],
+      "mean_seconds": 9.209219865811368,
+      "std_seconds": 0.32329883701739864,
+      "mean_steps_per_second": 111.33170114107855
+    },
+    {
+      "mode": "legacy",
+      "workers": 8,
+      "fragment_length": 128,
+      "device": "cuda:0",
+      "unprofiled_runs": [
+        {
+          "seconds": 5.87890312820673,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 174.1821522941739,
+          "learner_stats": {
+            "cur_kl_coeff": 0.10000000000000002,
+            "cur_lr": 5e-05,
+            "total_loss": -0.5646452133854231,
+            "policy_loss": -0.024790460554262,
+            "vf_loss": 0.2024322940657536,
+            "vf_explained_var": -0.9959544638792673,
+            "kl": 0.000663198449757374,
+            "entropy": 7.423533538977305,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 5656.26,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 5656.242,
+            "sample_time_ms": 5549.111,
+            "load_time_ms": 2.123,
+            "load_throughput": 482445.077,
+            "learn_time_ms": 97.912,
+            "learn_throughput": 10458.414,
+            "synch_weights_time_ms": 6.985
+          }
+        },
+        {
+          "seconds": 5.372242298908532,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 190.60942210444307,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.596507182965676,
+            "policy_loss": -0.05177012885299822,
+            "vf_loss": 0.19617238454520702,
+            "vf_explained_var": -1.0,
+            "kl": 0.005949527968368784,
+            "entropy": 7.412069141864777,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 5557.72,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 5557.702,
+            "sample_time_ms": 5452.416,
+            "load_time_ms": 1.959,
+            "load_throughput": 522798.908,
+            "learn_time_ms": 96.234,
+            "learn_throughput": 10640.694,
+            "synch_weights_time_ms": 6.986
+          }
+        },
+        {
+          "seconds": 5.647158995270729,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 181.3301167644756,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.6108750241498152,
+            "policy_loss": -0.06458483834285289,
+            "vf_loss": 0.18868672040601572,
+            "vf_explained_var": -1.0,
+            "kl": 0.012988991204890018,
+            "entropy": 7.35626345872879,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 5577.241,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 5577.223,
+            "sample_time_ms": 5474.375,
+            "load_time_ms": 1.876,
+            "load_throughput": 545721.838,
+            "learn_time_ms": 93.908,
+            "learn_throughput": 10904.316,
+            "synch_weights_time_ms": 6.96
+          }
+        }
+      ],
+      "mean_seconds": 5.6327681407953305,
+      "std_seconds": 0.20709357225770123,
+      "mean_steps_per_second": 182.04056372103085,
+      "profile": {
+        "trace": "artifacts/profiling/2026-10-13/legacy-workers-8/trace.json",
+        "timeline": "artifacts/profiling/2026-10-13/legacy-workers-8/timeline.html",
+        "overview": "artifacts/profiling/2026-10-13/legacy-workers-8/overview.svg",
+        "summary": {
+          "iteration_wall_ms": 5817.438243,
+          "iteration_count": 1,
+          "elapsed_span_ms": 5817.438243,
+          "driver_phases": [
+            {
+              "name": "synchronous_parallel_sample",
+              "category": "sampling_wait",
+              "duration_ms": 5681.326674,
+              "self_ms": 5681.326674,
+              "count": 1,
+              "wall_percent": 97.66028338738653
+            },
+            {
+              "name": "multi_gpu_train_one_step",
+              "category": "optimization",
+              "duration_ms": 115.75461099999957,
+              "self_ms": 6.032684000000001,
+              "count": 1,
+              "wall_percent": 1.9897866752480722
+            },
+            {
+              "name": "sync_weights",
+              "category": "sync",
+              "duration_ms": 8.462111999999731,
+              "self_ms": 8.462112,
+              "count": 1,
+              "wall_percent": 0.14546114022236525
+            }
+          ],
+          "workers": [
+            {
+              "worker_id": 1,
+              "pid": 935646,
+              "process_name": "rollout worker 1",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 4863.948316999999,
+              "sample_calls": 1,
+              "first_sample_start_ms": 0.86446,
+              "last_sample_end_ms": 4864.812777,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 2406.169026,
+                  "count": 384
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 1906.9709830000043,
+                  "count": 2909
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 221.36079900000016,
+                  "count": 340
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 115.70830099999998,
+                  "count": 128
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 108.10254599999998,
+                  "count": 128
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 74.045169,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 31.591493000000007,
+                  "count": 170
+                }
+              ]
+            },
+            {
+              "worker_id": 2,
+              "pid": 935647,
+              "process_name": "rollout worker 2",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 4250.034978,
+              "sample_calls": 1,
+              "first_sample_start_ms": 0.9321859999999997,
+              "last_sample_end_ms": 4250.967164,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 2047.5269489999996,
+                  "count": 384
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 1671.4617749999993,
+                  "count": 2604
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 219.59156000000004,
+                  "count": 338
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 109.88360800000002,
+                  "count": 128
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 99.87446599999997,
+                  "count": 128
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 72.121022,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 29.575598000000006,
+                  "count": 169
+                }
+              ]
+            },
+            {
+              "worker_id": 3,
+              "pid": 935649,
+              "process_name": "rollout worker 3",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 5245.041,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.0328270000000002,
+              "last_sample_end_ms": 5246.073826999999,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 2556.6394569999998,
+                  "count": 384
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 2135.6987560000034,
+                  "count": 3242
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 214.88595400000003,
+                  "count": 336
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 127.30992099999997,
+                  "count": 128
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 105.21537300000003,
+                  "count": 128
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 72.649836,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 32.641703,
+                  "count": 168
+                }
+              ]
+            },
+            {
+              "worker_id": 4,
+              "pid": 935648,
+              "process_name": "rollout worker 4",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 5207.429748,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.0408789999999999,
+              "last_sample_end_ms": 5208.470627,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 2545.2339859999993,
+                  "count": 384
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 2100.5409029999955,
+                  "count": 3235
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 222.1997539999999,
+                  "count": 336
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 126.661929,
+                  "count": 128
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 106.946105,
+                  "count": 128
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 73.405616,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 32.44145499999999,
+                  "count": 168
+                }
+              ]
+            },
+            {
+              "worker_id": 5,
+              "pid": 935650,
+              "process_name": "rollout worker 5",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 4789.049932,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.0735299999999997,
+              "last_sample_end_ms": 4790.123462,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 2336.2084310000005,
+                  "count": 384
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 1909.2175250000005,
+                  "count": 2896
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 218.3567800000003,
+                  "count": 336
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 114.79130400000004,
+                  "count": 128
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 107.093345,
+                  "count": 128
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 72.098951,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 31.283596000000003,
+                  "count": 168
+                }
+              ]
+            },
+            {
+              "worker_id": 6,
+              "pid": 935651,
+              "process_name": "rollout worker 6",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 4907.732573,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.1195960000000005,
+              "last_sample_end_ms": 4908.852169,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 2375.571603,
+                  "count": 384
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 1977.8353020000002,
+                  "count": 2937
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 220.89917000000003,
+                  "count": 338
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 120.19233999999994,
+                  "count": 128
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 108.12495400000003,
+                  "count": 128
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 73.313789,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 31.795415,
+                  "count": 169
+                }
+              ]
+            },
+            {
+              "worker_id": 7,
+              "pid": 935689,
+              "process_name": "rollout worker 7",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 5228.508368,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.1934300000000002,
+              "last_sample_end_ms": 5229.701797999999,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 2573.7806530000007,
+                  "count": 384
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 2087.4120580000017,
+                  "count": 3211
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 224.088552,
+                  "count": 338
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 125.45307099999998,
+                  "count": 128
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 110.38097500000003,
+                  "count": 128
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 74.404281,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 32.98877799999999,
+                  "count": 169
+                }
+              ]
+            },
+            {
+              "worker_id": 8,
+              "pid": 935685,
+              "process_name": "rollout worker 8",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 5672.618117999999,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.2282950000000001,
+              "last_sample_end_ms": 5673.846412999999,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 2792.8036279999983,
+                  "count": 384
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 2314.306114999999,
+                  "count": 3414
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 213.85063199999996,
+                  "count": 340
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 140.98549300000005,
+                  "count": 128
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 104.83649000000005,
+                  "count": 128
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 72.264065,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 33.57169499999999,
+                  "count": 170
+                }
+              ]
+            }
+          ],
+          "worker_balance": {
+            "scope": "traced fragment",
+            "fastest_sample_ms": 4250.034978,
+            "slowest_sample_ms": 5672.618117999999,
+            "sample_duration_spread_ms": 1422.5831399999997,
+            "worker_start_spread_ms": 0.36383500000000013,
+            "completion_spread_ms": 1422.8792489999996,
+            "worker_sample_sum_ms": 40164.363033999995,
+            "post_last_traced_scope_gap_ms": 7.864414999999099,
+            "post_last_sample_gap_ms": null,
+            "post_last_traced_fragment_gap_ms": 7.864414999999099,
+            "post_last_traced_scope_gap_note": "After the last measured worker scope: may include worker postprocessing, Ray serialization/transport and driver aggregation; this is not a direct network-time measurement."
+          },
+          "gpu": {
+            "busy_ms": 16.258192999962716,
+            "busy_percent_of_iteration": 0.2794734094431661,
+            "kernel_count": 6096,
+            "memcpy_count": 872,
+            "memset_count": 0,
+            "busy_by_process_ms": {
+              "936691": 16.258192999962716
+            },
+            "scope": "Union of traced GPU activity inside the profiled iteration; not whole-device utilization. CUDA runtime CPU calls are excluded."
+          },
+          "event_count": 95799,
+          "partial_exclusive_spans_omitted": 0,
+          "notes": [
+            "Driver phases use fresh measured scopes, not RLlib's smoothed timers.",
+            "Worker scope sum is concurrent CPU wall work, not iteration wall time; sample_scope identifies a full sample call or a traced fragment.",
+            "Exclusive categories use args.self_us and do not add parent/child time.",
+            "sync_weights measures driver publish/dispatch; remote updates are asynchronous."
+          ],
+          "dropped_events": 0,
+          "configuration": {
+            "mode": "legacy",
+            "workers": 8,
+            "clock_alignment": "single-host shared wall clock + monotonic per-process spans",
+            "global_train_batch": 1024,
+            "fragment_length": 128,
+            "minibatch_size": 128,
+            "optimization_epochs": 3,
+            "profiled_run": {
+              "seconds": 5.817072289064527,
+              "env_steps": 1024,
+              "trained_steps": 1024,
+              "steps_per_second": 176.03356965754242,
+              "learner_stats": {
+                "cur_kl_coeff": 0.10000000000000002,
+                "cur_lr": 5e-05,
+                "total_loss": -0.5646452133854231,
+                "policy_loss": -0.024790460554262,
+                "vf_loss": 0.2024322940657536,
+                "vf_explained_var": -0.9959544638792673,
+                "kl": 0.000663198449757374,
+                "entropy": 7.423533538977305,
+                "entropy_coeff": 0.10000000000000002
+              },
+              "ray_smoothed_timers": {
+                "training_iteration_time_ms": 5147.734,
+                "restore_workers_time_ms": 0.007,
+                "training_step_time_ms": 5147.713,
+                "sample_time_ms": 5039.893,
+                "load_time_ms": 1.583,
+                "load_throughput": 646735.024,
+                "learn_time_ms": 98.27,
+                "learn_throughput": 10420.239,
+                "synch_weights_time_ms": 7.813
+              }
+            },
+            "warmup_iterations": 1,
+            "prior_measured_iterations": 0,
+            "dropped_events": 0,
+            "note": "Instrumented iteration is separate from uninstrumented throughput trials. CPU+GPU spans overlap; nested inclusive durations are not additive."
+          }
+        }
+      }
+    },
+    {
+      "mode": "e2e",
+      "workers": 1,
+      "fragment_length": 1024,
+      "device": "cuda:0",
+      "unprofiled_runs": [
+        {
+          "seconds": 11.510420111007988,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 88.9628693066292,
+          "learner_stats": {
+            "cur_kl_coeff": 0.20000000000000004,
+            "cur_lr": 5e-05,
+            "total_loss": 0.05775498930597678,
+            "policy_loss": -0.004172620441143711,
+            "vf_loss": 0.3461008456846078,
+            "vf_explained_var": -1.0,
+            "kl": 0.00042756120165706363,
+            "entropy": 2.842587331930796,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 11309.16,
+            "restore_workers_time_ms": 0.005,
+            "training_step_time_ms": 11309.143,
+            "sample_time_ms": 11216.784,
+            "load_time_ms": 8.237,
+            "load_throughput": 124320.64,
+            "learn_time_ms": 81.814,
+            "learn_throughput": 12516.188,
+            "synch_weights_time_ms": 2.037
+          }
+        },
+        {
+          "seconds": 11.896341033279896,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 86.0768867616833,
+          "learner_stats": {
+            "cur_kl_coeff": 0.10000000000000002,
+            "cur_lr": 5e-05,
+            "total_loss": 0.027589060152725626,
+            "policy_loss": -0.008764338679611683,
+            "vf_loss": 0.3177482771376769,
+            "vf_explained_var": -0.9001606603463491,
+            "kl": 0.0012102966971291689,
+            "entropy": 2.81515900293986,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 11499.624,
+            "restore_workers_time_ms": 0.009,
+            "training_step_time_ms": 11499.603,
+            "sample_time_ms": 11406.571,
+            "load_time_ms": 8.257,
+            "load_throughput": 124022.08,
+            "learn_time_ms": 82.495,
+            "learn_throughput": 12412.889,
+            "synch_weights_time_ms": 2.02
+          }
+        },
+        {
+          "seconds": 11.659990454092622,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 87.82168424851318,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": 0.0332034044743826,
+            "policy_loss": -0.0065076895989477634,
+            "vf_loss": 0.3198386567334334,
+            "vf_explained_var": -0.9545058161020279,
+            "kl": 0.0009814457510124441,
+            "entropy": 2.8017663260300956,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 11537.434,
+            "restore_workers_time_ms": 0.008,
+            "training_step_time_ms": 11537.414,
+            "sample_time_ms": 11445.363,
+            "load_time_ms": 8.253,
+            "load_throughput": 124082.692,
+            "learn_time_ms": 81.516,
+            "learn_throughput": 12561.947,
+            "synch_weights_time_ms": 2.015
+          }
+        }
+      ],
+      "mean_seconds": 11.68891719946017,
+      "std_seconds": 0.158873759129629,
+      "mean_steps_per_second": 87.62048010560856
+    },
+    {
+      "mode": "e2e",
+      "workers": 2,
+      "fragment_length": 512,
+      "device": "cuda:0",
+      "unprofiled_runs": [
+        {
+          "seconds": 6.236955330707133,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 164.18267338847545,
+          "learner_stats": {
+            "cur_kl_coeff": 0.20000000000000004,
+            "cur_lr": 5e-05,
+            "total_loss": 0.027605224944030244,
+            "policy_loss": -0.0054467422887682915,
+            "vf_loss": 0.319174666578571,
+            "vf_explained_var": -0.9954972565174103,
+            "kl": 0.0006172002927469222,
+            "entropy": 2.8624612788359323,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 6315.391,
+            "restore_workers_time_ms": 0.005,
+            "training_step_time_ms": 6315.373,
+            "sample_time_ms": 6219.527,
+            "load_time_ms": 8.052,
+            "load_throughput": 127165.977,
+            "learn_time_ms": 84.716,
+            "learn_throughput": 12087.433,
+            "synch_weights_time_ms": 2.554
+          }
+        },
+        {
+          "seconds": 6.148512754589319,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 166.54434021230173,
+          "learner_stats": {
+            "cur_kl_coeff": 0.10000000000000002,
+            "cur_lr": 5e-05,
+            "total_loss": 0.031786908531406276,
+            "policy_loss": -0.008971295164277157,
+            "vf_loss": 0.3226156321664651,
+            "vf_explained_var": -0.9669209867715836,
+            "kl": 0.0018938615042701408,
+            "entropy": 2.8204681277275085,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 6257.081,
+            "restore_workers_time_ms": 0.005,
+            "training_step_time_ms": 6257.063,
+            "sample_time_ms": 6161.143,
+            "load_time_ms": 8.018,
+            "load_throughput": 127704.784,
+            "learn_time_ms": 84.796,
+            "learn_throughput": 12076.105,
+            "synch_weights_time_ms": 2.576
+          }
+        },
+        {
+          "seconds": 6.613694280385971,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 154.83025924510076,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": 0.04589657747419551,
+            "policy_loss": -0.00811672086517016,
+            "vf_loss": 0.33397981027762097,
+            "vf_explained_var": -0.9422552088896433,
+            "kl": 0.0013176468290539978,
+            "entropy": 2.800323784351349,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 6343.926,
+            "restore_workers_time_ms": 0.005,
+            "training_step_time_ms": 6343.907,
+            "sample_time_ms": 6248.409,
+            "load_time_ms": 8.02,
+            "load_throughput": 127681.056,
+            "learn_time_ms": 84.409,
+            "learn_throughput": 12131.391,
+            "synch_weights_time_ms": 2.571
+          }
+        }
+      ],
+      "mean_seconds": 6.333054121894141,
+      "std_seconds": 0.2017005969852815,
+      "mean_steps_per_second": 161.85242428195932,
+      "profile": {
+        "trace": "artifacts/profiling/2026-10-13/e2e-workers-2/trace.json",
+        "timeline": "artifacts/profiling/2026-10-13/e2e-workers-2/timeline.html",
+        "overview": "artifacts/profiling/2026-10-13/e2e-workers-2/overview.svg",
+        "summary": {
+          "iteration_wall_ms": 6261.98686,
+          "iteration_count": 1,
+          "elapsed_span_ms": 6261.98686,
+          "driver_phases": [
+            {
+              "name": "synchronous_parallel_sample",
+              "category": "sampling_wait",
+              "duration_ms": 6135.417443,
+              "self_ms": 6135.417443,
+              "count": 1,
+              "wall_percent": 97.9787658481289
+            },
+            {
+              "name": "multi_gpu_train_one_step",
+              "category": "optimization",
+              "duration_ms": 113.8394330000002,
+              "self_ms": 5.691674,
+              "count": 1,
+              "wall_percent": 1.817944296995861
+            },
+            {
+              "name": "sync_weights",
+              "category": "sync",
+              "duration_ms": 2.6541279999995604,
+              "self_ms": 2.654128,
+              "count": 1,
+              "wall_percent": 0.0423847583736316
+            }
+          ],
+          "workers": [
+            {
+              "worker_id": 1,
+              "pid": 936527,
+              "process_name": "rollout worker 1",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 6049.529337,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.0657439999999996,
+              "last_sample_end_ms": 6050.595081,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 3910.010937000002,
+                  "count": 768
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 1321.059701999997,
+                  "count": 2294
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 254.88222999999988,
+                  "count": 1025
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 188.02778099999998,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 182.21364700000024,
+                  "count": 1106
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 171.60909199999995,
+                  "count": 338
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 21.725948000000002,
+                  "count": 256
+                }
+              ]
+            },
+            {
+              "worker_id": 2,
+              "pid": 936528,
+              "process_name": "rollout worker 2",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 6110.891013,
+              "sample_calls": 1,
+              "first_sample_start_ms": 0.9650850000000001,
+              "last_sample_end_ms": 6111.856098,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 3990.516055,
+                  "count": 768
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 1305.2462939999934,
+                  "count": 2294
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 256.9392089999999,
+                  "count": 1025
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 183.554699,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 180.08010600000006,
+                  "count": 1106
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 173.100562,
+                  "count": 338
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 21.454088000000013,
+                  "count": 256
+                }
+              ]
+            }
+          ],
+          "worker_balance": {
+            "scope": "traced fragment",
+            "fastest_sample_ms": 6049.529337,
+            "slowest_sample_ms": 6110.891013,
+            "sample_duration_spread_ms": 61.36167600000044,
+            "worker_start_spread_ms": 0.1006589999999995,
+            "completion_spread_ms": 61.26101699999981,
+            "worker_sample_sum_ms": 12160.42035,
+            "post_last_traced_scope_gap_ms": 23.902405999999246,
+            "post_last_sample_gap_ms": null,
+            "post_last_traced_fragment_gap_ms": 23.902405999999246,
+            "post_last_traced_scope_gap_note": "After the last measured worker scope: may include worker postprocessing, Ray serialization/transport and driver aggregation; this is not a direct network-time measurement."
+          },
+          "gpu": {
+            "busy_ms": 20.691566000016405,
+            "busy_percent_of_iteration": 0.33043132255976027,
+            "kernel_count": 5856,
+            "memcpy_count": 874,
+            "memset_count": 48,
+            "busy_by_process_ms": {
+              "937530": 20.691566000016405
+            },
+            "scope": "Union of traced GPU activity inside the profiled iteration; not whole-device utilization. CUDA runtime CPU calls are excluded."
+          },
+          "event_count": 72126,
+          "partial_exclusive_spans_omitted": 0,
+          "notes": [
+            "Driver phases use fresh measured scopes, not RLlib's smoothed timers.",
+            "Worker scope sum is concurrent CPU wall work, not iteration wall time; sample_scope identifies a full sample call or a traced fragment.",
+            "Exclusive categories use args.self_us and do not add parent/child time.",
+            "sync_weights measures driver publish/dispatch; remote updates are asynchronous."
+          ],
+          "dropped_events": 0,
+          "configuration": {
+            "mode": "e2e",
+            "workers": 2,
+            "clock_alignment": "single-host shared wall clock + monotonic per-process spans",
+            "global_train_batch": 1024,
+            "fragment_length": 512,
+            "minibatch_size": 128,
+            "optimization_epochs": 3,
+            "profiled_run": {
+              "seconds": 6.261576998047531,
+              "env_steps": 1024,
+              "trained_steps": 1024,
+              "steps_per_second": 163.53707705252225,
+              "learner_stats": {
+                "cur_kl_coeff": 0.20000000000000004,
+                "cur_lr": 5e-05,
+                "total_loss": 0.027605224944030244,
+                "policy_loss": -0.0054467422887682915,
+                "vf_loss": 0.319174666578571,
+                "vf_explained_var": -0.9954972565174103,
+                "kl": 0.0006172002927469222,
+                "entropy": 2.8624612788359323,
+                "entropy_coeff": 0.10000000000000002
+              },
+              "ray_smoothed_timers": {
+                "training_iteration_time_ms": 6302.879,
+                "restore_workers_time_ms": 0.006,
+                "training_step_time_ms": 6302.859,
+                "sample_time_ms": 6194.527,
+                "load_time_ms": 8.462,
+                "load_throughput": 121012.265,
+                "learn_time_ms": 96.765,
+                "learn_throughput": 10582.295,
+                "synch_weights_time_ms": 2.669
+              }
+            },
+            "warmup_iterations": 1,
+            "prior_measured_iterations": 0,
+            "dropped_events": 0,
+            "note": "Instrumented iteration is separate from uninstrumented throughput trials. CPU+GPU spans overlap; nested inclusive durations are not additive."
+          }
+        }
+      }
+    },
+    {
+      "mode": "e2e",
+      "workers": 4,
+      "fragment_length": 256,
+      "device": "cuda:0",
+      "unprofiled_runs": [
+        {
+          "seconds": 3.4126101350411773,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 300.06357581999157,
+          "learner_stats": {
+            "cur_kl_coeff": 0.20000000000000004,
+            "cur_lr": 5e-05,
+            "total_loss": 0.04618073239301642,
+            "policy_loss": -0.009355208293224374,
+            "vf_loss": 0.3407298301657041,
+            "vf_explained_var": -0.9863660335540771,
+            "kl": 0.0021224903917683355,
+            "entropy": 2.8561837573846183,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 3343.351,
+            "restore_workers_time_ms": 0.007,
+            "training_step_time_ms": 3343.33,
+            "sample_time_ms": 3244.447,
+            "load_time_ms": 7.9,
+            "load_throughput": 129614.392,
+            "learn_time_ms": 86.385,
+            "learn_throughput": 11853.974,
+            "synch_weights_time_ms": 4.236
+          }
+        },
+        {
+          "seconds": 3.339976933784783,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 306.58894366663407,
+          "learner_stats": {
+            "cur_kl_coeff": 0.10000000000000002,
+            "cur_lr": 5e-05,
+            "total_loss": 0.017020543028290074,
+            "policy_loss": -0.006131182890385389,
+            "vf_loss": 0.30555143766105175,
+            "vf_explained_var": -0.8950405617554983,
+            "kl": 0.001644215863351765,
+            "entropy": 2.8256412943204245,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 3338.366,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 3338.346,
+            "sample_time_ms": 3241.356,
+            "load_time_ms": 7.95,
+            "load_throughput": 128805.225,
+            "learn_time_ms": 84.522,
+            "learn_throughput": 12115.176,
+            "synch_weights_time_ms": 4.178
+          }
+        },
+        {
+          "seconds": 4.002907165326178,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 255.81407654667882,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": -0.0023108554693559804,
+            "policy_loss": -0.008003249143560728,
+            "vf_loss": 0.28632492820421857,
+            "vf_explained_var": -0.9222454975048701,
+            "kl": 0.0016501126449005217,
+            "entropy": 2.807150274515152,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 3500.73,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 3500.71,
+            "sample_time_ms": 3404.343,
+            "load_time_ms": 7.977,
+            "load_throughput": 128372.756,
+            "learn_time_ms": 83.82,
+            "learn_throughput": 12216.631,
+            "synch_weights_time_ms": 4.166
+          }
+        }
+      ],
+      "mean_seconds": 3.5851647447173796,
+      "std_seconds": 0.29687308507538124,
+      "mean_steps_per_second": 287.4888653444348
+    },
+    {
+      "mode": "e2e",
+      "workers": 8,
+      "fragment_length": 128,
+      "device": "cuda:0",
+      "unprofiled_runs": [
+        {
+          "seconds": 2.382444277405739,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 429.8106821264425,
+          "learner_stats": {
+            "cur_kl_coeff": 0.20000000000000004,
+            "cur_lr": 5e-05,
+            "total_loss": -0.003873121924698353,
+            "policy_loss": -0.01157508212296913,
+            "vf_loss": 0.2929211563120286,
+            "vf_explained_var": -0.9832720408837,
+            "kl": 0.004372718148564066,
+            "entropy": 2.8609372874101004,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 2358.018,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 2357.996,
+            "sample_time_ms": 2262.064,
+            "load_time_ms": 8.06,
+            "load_throughput": 127047.486,
+            "learn_time_ms": 79.475,
+            "learn_throughput": 12884.586,
+            "synch_weights_time_ms": 6.883
+          }
+        },
+        {
+          "seconds": 2.295623197220266,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 446.0662364973248,
+          "learner_stats": {
+            "cur_kl_coeff": 0.10000000000000002,
+            "cur_lr": 5e-05,
+            "total_loss": 0.0418695758174484,
+            "policy_loss": -0.006622200831770897,
+            "vf_loss": 0.3334205523133278,
+            "vf_explained_var": -0.9871251483758291,
+            "kl": 0.001014256980549059,
+            "entropy": 2.8503019909063974,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 2333.236,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 2333.215,
+            "sample_time_ms": 2237.348,
+            "load_time_ms": 8.032,
+            "load_throughput": 127495.022,
+            "learn_time_ms": 79.846,
+            "learn_throughput": 12824.703,
+            "synch_weights_time_ms": 6.843
+          }
+        },
+        {
+          "seconds": 2.311066613532603,
+          "env_steps": 1024,
+          "trained_steps": 1024,
+          "steps_per_second": 443.0854541378862,
+          "learner_stats": {
+            "cur_kl_coeff": 0.05000000000000001,
+            "cur_lr": 5e-05,
+            "total_loss": 0.02074150412227027,
+            "policy_loss": -0.00911174745609363,
+            "vf_loss": 0.311165165156126,
+            "vf_explained_var": -1.0,
+            "kl": 0.0014499129418557761,
+            "entropy": 2.8138441046079,
+            "entropy_coeff": 0.10000000000000002
+          },
+          "ray_smoothed_timers": {
+            "training_iteration_time_ms": 2324.7,
+            "restore_workers_time_ms": 0.006,
+            "training_step_time_ms": 2324.679,
+            "sample_time_ms": 2225.783,
+            "load_time_ms": 8.046,
+            "load_throughput": 127269.603,
+            "learn_time_ms": 82.193,
+            "learn_throughput": 12458.479,
+            "synch_weights_time_ms": 7.683
+          }
+        }
+      ],
+      "mean_seconds": 2.329711362719536,
+      "std_seconds": 0.0378170596012418,
+      "mean_steps_per_second": 439.6541242538845,
+      "profile": {
+        "trace": "artifacts/profiling/2026-10-13/e2e-workers-8/trace.json",
+        "timeline": "artifacts/profiling/2026-10-13/e2e-workers-8/timeline.html",
+        "overview": "artifacts/profiling/2026-10-13/e2e-workers-8/overview.svg",
+        "summary": {
+          "iteration_wall_ms": 2402.838817,
+          "iteration_count": 1,
+          "elapsed_span_ms": 2402.838817,
+          "driver_phases": [
+            {
+              "name": "synchronous_parallel_sample",
+              "category": "sampling_wait",
+              "duration_ms": 2261.600349,
+              "self_ms": 2261.600349,
+              "count": 1,
+              "wall_percent": 94.12201654972682
+            },
+            {
+              "name": "multi_gpu_train_one_step",
+              "category": "optimization",
+              "duration_ms": 119.51944799999985,
+              "self_ms": 6.025018,
+              "count": 1,
+              "wall_percent": 4.9740934412414175
+            },
+            {
+              "name": "sync_weights",
+              "category": "sync",
+              "duration_ms": 7.8450430000000635,
+              "self_ms": 7.8450429999999995,
+              "count": 1,
+              "wall_percent": 0.3264906053829604
+            }
+          ],
+          "workers": [
+            {
+              "worker_id": 1,
+              "pid": 936974,
+              "process_name": "rollout worker 1",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 1959.553754,
+              "sample_calls": 1,
+              "first_sample_start_ms": 0.9111390000000001,
+              "last_sample_end_ms": 1960.4648929999998,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 1152.0486650000003,
+                  "count": 192
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 513.2142220000002,
+                  "count": 569
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 102.58606800000001,
+                  "count": 257
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 65.585866,
+                  "count": 1
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 60.15998899999999,
+                  "count": 83
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 58.151987999999996,
+                  "count": 275
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 7.806956000000002,
+                  "count": 64
+                }
+              ]
+            },
+            {
+              "worker_id": 2,
+              "pid": 936975,
+              "process_name": "rollout worker 2",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 2236.003179,
+              "sample_calls": 1,
+              "first_sample_start_ms": 0.9522730000000001,
+              "last_sample_end_ms": 2236.955452,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 1467.4196750000003,
+                  "count": 192
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 476.0593960000003,
+                  "count": 575
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 98.35428499999999,
+                  "count": 257
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 63.234067,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 62.04091899999995,
+                  "count": 277
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 59.365173000000006,
+                  "count": 85
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 9.529663999999999,
+                  "count": 64
+                }
+              ]
+            },
+            {
+              "worker_id": 3,
+              "pid": 936976,
+              "process_name": "rollout worker 3",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 2109.178731,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.024786,
+              "last_sample_end_ms": 2110.203517,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 1343.535244,
+                  "count": 192
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 470.73920400000014,
+                  "count": 572
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 99.38113599999997,
+                  "count": 257
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 64.717749,
+                  "count": 1
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 61.11604599999998,
+                  "count": 84
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 60.80732400000001,
+                  "count": 276
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 8.882028,
+                  "count": 64
+                }
+              ]
+            },
+            {
+              "worker_id": 4,
+              "pid": 936977,
+              "process_name": "rollout worker 4",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 1800.786994,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.0816940000000004,
+              "last_sample_end_ms": 1801.868688,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 1084.4829790000001,
+                  "count": 192
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 436.75819699999994,
+                  "count": 572
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 99.13739700000004,
+                  "count": 256
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 63.938174,
+                  "count": 1
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 57.46908899999999,
+                  "count": 84
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 52.03182899999999,
+                  "count": 276
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 6.969329000000001,
+                  "count": 64
+                }
+              ]
+            },
+            {
+              "worker_id": 5,
+              "pid": 936978,
+              "process_name": "rollout worker 5",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 1995.367331,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.1517730000000002,
+              "last_sample_end_ms": 1996.519104,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 1233.9242230000004,
+                  "count": 192
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 469.288165,
+                  "count": 569
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 100.62062,
+                  "count": 257
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 64.519273,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 60.075992,
+                  "count": 275
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 58.929576999999995,
+                  "count": 83
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 8.009481,
+                  "count": 64
+                }
+              ]
+            },
+            {
+              "worker_id": 6,
+              "pid": 936980,
+              "process_name": "rollout worker 6",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 2048.670942,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.1971779999999999,
+              "last_sample_end_ms": 2049.86812,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 1281.0961369999998,
+                  "count": 192
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 472.9526970000002,
+                  "count": 572
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 99.38471900000009,
+                  "count": 257
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 65.175145,
+                  "count": 1
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 61.13868900000003,
+                  "count": 276
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 60.430213999999985,
+                  "count": 84
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 8.493341000000001,
+                  "count": 64
+                }
+              ]
+            },
+            {
+              "worker_id": 7,
+              "pid": 936979,
+              "process_name": "rollout worker 7",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 2000.967322,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.2144350000000004,
+              "last_sample_end_ms": 2002.181757,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 1252.3831040000005,
+                  "count": 192
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 460.91836000000023,
+                  "count": 575
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 98.88344499999998,
+                  "count": 256
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 64.097059,
+                  "count": 1
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 58.700335999999986,
+                  "count": 85
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 58.173773999999995,
+                  "count": 277
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 7.8112439999999985,
+                  "count": 64
+                }
+              ]
+            },
+            {
+              "worker_id": 8,
+              "pid": 936984,
+              "process_name": "rollout worker 8",
+              "sample_scope": "SyncSampler.next",
+              "sample_scope_kind": "fragment",
+              "sample_scope_note": "Measured SyncSampler.next fragment; excludes later worker batch concatenation, compression and Ray serialization.",
+              "sample_ms": 1977.812007,
+              "sample_calls": 1,
+              "first_sample_start_ms": 1.305723,
+              "last_sample_end_ms": 1979.11773,
+              "exclusive_categories": [
+                {
+                  "category": "chemistry",
+                  "self_ms": 1218.732855999999,
+                  "count": 192
+                },
+                {
+                  "category": "embedding",
+                  "self_ms": 468.4570649999997,
+                  "count": 575
+                },
+                {
+                  "category": "inference",
+                  "self_ms": 99.86585499999998,
+                  "count": 257
+                },
+                {
+                  "category": "rollout",
+                  "self_ms": 65.40924199999999,
+                  "count": 1
+                },
+                {
+                  "category": "scoring",
+                  "self_ms": 59.513510999999994,
+                  "count": 85
+                },
+                {
+                  "category": "environment",
+                  "self_ms": 57.816571,
+                  "count": 277
+                },
+                {
+                  "category": "reassembly",
+                  "self_ms": 8.016906999999998,
+                  "count": 64
+                }
+              ]
+            }
+          ],
+          "worker_balance": {
+            "scope": "traced fragment",
+            "fastest_sample_ms": 1800.786994,
+            "slowest_sample_ms": 2236.003179,
+            "sample_duration_spread_ms": 435.21618499999977,
+            "worker_start_spread_ms": 0.3945839999999998,
+            "completion_spread_ms": 435.08676400000013,
+            "worker_sample_sum_ms": 16128.34026,
+            "post_last_traced_scope_gap_ms": 25.025892999999996,
+            "post_last_sample_gap_ms": null,
+            "post_last_traced_fragment_gap_ms": 25.025892999999996,
+            "post_last_traced_scope_gap_note": "After the last measured worker scope: may include worker postprocessing, Ray serialization/transport and driver aggregation; this is not a direct network-time measurement."
+          },
+          "gpu": {
+            "busy_ms": 20.865034000021872,
+            "busy_percent_of_iteration": 0.8683492980220934,
+            "kernel_count": 5856,
+            "memcpy_count": 874,
+            "memset_count": 48,
+            "busy_by_process_ms": {
+              "937986": 20.865034000021872
+            },
+            "scope": "Union of traced GPU activity inside the profiled iteration; not whole-device utilization. CUDA runtime CPU calls are excluded."
+          },
+          "event_count": 72145,
+          "partial_exclusive_spans_omitted": 0,
+          "notes": [
+            "Driver phases use fresh measured scopes, not RLlib's smoothed timers.",
+            "Worker scope sum is concurrent CPU wall work, not iteration wall time; sample_scope identifies a full sample call or a traced fragment.",
+            "Exclusive categories use args.self_us and do not add parent/child time.",
+            "sync_weights measures driver publish/dispatch; remote updates are asynchronous."
+          ],
+          "dropped_events": 0,
+          "configuration": {
+            "mode": "e2e",
+            "workers": 8,
+            "clock_alignment": "single-host shared wall clock + monotonic per-process spans",
+            "global_train_batch": 1024,
+            "fragment_length": 128,
+            "minibatch_size": 128,
+            "optimization_epochs": 3,
+            "profiled_run": {
+              "seconds": 2.4024428725242615,
+              "env_steps": 1024,
+              "trained_steps": 1024,
+              "steps_per_second": 426.23281981480665,
+              "learner_stats": {
+                "cur_kl_coeff": 0.20000000000000004,
+                "cur_lr": 5e-05,
+                "total_loss": -0.003873121924698353,
+                "policy_loss": -0.01157508212296913,
+                "vf_loss": 0.2929211563120286,
+                "vf_explained_var": -0.9832720408837,
+                "kl": 0.004372718148564066,
+                "entropy": 2.8609372874101004,
+                "entropy_coeff": 0.10000000000000002
+              },
+              "ray_smoothed_timers": {
+                "training_iteration_time_ms": 2341.396,
+                "restore_workers_time_ms": 0.007,
+                "training_step_time_ms": 2341.374,
+                "sample_time_ms": 2226.824,
+                "load_time_ms": 8.298,
+                "load_throughput": 123397.325,
+                "learn_time_ms": 97.965,
+                "learn_throughput": 10452.751,
+                "synch_weights_time_ms": 7.644
+              }
+            },
+            "warmup_iterations": 1,
+            "prior_measured_iterations": 0,
+            "dropped_events": 0,
+            "note": "Instrumented iteration is separate from uninstrumented throughput trials. CPU+GPU spans overlap; nested inclusive durations are not additive."
+          }
+        }
+      }
+    }
+  ],
+  "interpretation": "Same global batch/optimization settings within each mode. Different worker counts change sampled trajectories. Timings are throughput checks, not paper reproduction or a quality comparison. All clocks are aligned only within this host."
+}

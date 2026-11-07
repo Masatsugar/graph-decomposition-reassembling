@@ -1,0 +1,4 @@
+# Direct transfer requires mapless intermediates; both switches are explicit.
+chemistry:
+  candidate_representation: mapless
+  mol_transfer: direct
