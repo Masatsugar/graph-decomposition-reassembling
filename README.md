@@ -26,6 +26,25 @@ Set python path: `export PYTHONPATH=.`.
 
 ### Start here: a small working example
 
+For a **Python-only walkthrough**, start with
+[the tutorial](docs/tutorial.md). It explains how to define a molecular score,
+turn that score into PPO rewards, train a small CPU policy, and restore the
+saved policy and custom objective in a new process:
+
+```shell
+uv run python examples/tutorial.py demo
+uv run python examples/tutorial.py train --iterations 1 \
+  --objective custom --target-atoms 10 --size-width 2 --qed-weight 0.3
+uv run python examples/tutorial.py sample --checkpoint PATH_PRINTED_BY_TRAIN --episodes 3
+```
+
+Replace `PATH_PRINTED_BY_TRAIN` with the run directory printed by training;
+the script also prints a complete sampling command. Edit
+[`tutorial_objective.py`](examples/tutorial_objective.py) to adapt the score
+to your research objective. Sampling restores its saved definition and
+parameters without registering the function again. No Jupyter dependency is
+needed for this route.
+
 Open [the quickstart notebook](examples/quickstart.ipynb) for a guided Japanese
 walkthrough: eight sample molecules → gSpan fragments → reassembly candidates →
 one end-to-end episode → saved CSV results. The sample SMILES are included in
