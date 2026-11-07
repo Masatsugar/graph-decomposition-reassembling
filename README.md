@@ -24,6 +24,32 @@ Use a recent uv supporting
 ## Usage
 Set python path: `export PYTHONPATH=.`.
 
+### Start here: a small working example
+
+Open [the quickstart notebook](examples/quickstart.ipynb) for a guided Japanese
+walkthrough: eight sample molecules → gSpan fragments → reassembly candidates →
+one end-to-end episode → saved CSV results. The sample SMILES are included in
+the notebook; no external dataset download is needed. The default cells use
+CPU and the supplied Mol2Vec model, with valid actions chosen at random to
+check the pipeline. A separate, opt-in section runs a small CPU PPO training
+job and samples from its saved checkpoint. Neither demonstration establishes
+molecular optimization quality.
+
+After installation, run this from the repository root:
+
+```shell
+uv run --locked --with 'jupyterlab>=4,<5' --with 'ipykernel>=6,<7' \
+  python -m jupyter lab examples/quickstart.ipynb
+```
+
+Select the Python kernel from that environment and run the cells in order.
+The notebook requires this development version's shared `moldr.factory` and
+`moldr.cli` modules; older checkouts with only the original E2E API are not
+sufficient. It explains where to substitute your own molecules and objective,
+and how legacy, initial E2E, and E2E v2 checkpoints differ.
+
+### Training and sampling
+
 New training runs use **E2E + PPO + fixed Mol2Vec + a fixed fragment table +
 actor selection**, with QED, improvement rewards, and local logging. The policy
 selects both the building block and its completed attachment candidate. Training,
@@ -76,7 +102,8 @@ runner = MolsMining(config)
 gspan = runner.decompose(mols)
 ```
 
-If you want to see the subgraphs in detail, see `examples/decomponsition.ipynb`.
+If you want to see the subgraphs in detail, see
+[the decomposition notebook](examples/decomposition.ipynb).
 
 ### Reassembling
 - Training 
