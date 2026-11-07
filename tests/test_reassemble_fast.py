@@ -18,6 +18,7 @@ from moldr.chemutils import (
     mol_to_adj,
     mol_to_graph,
 )
+from moldr.core.molgraph import MolGraph, sanitize_molgraph
 from moldr.core.reassemble import (
     get_ring_targets,
     merge_edge,
@@ -25,7 +26,6 @@ from moldr.core.reassemble import (
     merge_mol_from_node,
     merge_node,
 )
-from moldr.core.molgraph import MolGraph, sanitize_molgraph
 
 # A deliberately diverse set: chains, hetero atoms, fused/aromatic rings,
 # multiple bond orders, charges-free building-block-like fragments.

@@ -80,8 +80,8 @@ def adj_list_to_mat(adj_list):
 
 def _reconstruct(adj_mat, nodes, atom_templates=None, bond_scan="nonzero"):
     # Direct numpy -> RWMol build. Equivalent to the previous networkx round
-    # trip (nx.from_numpy_array + _set_*_label + mol_from_graph) but ~10x
-    # cheaper; see moldr.chemutils.mol_from_adj.
+    # trip (nx.from_numpy_array + _set_*_label + mol_from_graph), without
+    # constructing an intermediate graph; see moldr.chemutils.mol_from_adj.
     return mol_from_adj(adj_mat, nodes, atom_templates=atom_templates, bond_scan=bond_scan)
 
 

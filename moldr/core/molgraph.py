@@ -33,6 +33,21 @@ class MolGraph:
             self._graph_built = True
         return self._graph
 
+    @graph.setter
+    def graph(self, value):
+        # ``graph`` was a writable instance attribute before lazy construction.
+        self._graph = value
+        self._graph_built = True
+
+    def __setstate__(self, state):
+        # Old pickles store the already-computed public attribute. Keep that
+        # graph, including caller edits, instead of trying to rebuild it.
+        state = dict(state)
+        if "graph" in state:
+            state["_graph"] = state.pop("graph")
+            state["_graph_built"] = True
+        self.__dict__.update(state)
+
     def _mol_to_graph(self, mol):
         if mol is not None:
             return mol_to_graph(mol)

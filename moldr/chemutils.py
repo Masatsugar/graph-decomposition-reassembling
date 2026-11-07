@@ -119,7 +119,7 @@ _BOND_FROM_ORDER = {
 }
 
 
-def mol_to_adj(mol: Mol) -> Tuple[ndarray, List[str]]:
+def mol_to_adj(mol: Mol) -> tuple[ndarray, list[str]]:
     """Fast, networkx-free equivalent of reading symbols + a bond-order
     adjacency matrix out of ``mol``.
 
@@ -144,11 +144,11 @@ def mol_to_adj(mol: Mol) -> Tuple[ndarray, List[str]]:
 
 def mol_from_adj(
     adj_mat: ndarray,
-    nodes: List[str],
+    nodes: list[str],
     *,
-    atom_templates: Optional[List[Chem.Atom]] = None,
+    atom_templates: list[Chem.Atom] | None = None,
     bond_scan: str = "nonzero",
-) -> Optional[Mol]:
+) -> Mol | None:
     """Fast, networkx-free equivalent of ``mol_from_graph``.
 
     Builds a plain-atom RWMol from an adjacency matrix of bond orders and a
