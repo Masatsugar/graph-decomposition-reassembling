@@ -53,12 +53,22 @@ def force_kekulize(mol: Mol) -> Mol:
     return mol
 
 
-def mol_with_atom_index(mol: Mol) -> Mol:
+def mol_with_atom_index(mol: Mol, map_storage: str = "int") -> Mol:
+    """Assign index maps, including index zero, with selectable storage.
+
+    ``SetAtomMapNum(0)`` clears the property and is not equivalent to the
+    original index-zero map. ``SetIntProp`` preserves that map while avoiding
+    conversion through Python strings.
+    """
+    if map_storage not in {"int", "string"}:
+        raise ValueError("map_storage must be 'int' or 'string'.")
     atoms = mol.GetNumAtoms()
     for idx in range(atoms):
-        mol.GetAtomWithIdx(idx).SetProp(
-            "molAtomMapNumber", str(mol.GetAtomWithIdx(idx).GetIdx())
-        )
+        atom = mol.GetAtomWithIdx(idx)
+        if map_storage == "int":
+            atom.SetIntProp("molAtomMapNumber", idx)
+        else:
+            atom.SetProp("molAtomMapNumber", str(idx))
     return mol
 
 
@@ -99,6 +109,105 @@ def mol_to_graph(mol) -> Graph:
     _set_node_label(graph, node_label)
     _set_edge_label(graph, edge_label)
     return graph
+
+
+_BOND_FROM_ORDER = {
+    1.0: Chem.rdchem.BondType.SINGLE,
+    2.0: Chem.rdchem.BondType.DOUBLE,
+    3.0: Chem.rdchem.BondType.TRIPLE,
+    1.5: Chem.rdchem.BondType.AROMATIC,
+}
+
+
+def mol_to_adj(mol: Mol) -> tuple[ndarray, list[str]]:
+    """Fast, networkx-free equivalent of reading symbols + a bond-order
+    adjacency matrix out of ``mol``.
+
+    Returns the same ``(adjacency, node_labels)`` pair that
+    ``nx.adjacency_matrix(mol_to_graph(mol)).toarray()`` and
+    ``[n[LABEL] for n in mol_to_graph(mol).nodes.values()]`` produce, but
+    without building an intermediate networkx graph. The adjacency holds
+    ``bond.GetBondTypeAsDouble()`` values (1.0/1.5/2.0/3.0) and is symmetric.
+    """
+    atoms = mol.GetAtoms()
+    n = len(atoms)
+    nodes = [atom.GetSymbol() for atom in atoms]
+    adj = np.zeros((n, n))
+    for bond in mol.GetBonds():
+        src = bond.GetBeginAtomIdx()
+        dst = bond.GetEndAtomIdx()
+        order = bond.GetBondTypeAsDouble()
+        adj[src, dst] = order
+        adj[dst, src] = order
+    return adj, nodes
+
+
+def mol_from_adj(
+    adj_mat: ndarray,
+    nodes: list[str],
+    *,
+    atom_templates: list[Chem.Atom] | None = None,
+    bond_scan: str = "nonzero",
+) -> Mol | None:
+    """Fast, networkx-free equivalent of ``mol_from_graph``.
+
+    Builds a plain-atom RWMol from an adjacency matrix of bond orders and a
+    list of atom-symbol labels, mirroring ``mol_from_graph`` exactly: atoms
+    are added in index order, bonds are read from the upper triangle, and
+    bond orders map 1.0->single, 2.0->double, 3.0->triple, 1.5->aromatic
+    (any other value is skipped, as in the original). Optional atom templates
+    preserve formal charges, isotopes and explicit hydrogen counts during
+    merging; symbol-only callers retain the original plain-atom behavior.
+    Specified stereochemistry is rejected because rebuilding bond order can
+    change the meaning of an atom's chiral tag.
+    """
+    if bond_scan not in {"nonzero", "python"}:
+        raise ValueError("bond_scan must be 'nonzero' or 'python'.")
+    mol = Chem.RWMol()
+    if atom_templates is not None and len(atom_templates) != len(nodes):
+        raise ValueError("atom_templates must contain one atom per node.")
+    for idx, symbol in enumerate(nodes):
+        atom = Chem.Atom(symbol if atom_templates is None else atom_templates[idx])
+        if atom_templates is not None and atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED:
+            raise ValueError("Stereochemical input is unsupported for adjacency-based reassembly.")
+        mol.AddAtom(atom)
+    n_atom = len(nodes)
+    if bond_scan == "nonzero":
+        # numpy still visits a dense matrix. This reduces Python work, while
+        # retaining row-major atom/bond insertion order; it is not O(E).
+        src, dst = np.nonzero(adj_mat)
+        upper = dst > src
+        entries = ((int(i), int(j)) for i, j in zip(src[upper], dst[upper]))
+    else:
+        entries = ((i, j) for i in range(n_atom) for j in range(i + 1, n_atom))
+    for ix, iy in entries:
+        bond_type = _BOND_FROM_ORDER.get(adj_mat[ix, iy])
+        if bond_type is not None:
+            mol.AddBond(ix, iy, bond_type)
+    return mol.GetMol()
+
+
+def validate_reassembly_mol(mol: Mol) -> None:
+    """Fail explicitly for input whose stereochemistry the merge cannot retain.
+
+    Reassembling currently supports molecular connectivity, charges, isotopes
+    and explicit hydrogens. A caller may deliberately remove stereochemistry
+    before using it, but the merge must never silently change a stereoisomer.
+    """
+    if mol is None or mol.GetNumAtoms() == 0:
+        raise ValueError("Reassembly requires a valid, nonempty molecule.")
+    has_stereo = any(
+        atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for atom in mol.GetAtoms()
+    ) or any(
+        bond.GetStereo() != Chem.BondStereo.STEREONONE
+        or bond.GetBondDir() != Chem.BondDir.NONE
+        for bond in mol.GetBonds()
+    )
+    if has_stereo:
+        raise ValueError(
+            "Stereochemical input is unsupported for adjacency-based reassembly; "
+            "remove stereochemistry explicitly before use."
+        )
 
 
 def mol_from_graph(graph: Graph) -> Optional[Mol]:
