@@ -214,7 +214,9 @@ class gSpan(object):
                 "Set max_num_vertices = min_num_vertices."
             )
             self._max_num_vertices = self._min_num_vertices
-        self._report_df = pd.DataFrame()
+        self._report_columns = ["support", "description", "num_vert", "support_ids"]
+        self._report_df = pd.DataFrame(columns=self._report_columns)
+        self._report_rows = list()
         self.ggnx = list()
 
     def time_stats(self):
@@ -267,26 +269,29 @@ class gSpan(object):
         vevlb_counter = collections.Counter()
         vlb_counted = set()
         vevlb_counted = set()
+        vlb_gids = collections.defaultdict(list)
         for g in self.graphs.values():
             for v in g.vertices.values():
                 if (g.gid, v.vlb) not in vlb_counted:
                     vlb_counter[v.vlb] += 1
+                    vlb_gids[v.vlb].append(g.gid)
                 vlb_counted.add((g.gid, v.vlb))
                 for to, e in v.edges.items():
                     vlb1, vlb2 = v.vlb, g.vertices[to].vlb
                     if self._is_undirected and vlb1 > vlb2:
                         vlb1, vlb2 = vlb2, vlb1
-                    if (g.gid, (vlb1, e.elb, vlb2)) not in vevlb_counter:
+                    if (g.gid, (vlb1, e.elb, vlb2)) not in vevlb_counted:
                         vevlb_counter[(vlb1, e.elb, vlb2)] += 1
                     vevlb_counted.add((g.gid, (vlb1, e.elb, vlb2)))
         # add frequent vertices.
-        for vlb, cnt in vlb_counter.items():
+        for vlb in sorted(vlb_counter):
+            cnt = vlb_counter[vlb]
             if cnt >= self._min_support:
                 g = Graph(gid=next(self._counter), is_undirected=self._is_undirected)
-                g.add_vertex(0, vlb)
+                g.add_vertex("0", vlb)
                 self._frequent_size1_subgraphs.append(g)
                 if self._min_num_vertices <= 1:
-                    self._report_size1(g, support=cnt)
+                    self._report_size1(g, support=cnt, support_ids=vlb_gids[vlb])
             else:
                 continue
         if self._min_num_vertices > 1:
@@ -298,6 +303,7 @@ class gSpan(object):
         self._read_graphs()
         self._generate_1edge_frequent_subgraphs()
         if self._max_num_vertices < 2:
+            self._finalize_report()
             return
         root = collections.defaultdict(Projected)
         for gid, g in self.graphs.items():
@@ -312,6 +318,7 @@ class gSpan(object):
             self._DFScode.append(DFSedge(0, 1, vevlb))
             self._subgraph_mining(projected)
             self._DFScode.pop()
+        self._finalize_report()
 
     def _get_support(self, projected):
         """Supportを取得する"""
@@ -321,10 +328,18 @@ class gSpan(object):
 
         return len(set([pdfs.gid for pdfs in projected])), _ids
 
-    def _report_size1(self, g, support):
-        g.display()
-        print("\nSupport: {}".format(support))
-        print("\n-----------------\n")
+    def _report_size1(self, g, support, support_ids=()):
+        display_str = g.display()
+        gx, vlbs, elbs = g.get_result()
+        self.ggnx.append({"graph": gx, "vlbs": vlbs, "elbs": elbs, "g": g})
+        self._report_rows.append(
+            {
+                "support": support,
+                "description": display_str,
+                "num_vert": 1,
+                "support_ids": ",".join(map(str, support_ids)),
+            }
+        )
 
     def _report(self, projected):
         self._frequent_subgraphs.append(copy.copy(self._DFScode))
@@ -340,23 +355,26 @@ class gSpan(object):
 
         # Add some report info to pandas dataframe "self._report_df".
         ids = ",".join(map(str, self._ids))
-        new_row = pd.DataFrame(
+        self._report_rows.append(
             {
-                "support": [self._support],
-                "description": [display_str],
-                "num_vert": [self._DFScode.get_num_vertices()],
-                "support_ids": [ids],
-            },
-            index=[int(repr(self._counter)[6:-1])],
+                "support": self._support,
+                "description": display_str,
+                "num_vert": self._DFScode.get_num_vertices(),
+                "support_ids": ids,
+            }
         )
-
-        # 元の DF と連結
-        self._report_df = pd.concat([self._report_df, new_row])
         #         if self._visualize:
         #             g.plot()
         if self._where:
             pass
-            # print('where: {}'.format(list(set([p.gid for p in projected]))))
+
+    def _finalize_report(self):
+        self._report_df = pd.DataFrame(
+            self._report_rows,
+            columns=self._report_columns,
+            index=range(1, len(self._report_rows) + 1),
+        )
+        # print('where: {}'.format(list(set([p.gid for p in projected]))))
         # print('\n-----------------\n')
 
     def _get_forward_root_edges(self, g, frm):

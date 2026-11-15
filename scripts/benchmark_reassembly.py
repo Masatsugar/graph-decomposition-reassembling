@@ -42,7 +42,7 @@ PAIRS = [
     ["C1=CCc2ccccc2C1", "C1CCCCC1"],
     ["CC(C)(C)NCC(O)c1ccc(O)c(CO)c1", "CCO"],
 ]
-WORKER = r'''
+WORKER = r"""
 import contextlib
 import json
 import platform
@@ -91,7 +91,7 @@ print(json.dumps({"environment": {
     "rdkit": rdkit.__version__, "numpy": numpy.__version__,
     "networkx": networkx.__version__, "scipy": scipy.__version__,
 }, "cases": cases}))
-'''
+"""
 
 
 def run_worker(directory, settings):
@@ -99,8 +99,13 @@ def run_worker(directory, settings):
     for key in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
         environment[key] = "1"
     result = subprocess.run(
-        [sys.executable, "-c", WORKER], cwd=directory, env=environment,
-        input=json.dumps(settings), text=True, capture_output=True, check=True,
+        [sys.executable, "-c", WORKER],
+        cwd=directory,
+        env=environment,
+        input=json.dumps(settings),
+        text=True,
+        capture_output=True,
+        check=True,
     )
     return json.loads(result.stdout)
 
@@ -121,9 +126,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repeats", type=int, default=7)
     parser.add_argument("--warmup", type=int, default=2)
-    parser.add_argument("--output", type=Path, default=Path("tmp/reassembly_benchmark.json"))
-    parser.add_argument("--write-fixtures", type=Path,
-                        help="Write expected candidates generated only by the pinned main")
+    parser.add_argument(
+        "--output", type=Path, default=Path("tmp/reassembly_benchmark.json")
+    )
+    parser.add_argument(
+        "--write-fixtures",
+        type=Path,
+        help="Write expected candidates generated only by the pinned main",
+    )
     args = parser.parse_args()
     if args.repeats < 1 or args.warmup < 0:
         parser.error("repeats must be positive and warmup must be nonnegative")
@@ -133,8 +143,10 @@ def main():
         baseline_root = Path(temporary)
         for relative in SOURCE_PATHS:
             result = subprocess.run(
-                ["git", "show", f"{BASELINE_COMMIT}:{relative}"], cwd=root,
-                capture_output=True, check=True,
+                ["git", "show", f"{BASELINE_COMMIT}:{relative}"],
+                cwd=root,
+                capture_output=True,
+                check=True,
             )
             path = baseline_root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -148,15 +160,21 @@ def main():
     for before, after in zip(baseline["cases"], optimized["cases"], strict=True):
         before_median = statistics.median(before["seconds"])
         after_median = statistics.median(after["seconds"])
-        comparisons.append({
-            "base": before["base"], "fragment": before["fragment"],
-            "exact_candidate_order": before["candidates"] == after["candidates"],
-            "candidate_counts": {key: len(value) for key, value in before["candidates"].items()},
-            "baseline_seconds": before["seconds"], "optimized_seconds": after["seconds"],
-            "baseline_median_seconds": before_median,
-            "optimized_median_seconds": after_median,
-            "speedup": before_median / after_median,
-        })
+        comparisons.append(
+            {
+                "base": before["base"],
+                "fragment": before["fragment"],
+                "exact_candidate_order": before["candidates"] == after["candidates"],
+                "candidate_counts": {
+                    key: len(value) for key, value in before["candidates"].items()
+                },
+                "baseline_seconds": before["seconds"],
+                "optimized_seconds": after["seconds"],
+                "baseline_median_seconds": before_median,
+                "optimized_median_seconds": after_median,
+                "speedup": before_median / after_median,
+            }
+        )
     baseline_total = sum(case["baseline_median_seconds"] for case in comparisons)
     optimized_total = sum(case["optimized_median_seconds"] for case in comparisons)
     report = {
@@ -166,7 +184,9 @@ def main():
         "environment": baseline["environment"],
         "scope": "CPU node/edge enumeration, candidate serialization, and sanitization; no PPO or scoring",
         "settings": {"repeats": args.repeats, "warmup": args.warmup, "threads": 1},
-        "all_candidates_and_order_equal": all(case["exact_candidate_order"] for case in comparisons),
+        "all_candidates_and_order_equal": all(
+            case["exact_candidate_order"] for case in comparisons
+        ),
         "baseline_sum_of_medians_seconds": baseline_total,
         "optimized_sum_of_medians_seconds": optimized_total,
         "speedup_from_sum_of_medians": baseline_total / optimized_total,
@@ -174,20 +194,37 @@ def main():
     }
     write_json(args.output, report)
     if args.write_fixtures:
-        write_json(args.write_fixtures, {
-            "baseline_commit": BASELINE_COMMIT,
-            "source_sha256": baseline_hashes,
-            "environment": baseline["environment"],
-            "cases": [{key: value for key, value in case.items() if key != "seconds"}
-                      for case in baseline["cases"]],
-        })
-    print(json.dumps({key: report[key] for key in (
-        "all_candidates_and_order_equal", "baseline_sum_of_medians_seconds",
-        "optimized_sum_of_medians_seconds", "speedup_from_sum_of_medians",
-    )}, indent=2))
+        write_json(
+            args.write_fixtures,
+            {
+                "baseline_commit": BASELINE_COMMIT,
+                "source_sha256": baseline_hashes,
+                "environment": baseline["environment"],
+                "cases": [
+                    {key: value for key, value in case.items() if key != "seconds"}
+                    for case in baseline["cases"]
+                ],
+            },
+        )
+    print(
+        json.dumps(
+            {
+                key: report[key]
+                for key in (
+                    "all_candidates_and_order_equal",
+                    "baseline_sum_of_medians_seconds",
+                    "optimized_sum_of_medians_seconds",
+                    "speedup_from_sum_of_medians",
+                )
+            },
+            indent=2,
+        )
+    )
     print(f"Report: {args.output}")
     if not report["all_candidates_and_order_equal"]:
-        raise SystemExit("Candidate mismatch; inspect results before claiming a transparent speedup")
+        raise SystemExit(
+            "Candidate mismatch; inspect results before claiming a transparent speedup"
+        )
 
 
 if __name__ == "__main__":

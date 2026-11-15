@@ -139,7 +139,9 @@ def test_molgraph_graph_is_lazy_but_correct():
     assert g.number_of_edges() == ref.number_of_edges()
 
 
-@pytest.mark.parametrize("smiles", ["C[NH3+]", "[13CH3]O", "F[C@H](Cl)Br", "c1cc[nH]c1"])
+@pytest.mark.parametrize(
+    "smiles", ["C[NH3+]", "[13CH3]O", "F[C@H](Cl)Br", "c1cc[nH]c1"]
+)
 def test_sanitize_molgraph_preserves_atom_chemistry(smiles):
     candidates = sanitize_molgraph([MolGraph(smiles)])
     assert len(candidates) == 1
@@ -147,7 +149,9 @@ def test_sanitize_molgraph_preserves_atom_chemistry(smiles):
 
 
 def test_sanitize_molgraph_drops_invalid_and_deduplicates_atom_maps():
-    candidates = sanitize_molgraph([MolGraph("invalid"), MolGraph("[CH3:1][OH:2]"), MolGraph("CO")])
+    candidates = sanitize_molgraph(
+        [MolGraph("invalid"), MolGraph("[CH3:1][OH:2]"), MolGraph("CO")]
+    )
     assert [get_smiles(m) for m in candidates] == ["CO"]
 
 
@@ -169,7 +173,9 @@ def test_edge_merge_keeps_atom_labels_for_reversed_endpoints(direction):
     base, attach = get_mol("N1CCCCC1"), get_mol("C1CCOCC1")
     offset = base.GetNumAtoms()
     forward = merge_mol_from_edge(base, attach, (0, 1), (offset, offset + 1), direction)
-    reversed_ends = merge_mol_from_edge(base, attach, (1, 0), (offset + 1, offset), direction)
+    reversed_ends = merge_mol_from_edge(
+        base, attach, (1, 0), (offset + 1, offset), direction
+    )
     assert get_smiles(forward) == get_smiles(reversed_ends)
 
 
@@ -181,10 +187,13 @@ def test_mol_from_adj_with_templates_preserves_atom_properties(smiles):
     assert get_smiles(rebuilt) == get_smiles(mol)
 
 
-@pytest.mark.parametrize("base,charge,isotope", [
-    ("C[NH3+]", 1, 0),
-    ("[13CH3]CO", 0, 13),
-])
+@pytest.mark.parametrize(
+    "base,charge,isotope",
+    [
+        ("C[NH3+]", 1, 0),
+        ("[13CH3]CO", 0, 13),
+    ],
+)
 def test_node_merge_preserves_charge_and_isotope(base, charge, isotope):
     mols = sanitize_molgraph(merge_node(get_mol(base), get_mol("CC")))
     assert mols
@@ -194,10 +203,13 @@ def test_node_merge_preserves_charge_and_isotope(base, charge, isotope):
             assert sum(atom.GetIsotope() == isotope for atom in mol.GetAtoms()) == 1
 
 
-@pytest.mark.parametrize("base,charge,isotope", [
-    ("C1CC[NH2+]CC1", 1, 0),
-    ("[13CH2]1CCCCC1", 0, 13),
-])
+@pytest.mark.parametrize(
+    "base,charge,isotope",
+    [
+        ("C1CC[NH2+]CC1", 1, 0),
+        ("[13CH2]1CCCCC1", 0, 13),
+    ],
+)
 def test_edge_merge_preserves_charge_and_isotope(base, charge, isotope):
     mols = sanitize_molgraph(merge_edge(get_mol(base), get_mol("C1CCCCC1")))
     assert mols
@@ -210,7 +222,10 @@ def test_edge_merge_preserves_charge_and_isotope(base, charge, isotope):
 @pytest.mark.parametrize("smiles", ["C[C@H](O)F", "C/C=C/C"])
 @pytest.mark.parametrize("merge", [merge_node, merge_edge])
 def test_reassembly_rejects_stereo_instead_of_silently_corrupting_it(smiles, merge):
-    for base, attach in [(get_mol(smiles), get_mol("CC")), (get_mol("CC"), get_mol(smiles))]:
+    for base, attach in [
+        (get_mol(smiles), get_mol("CC")),
+        (get_mol("CC"), get_mol(smiles)),
+    ]:
         with pytest.raises(ValueError, match="Stereochemical input"):
             merge(base, attach)
 

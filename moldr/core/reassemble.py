@@ -82,7 +82,9 @@ def _reconstruct(adj_mat, nodes, atom_templates=None, bond_scan="nonzero"):
     # Direct numpy -> RWMol build. Equivalent to the previous networkx round
     # trip (nx.from_numpy_array + _set_*_label + mol_from_graph), without
     # constructing an intermediate graph; see moldr.chemutils.mol_from_adj.
-    return mol_from_adj(adj_mat, nodes, atom_templates=atom_templates, bond_scan=bond_scan)
+    return mol_from_adj(
+        adj_mat, nodes, atom_templates=atom_templates, bond_scan=bond_scan
+    )
 
 
 @dataclass
@@ -114,7 +116,9 @@ def num_rings(mol):
     return sssr if isinstance(sssr, int) else len(sssr)
 
 
-def merge_mol_from_node(mol1, mol2, id1, id2, direction="", *, _prepared=None, bond_scan="nonzero"):
+def merge_mol_from_node(
+    mol1, mol2, id1, id2, direction="", *, _prepared=None, bond_scan="nonzero"
+):
     prepared = _prepared if _prepared is not None else prepare_pair(mol1, mol2)
     new_adj = prepared.adjacency.copy()
     nodes = list(prepared.nodes)
@@ -133,13 +137,24 @@ def merge_mol_from_node(mol1, mol2, id1, id2, direction="", *, _prepared=None, b
         del nodes[id2]
         del atom_templates[id2]
 
-    mol = _reconstruct(adj_mat=new_adj, nodes=nodes, atom_templates=atom_templates, bond_scan=bond_scan)
+    mol = _reconstruct(
+        adj_mat=new_adj, nodes=nodes, atom_templates=atom_templates, bond_scan=bond_scan
+    )
     if mol is None:
         return None
     return mol
 
 
-def merge_mol_from_edge(mol1, mol2, edge_type1: tuple, edge_type2: tuple, direction="", *, _prepared=None, bond_scan="nonzero"):
+def merge_mol_from_edge(
+    mol1,
+    mol2,
+    edge_type1: tuple,
+    edge_type2: tuple,
+    direction="",
+    *,
+    _prepared=None,
+    bond_scan="nonzero",
+):
     prepared = _prepared if _prepared is not None else prepare_pair(mol1, mol2)
     _new_adj = prepared.adjacency.copy()
     nodes = prepared.nodes
@@ -164,7 +179,9 @@ def merge_mol_from_edge(mol1, mol2, edge_type1: tuple, edge_type2: tuple, direct
         #     if i != id11 or i != id12:
         #         new_nodes.append(nodes[i])
         new_nodes = [node for idx, node in enumerate(nodes) if idx not in (id11, id12)]
-        atom_templates = [atom for idx, atom in enumerate(atom_templates) if idx not in (id11, id12)]
+        atom_templates = [
+            atom for idx, atom in enumerate(atom_templates) if idx not in (id11, id12)
+        ]
     else:
         # new_nodes = []  # copy.deepcopy(nodes)
         new_nodes = copy.deepcopy(nodes)
@@ -176,9 +193,16 @@ def merge_mol_from_edge(mol1, mol2, edge_type1: tuple, edge_type2: tuple, direct
         #         new_nodes.append(nodes[i])
         #
         new_nodes = [node for idx, node in enumerate(nodes) if idx not in (id21, id22)]
-        atom_templates = [atom for idx, atom in enumerate(atom_templates) if idx not in (id21, id22)]
+        atom_templates = [
+            atom for idx, atom in enumerate(atom_templates) if idx not in (id21, id22)
+        ]
 
-    mol = _reconstruct(adj_mat=new_adj, nodes=new_nodes, atom_templates=atom_templates, bond_scan=bond_scan)
+    mol = _reconstruct(
+        adj_mat=new_adj,
+        nodes=new_nodes,
+        atom_templates=atom_templates,
+        bond_scan=bond_scan,
+    )
     if mol is None:
         return None
 
@@ -319,8 +343,14 @@ def check_target_atom(base_mol, attach_mol) -> Dict[int, List[int]]:
     return targets
 
 
-def node_candidate_molecules(base_mol, attach_mol, *, _prepared=None,
-                            shared_preparation=True, bond_scan="nonzero"):
+def node_candidate_molecules(
+    base_mol,
+    attach_mol,
+    *,
+    _prepared=None,
+    shared_preparation=True,
+    bond_scan="nonzero",
+):
     """Yield unsanitized molecules in the historical enumeration order."""
     if _prepared is None:
         validate_reassembly_mol(base_mol)
@@ -336,29 +366,60 @@ def node_candidate_molecules(base_mol, attach_mol, *, _prepared=None,
             if src_symbol != dst_symbol:
                 for direction in ["target1", "target2"]:
                     new_mol = merge_mol_from_node(
-                        base_mol, attach_mol, src, dst, direction=direction,
-                        _prepared=_prepared, bond_scan=bond_scan,
+                        base_mol,
+                        attach_mol,
+                        src,
+                        dst,
+                        direction=direction,
+                        _prepared=_prepared,
+                        bond_scan=bond_scan,
                     )
                     yield new_mol
             else:
-                new_mol = merge_mol_from_node(base_mol, attach_mol, src, dst,
-                                              _prepared=_prepared, bond_scan=bond_scan)
+                new_mol = merge_mol_from_node(
+                    base_mol,
+                    attach_mol,
+                    src,
+                    dst,
+                    _prepared=_prepared,
+                    bond_scan=bond_scan,
+                )
                 yield new_mol
 
 
-def merge_node(base_mol, attach_mol, *, map_storage="int", shared_preparation=True,
-               bond_scan="nonzero", _prepared=None) -> list[MolGraph]:
-    smis = [get_smiles(mol_with_atom_index(mol, map_storage)) for mol in
-            node_candidate_molecules(base_mol, attach_mol, _prepared=_prepared,
-                                     shared_preparation=shared_preparation, bond_scan=bond_scan)]
+def merge_node(
+    base_mol,
+    attach_mol,
+    *,
+    map_storage="int",
+    shared_preparation=True,
+    bond_scan="nonzero",
+    _prepared=None,
+) -> list[MolGraph]:
+    smis = [
+        get_smiles(mol_with_atom_index(mol, map_storage))
+        for mol in node_candidate_molecules(
+            base_mol,
+            attach_mol,
+            _prepared=_prepared,
+            shared_preparation=shared_preparation,
+            bond_scan=bond_scan,
+        )
+    ]
 
     smis = np.unique(smis)
     mol_graphs = [MolGraph(smi) for smi in smis]
     return mol_graphs
 
 
-def edge_candidate_molecules(base_mol, attach_mol, *, _prepared=None,
-                            shared_preparation=True, bond_scan="nonzero"):
+def edge_candidate_molecules(
+    base_mol,
+    attach_mol,
+    *,
+    _prepared=None,
+    shared_preparation=True,
+    bond_scan="nonzero",
+):
     if _prepared is None:
         validate_reassembly_mol(base_mol)
         validate_reassembly_mol(attach_mol)
@@ -384,13 +445,24 @@ def edge_candidate_molecules(base_mol, attach_mol, *, _prepared=None,
                 if src_node_label != dst_node_label:
                     for direction in ["target1", "target2"]:
                         res = merge_mol_from_edge(
-                            base_mol, attach_mol, src, dst, direction=direction,
-                            _prepared=_prepared, bond_scan=bond_scan,
+                            base_mol,
+                            attach_mol,
+                            src,
+                            dst,
+                            direction=direction,
+                            _prepared=_prepared,
+                            bond_scan=bond_scan,
                         )
                         yield res
                 else:
-                    res = merge_mol_from_edge(base_mol, attach_mol, src, dst,
-                                               _prepared=_prepared, bond_scan=bond_scan)
+                    res = merge_mol_from_edge(
+                        base_mol,
+                        attach_mol,
+                        src,
+                        dst,
+                        _prepared=_prepared,
+                        bond_scan=bond_scan,
+                    )
                     yield res
         else:
             # No ring on either side -> no edge merge is possible. Stop and
@@ -398,11 +470,24 @@ def edge_candidate_molecules(base_mol, attach_mol, *, _prepared=None,
             # ``extend`` the result (see MolEnvValueMax._reassemble).
             break
 
-def merge_edge(base_mol, attach_mol, *, map_storage="int", shared_preparation=True,
-               bond_scan="nonzero", _prepared=None):
+
+def merge_edge(
+    base_mol,
+    attach_mol,
+    *,
+    map_storage="int",
+    shared_preparation=True,
+    bond_scan="nonzero",
+    _prepared=None,
+):
     smis = []
-    for mol in edge_candidate_molecules(base_mol, attach_mol, _prepared=_prepared,
-                                       shared_preparation=shared_preparation, bond_scan=bond_scan):
+    for mol in edge_candidate_molecules(
+        base_mol,
+        attach_mol,
+        _prepared=_prepared,
+        shared_preparation=shared_preparation,
+        bond_scan=bond_scan,
+    ):
         mol = sanitize(mol_with_atom_index(mol, map_storage))
         if mol is not None:
             smis.append(get_smiles(mol))

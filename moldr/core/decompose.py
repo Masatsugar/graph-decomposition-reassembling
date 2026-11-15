@@ -22,8 +22,8 @@ from moldr.chemutils import (
 )
 
 from moldr.gspan import gSpan
-from moldr.gspan.config import parser
-from moldr.gspan.utils import gspan_to_mol, preprocess_mols
+from moldr.gspan.fast import FastMiningResult, mine_fast_gspan
+from moldr.gspan.utils import gspan_to_mol, preprocess_graphs, preprocess_mols
 
 
 @dataclass
@@ -36,6 +36,10 @@ class DefaultConfig:
     is_save: bool = True
     output_csv: bool = False
     method: str = "raw"
+    backend: str = "fast-gspan"
+    num_threads: int = 0
+    timeout: Optional[float] = None
+    show_progress: bool = False
 
 
 def check_substructures(path, max_nums=100, **kwargs):
@@ -68,29 +72,24 @@ class GraphMining:
         self.save_name = None
 
     def _run_gspan(self):
-        args_str = (
-            f"-s {self.config.support} -d {self.config.directed} -l {self.config.lower} -u {self.config.upper} "
-            f"-p False -w False {self.config.data_path}"
-        )
-        FLAGS, _ = parser.parse_known_args(args=args_str.split())
+        if self.config.backend == "fast-gspan":
+            return mine_fast_gspan(self.config)
+        if self.config.backend != "python":
+            raise ValueError("backend must be 'fast-gspan' or 'python'")
         gs = gSpan(
-            database_file_name=FLAGS.database_file_name,
-            min_support=FLAGS.min_support,
-            min_num_vertices=FLAGS.lower_bound_of_num_vertices,
-            max_num_vertices=FLAGS.upper_bound_of_num_vertices,
-            max_ngraphs=FLAGS.num_graphs,
-            is_undirected=(not FLAGS.directed),
-            verbose=FLAGS.verbose,
-            visualize=FLAGS.plot,
-            where=FLAGS.where,
+            database_file_name=self.config.data_path,
+            min_support=self.config.support,
+            min_num_vertices=self.config.lower,
+            max_num_vertices=self.config.upper,
+            is_undirected=not self.config.directed,
         )
         gs.run()
         gs.time_stats()
         return gs
 
-    def decompose(self, graphs):
-        if any(graphs):
-            create_gspan_dataset_nx(nx_graphs=graphs)
+    def decompose(self, graphs=None):
+        if graphs:
+            preprocess_graphs(graphs, self.config.data_path)
         gspan_object = self._run_gspan()
         return gspan_object
 
@@ -101,8 +100,8 @@ class MolsMining(GraphMining):
         self.config = config
         self.save_name = None
 
-    def decompose(self, mols: Optional[List[Mol]] = None) -> gSpan:
-        if any(mols):
+    def decompose(self, mols: Optional[List[Mol]] = None) -> gSpan | FastMiningResult:
+        if mols is not None:
             preprocess_mols(
                 mols, fname=self.config.data_path, method=self.config.method
             )
@@ -115,7 +114,7 @@ class MolsMining(GraphMining):
 
     def save_csv(
         self,
-        gspan_object: gSpan,
+        gspan_object: gSpan | FastMiningResult,
         mols: Optional[List[Mol]] = None,
         suffix: str = ".pickle",
     ):
@@ -128,21 +127,23 @@ class MolsMining(GraphMining):
         self.save_name = save_name
 
         # Save as CSV
-        smiles = [get_smiles(m) for m in mols]
+        smiles = [get_smiles(m) for m in mols] if mols is not None else None
         sub_mols = self.gspan_to_mols(gspan_object, smiles_list=smiles)
         sub_smiles = [get_smiles(m) for m in sub_mols]
-        pd.DataFrame(sub_smiles).to_csv(
+        pd.DataFrame(sub_smiles, columns=["0"]).to_csv(
             cnf.data_path.with_name(save_name).with_suffix(".csv")
         )
         gspan_object._report_df["support_ids"].to_csv(
             cnf.data_path.with_name(f"{save_name}_info.csv")
         )
 
-    def gspan_to_mols(self, gspan: gSpan, smiles_list: Optional[List[str]] = None):
+    def gspan_to_mols(
+        self, gspan: gSpan | FastMiningResult, smiles_list: Optional[List[str]] = None
+    ):
         return gspan_to_mol(gspan, self.config.method, smiles_list=smiles_list)
 
     @staticmethod
-    def save(fpath: Path, obj: gSpan):
+    def save(fpath: Path, obj: gSpan | FastMiningResult):
         with fpath.open("wb") as f:
             pickle.dump(obj, f)
 
