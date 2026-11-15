@@ -1,9 +1,10 @@
-"""Run a small legacy demo, train a CPU policy, or sample a saved policy.
+"""Run a small legacy demo, train a CPU/GPU policy, or sample a saved policy.
 
 Examples (from the repository root)::
 
     uv run python examples/tutorial.py demo
     uv run python examples/tutorial.py train --iterations 1
+    uv run python examples/tutorial.py train --iterations 1 --num-gpus 1
     uv run python examples/tutorial.py sample --checkpoint PATH_PRINTED_BY_TRAIN
 
 See docs/tutorial.md (English) or docs/tutorial_ja.md (Japanese) for score design,
@@ -54,7 +55,7 @@ def parser():
     for command in ("demo", "train"):
         sub = commands.add_parser(
             command,
-            help="Random valid actions" if command == "demo" else "Train CPU PPO",
+            help="Random valid actions" if command == "demo" else "Train CPU/GPU PPO",
         )
         sub.add_argument(
             "--mode",
@@ -108,6 +109,12 @@ def parser():
         sub.add_argument("--seed", type=int, default=7)
         sub.add_argument("--output", type=Path, default=ROOT / "outputs/tutorial")
         if command == "train":
+            sub.add_argument(
+                "--num-gpus",
+                type=float,
+                default=0.0,
+                help="PPO GPU resources, from 0 (CPU, default) to 1 (one CUDA GPU)",
+            )
             sub.add_argument(
                 "--iterations",
                 type=int,
@@ -169,7 +176,7 @@ def make_config(args):
             "training.iterations": getattr(args, "iterations", 1),
             "training.num_workers": 0,
             "training.num_cpus": 2,
-            "training.num_gpus": 0.0,
+            "training.num_gpus": getattr(args, "num_gpus", 0.0),
             "training.train_batch_size": 64,
             "training.minibatch_size": 32,
             "training.num_epochs": 1,

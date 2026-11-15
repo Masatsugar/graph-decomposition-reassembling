@@ -4,7 +4,7 @@ This repository is for [MOLDR: Molecular Graph Generation by Decomposition and R
 ## Installation
 
 ### For Latest Version
-Use Python 3.10.13–3.12.
+Use Python 3.11–3.12.
 
 ```shell
 pip install --upgrade uv
@@ -20,9 +20,25 @@ distribution instead. No site-packages edits or manual uninstalls are needed.
 Use a recent uv supporting
 [`exclude-dependencies`](https://docs.astral.sh/uv/reference/settings/#exclude-dependencies).
 
+On Linux and Windows, the uv configuration selects PyTorch's CUDA 12.6 build
+from the [official PyTorch index](https://download.pytorch.org/whl/cu126).
+GPU training requires a compatible NVIDIA driver; CPU training also works
+with this build.
+
 
 ## Usage
 Set python path: `export PYTHONPATH=.`.
+
+Enable [Ray token authentication](https://docs.ray.io/en/latest/ray-security/token-auth.html)
+in your shell before starting Python, `uv run`, or Jupyter:
+
+```shell
+export RAY_AUTH_MODE=token
+```
+
+Ray reads this setting when it is imported. Restart an existing Python process
+or notebook kernel after setting it. Keep Ray management interfaces within a
+trusted network; token authentication does not encrypt network traffic.
 
 ### Start here: a small working example
 
@@ -99,6 +115,22 @@ with their original source revision or retrained; the loader rejects them
 instead of changing the observations supplied to a trained policy. New runs
 also sanitize candidates before serialization and deduplicate aromatic
 structures, so candidate counts and trajectories can differ from earlier runs.
+
+Ray 2.56 no longer includes logger classes embedded in older checkpoints. If
+restoration fails with `No module named 'ray.tune.logger.unified'`, use the
+original environment to copy and migrate your own trusted run, then restore
+the copy with the updated environment:
+
+```shell
+/path/to/original-environment/bin/python scripts/migrate_ray_checkpoint.py \
+  outputs/experiments/OLD_RUN outputs/experiments/MIGRATED_RUN
+uv run python -m moldr.cli sample --checkpoint outputs/experiments/MIGRATED_RUN
+```
+
+The destination must not exist. Migration removes only saved logger
+configuration and adjusts copied checkpoint paths; it preserves the original
+run, model weights, and optimizer state. It does not migrate older observation
+formats or make untrusted pickle files safe to load.
 
 ### Decomposition
 In the decomposition step, molecules are decomposed into subgraphs using

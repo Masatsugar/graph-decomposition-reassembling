@@ -8,6 +8,13 @@ No Jupyter installation is required. The CLI entry point is [examples/tutorial.p
 This tutorial uses the shared factory / CLI layer and defaults to the original **legacy** environment.
 Make sure you run the matching source revision as this tutorial.
 Complete the Installation steps in the README first, then run the commands below from the repository root.
+Use Python 3.11 or 3.12. Before starting Python in each terminal, enable Ray authentication:
+
+```bash
+export RAY_AUTH_MODE=token
+```
+
+Ray reads this setting when imported, so restart an existing Python process after setting it.
 
 ## 1. Run One Episode Without Training
 
@@ -115,7 +122,7 @@ Combining `sparse` with `final_weight=0` makes rewards zero everywhere, includin
 
 With `--mode e2e` (**experimental**), the default reward is `improvement` and score-decrease termination is disabled. Phase A returns `0` whenever valid candidates exist, and Phase B applies the table above upon reassembly.
 
-## 4. Run a Short CPU Training Job
+## 4. Run a Short CPU or GPU Training Job
 
 Pass the scoring settings verified in the demo to `train`:
 
@@ -127,6 +134,17 @@ uv run python examples/tutorial.py train --iterations 1 \
 This runs a lightweight CPU configuration: 0 GPUs, 0 rollout workers, batch size 64, minibatch 32, 1 SGD epoch, and policy hidden width 32.
 Even with `num_workers=0`, training still starts local Ray.
 A single iteration is only a smoke check of training, checkpoint saving, and restoration—it is not sufficient for evaluating molecular optimization quality.
+
+For a CUDA GPU, add `--num-gpus 1` to the same command:
+
+```bash
+uv run python examples/tutorial.py train --iterations 1 --num-gpus 1 \
+  --objective custom --target-atoms 10 --size-width 2 --qed-weight 0.3
+```
+
+This moves PPO's policy and updates to the GPU; molecular chemistry still runs on CPU.
+The locked environment uses CUDA 12.6 on Linux and Windows and requires a compatible NVIDIA driver.
+If a GPU was requested but CUDA is unavailable, training reports an error instead of silently using CPU.
 
 Note the run directory printed at completion, e.g. `outputs/tutorial/train_..._seed7`.
 In addition to configuration and assets, training writes:
@@ -154,6 +172,7 @@ uv run python examples/tutorial.py sample \
 
 Replace `train_ACTUAL_TIMESTAMP_seed7` with the actual directory name.
 `sample` reloads the saved configuration, fragment table, Mol2Vec model, custom objective, and policy weights automatically.
+It also uses the saved GPU allocation: CPU runs restore on CPU, and GPU runs require CUDA for sampling.
 You do not need to re-register the custom objective or reconstruct the policy network manually, and sampling evaluates with the saved environment configuration.
 
 Sampling writes `molecules.json` and `molecules.csv` (SMILES, score, reward, termination flags, etc.) alongside `evaluation.json` (mean score, validity rate, diversity, and related metrics).

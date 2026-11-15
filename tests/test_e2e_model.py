@@ -140,6 +140,7 @@ def test_rllib_ppo_smoke(num_workers):
     import ray
 
     from moldr.e2e.config import get_e2e_config
+    from moldr.metrics import MoleculeMetrics, collect_metrics, metric_delta
 
     class _FakeObjective:
         class _Wrapped:
@@ -167,9 +168,25 @@ def test_rllib_ppo_smoke(num_workers):
             length=20,
             max_episode_steps=24,
         )
-        config = config.training(train_batch_size=64, minibatch_size=16, num_epochs=1)
+        config = config.training(
+            train_batch_size=64, minibatch_size=16, num_epochs=1
+        ).callbacks(MoleculeMetrics)
         algo = config.build()
+        before_metrics = collect_metrics(algo)
         _assert_finite_ppo_update(algo)
+        after_metrics = collect_metrics(algo)
+        delta = metric_delta(before_metrics, after_metrics, seconds=1.0)
+        assert delta["updates"] > 0
+        assert delta["valid_molecules"] == delta["updates"]
+        assert delta["episodes"] > 0
+        assert np.isfinite(delta["mean_final_score"])
+        assert delta["molecule_updates_per_second"] > 0
+        assert after_metrics["unique_final_molecules"] > 0
+        assert (
+            after_metrics["unique_final_molecules"]
+            <= after_metrics["sampled_final_molecules"]
+            <= after_metrics["episodes"]
+        )
         algo.stop()
     finally:
         ray.shutdown()

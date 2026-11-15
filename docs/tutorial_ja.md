@@ -9,6 +9,13 @@ Jupyter は不要です。入口は [examples/tutorial.py](../examples/tutorial.
 このチュートリアルは共通 factory / CLI を使い、既定では旧方式の **legacy** を実行します。
 スクリプトと同じ版のソース一式を使ってください。
 README の Installation を済ませ、以下のコマンドはリポジトリ直下で実行します。
+Python 3.11 または 3.12 を使います。各ターミナルで Python を起動する前に、Ray の認証を有効にしてください。
+
+```bash
+export RAY_AUTH_MODE=token
+```
+
+Ray は import 時にこの設定を読むため、起動済みの Python プロセスは設定後に再起動します。
 
 ## 1. 学習せずに 1 エピソード動かす
 
@@ -126,7 +133,7 @@ legacy の既定は `sparse` で、スコアが前 step より下がったとき
 `--mode e2e` の既定報酬は `improvement` で、スコア低下では終了しません。
 E2E の A 段階は候補があれば報酬 `0`、B 段階の再結合で上の表に沿って報酬を計算します。
 
-## 4. 短い CPU 学習を実行する
+## 4. 短い CPU・GPU 学習を実行する
 
 デモで確認した条件を `train` に渡します。
 
@@ -138,6 +145,17 @@ uv run python examples/tutorial.py train --iterations 1 \
 CPU、GPU 数 0、rollout worker 数 0、batch 64、minibatch 32、更新 1 epoch、policy hidden 幅 32 の設定です。
 worker 数が 0 でも、学習にはローカル Ray の起動が必要です。
 1 iteration は学習・保存・復元を確かめるための短い実行で、分子最適化の性能を評価するには不十分です。
+
+CUDA GPU を使う場合は、同じコマンドに `--num-gpus 1` を追加します。
+
+```bash
+uv run python examples/tutorial.py train --iterations 1 --num-gpus 1 \
+  --objective custom --target-atoms 10 --size-width 2 --qed-weight 0.3
+```
+
+PPO の policy と重みの更新を GPU で処理し、分子の化学処理は引き続き CPU で実行します。
+Linux・Windows の lock は CUDA 12.6 版を使うため、対応する NVIDIA ドライバーが必要です。
+GPU を指定して CUDA が利用できない場合はエラーになり、CPU へ自動的に切り替わることはありません。
 
 終了時に表示された run ディレクトリを控えてください。例えば `outputs/tutorial/train_..._seed7` です。
 設定とアセットに加え、次のファイルが保存されます。
@@ -165,6 +183,7 @@ uv run python examples/tutorial.py sample \
 
 `train_実際の日時_seed7` は実際のディレクトリ名へ置き換えてください。
 `sample` は保存された設定、fragment 表、Mol2Vec、独自 objective、policy の重みを読み込みます。
+GPU の割り当ても保存設定に従います。CPU で学習した run は CPU で復元し、GPU で学習した run の生成には CUDA が必要です。
 独自 objective の再登録や、ネットワーク構造の手動再作成は不要です。
 同じ評価条件で、学習済み policy による生成を実行できます。
 

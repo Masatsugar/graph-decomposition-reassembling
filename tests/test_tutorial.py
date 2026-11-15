@@ -20,6 +20,41 @@ def test_tutorial_defaults_to_legacy_reward_and_termination(command, tmp_path):
     assert config.environment.mode == "legacy"
     assert config.environment.reward == "sparse"
     assert config.environment.terminate_on_score_decrease
+    assert config.training.num_gpus == 0.0
+
+
+@pytest.mark.parametrize("num_gpus", [0.0, 0.5, 1.0])
+def test_tutorial_training_gpu_resources_reach_shared_configuration(num_gpus, tmp_path):
+    args = tutorial.parser().parse_args(
+        [
+            "train",
+            "--objective",
+            "QED",
+            "--output",
+            str(tmp_path),
+            f"--num-gpus={num_gpus}",
+        ]
+    )
+    config, _, _ = tutorial.make_config(args)
+    assert config.training.num_gpus == num_gpus
+    assert config.training.num_workers == 0
+    assert config.environment.mode == "legacy"
+
+
+@pytest.mark.parametrize("num_gpus", ["-1", "nan", "inf", "-inf", "2"])
+def test_tutorial_rejects_invalid_gpu_resources_before_training(num_gpus, tmp_path):
+    args = tutorial.parser().parse_args(
+        [
+            "train",
+            "--objective",
+            "QED",
+            "--output",
+            str(tmp_path),
+            f"--num-gpus={num_gpus}",
+        ]
+    )
+    with pytest.raises(ValueError, match="finite|nonnegative|one learner GPU"):
+        tutorial.make_config(args)
 
 
 @pytest.mark.parametrize("reward", ["sparse", "improvement"])
