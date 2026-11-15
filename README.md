@@ -27,7 +27,8 @@ Set python path: `export PYTHONPATH=.`.
 ### Start here: a small working example
 
 For a **Python-only walkthrough**, start with
-[the tutorial](docs/tutorial.md). It explains how to define a molecular score,
+the tutorial ([English](docs/tutorial.md) | [日本語](docs/tutorial_ja.md)). It
+explains how to define a molecular score,
 turn that score into PPO rewards, train a small CPU policy, and restore the
 saved policy and custom objective in a new process:
 
@@ -45,8 +46,8 @@ to your research objective. Sampling restores its saved definition and
 parameters without registering the function again. No Jupyter dependency is
 needed for this route.
 
-Open [the quickstart notebook](examples/quickstart.ipynb) for a guided Japanese
-walkthrough: eight sample molecules → fast-gspan fragments → reassembly candidates →
+Open the quickstart notebook ([English](examples/quickstart.ipynb) | [日本語](examples/quickstart_ja.ipynb))
+for a guided walkthrough: eight sample molecules → fast-gspan fragments → reassembly candidates →
 one legacy episode → saved CSV results. The sample SMILES are included in
 the notebook; no external dataset download is needed. The default cells use
 CPU and the supplied Mol2Vec model with the original **legacy** environment:
@@ -64,6 +65,7 @@ uv run --locked --with 'jupyterlab>=4,<5' --with 'ipykernel>=6,<7' \
   python -m jupyter lab examples/quickstart.ipynb
 ```
 
+For the Japanese notebook, open `examples/quickstart_ja.ipynb` instead.
 Select the Python kernel from that environment and run the cells in order.
 The notebook requires this development version's shared `moldr.factory` and
 `moldr.cli` modules. It explains where to substitute your own molecules and

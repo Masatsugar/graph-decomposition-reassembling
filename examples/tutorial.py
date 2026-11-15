@@ -6,7 +6,8 @@ Examples (from the repository root)::
     uv run python examples/tutorial.py train --iterations 1
     uv run python examples/tutorial.py sample --checkpoint PATH_PRINTED_BY_TRAIN
 
-See docs/tutorial.md for score design, reward shaping, and saved artifacts.
+See docs/tutorial.md (English) or docs/tutorial_ja.md (Japanese) for score design,
+reward shaping, and saved artifacts.
 """
 
 from __future__ import annotations

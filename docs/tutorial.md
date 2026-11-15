@@ -1,43 +1,41 @@
-# Python だけで試す MOLDR チュートリアル
+# Python-Only MOLDR Tutorial
 
-小さなサンプルで動作を確認し、目的に合わせたスコアを設定して、学習済みモデルから分子を生成するまでの手順です。
-Jupyter は不要です。入口は [examples/tutorial.py](../examples/tutorial.py)、
-独自スコアの例は [examples/tutorial_objective.py](../examples/tutorial_objective.py) にあります。
+Language: **English** | [日本語](tutorial_ja.md)
 
-このチュートリアルは共通 factory / CLI を使い、既定では旧方式の **legacy** を実行します。
-スクリプトと同じ版のソース一式を使ってください。
-README の Installation を済ませ、以下のコマンドはリポジトリ直下で実行します。
+This walkthrough takes you from running a small smoke test to configuring a molecular score aligned with your research goal and sampling molecules from a trained policy.
+No Jupyter installation is required. The CLI entry point is [examples/tutorial.py](../examples/tutorial.py), and the customizable objective lives in [examples/tutorial_objective.py](../examples/tutorial_objective.py).
 
-## 1. 学習せずに 1 エピソード動かす
+This tutorial uses the shared factory / CLI layer and defaults to the original **legacy** environment.
+Make sure you run the matching source revision as this tutorial.
+Complete the Installation steps in the README first, then run the commands below from the repository root.
+
+## 1. Run One Episode Without Training
 
 ```bash
 uv run python examples/tutorial.py demo
 ```
 
-付属の小さな building block 表と固定 Mol2Vec モデルを使い、CPU で分子を生成します。
-Ray の起動や PPO 学習は行いません。building block を一様ランダムに選ぶため、
-この結果は学習済みモデルの性能を表しません。
+This generates a molecule on CPU using the bundled 13-fragment table and the fixed Mol2Vec model.
+It does not start Ray or run PPO training. Because building blocks are chosen uniformly at random, these outputs do not reflect trained-model quality.
 
-legacy は「building block を選ぶ → 環境が再結合候補をすべて採点し、最高スコアの候補を採用する」を繰り返します。
-学習時に PPO が選ぶのも building block だけです。最大 8 steps は最大 8 回の再結合に相当します。
-デモは各 step の行動後の SMILES、分子スコア、報酬を表示し、出力先を最後に示します。
-終了理由は保存した `trajectory.csv` と `molecules.json` で確認できます。
-既定の出力先は `outputs/tutorial/` の新しい run ディレクトリです。
+In `legacy` mode, each step follows: **pick a building block → score every reassembly candidate in the environment → keep the highest-scoring candidate**. During training, PPO also chooses only the building block. At most 8 steps corresponds to at most 8 reassemblies.
+The demo prints the SMILES, score, and reward after each step, followed by the output directory path.
+Check the saved `trajectory.csv` and `molecules.json` to see why the episode ended.
+By default, outputs are written to a new run directory under `outputs/tutorial/`.
 
-実験的機能（experimental）である E2E を試したい場合は `demo` または `train` に `--mode e2e` を指定できます。
-E2E は「A: building block を選ぶ → B: 再結合候補を選ぶ」の 2 段階をエージェントが決めます。
-E2E での最大 8 steps は通常 4 回の再結合に相当します。
+To try the **experimental** E2E mode instead, pass `--mode e2e` to `demo` or `train`.
+E2E splits each reassembly into two agent decisions (**Phase A: pick a building block → Phase B: pick a reassembly candidate**), so 8 steps typically corresponds to 4 reassemblies.
 
-| ファイル | 内容 |
+| File | Contents |
 | --- | --- |
-| `objective_preview.csv` | 学習前に確かめるサンプル分子とスコア |
-| `trajectory.csv` | 各 decision の分子・報酬・終了フラグ |
-| `molecules.json` | 生成結果 |
-| `tutorial_settings.json` | チュートリアルで指定した条件 |
-| `resolved_config.yaml` | 実際に使った設定 |
-| `manifest.json`, `fragment_catalog.json`, `assets/` | 復元に必要な構成とアセット |
+| `objective_preview.csv` | Sample molecules and their scores checked before running |
+| `trajectory.csv` | Resulting molecule, reward, and termination flags at each decision step |
+| `molecules.json` | Generated episode outputs |
+| `tutorial_settings.json` | Tutorial options recorded for the run |
+| `resolved_config.yaml` | Fully resolved experiment configuration |
+| `manifest.json`, `fragment_catalog.json`, `assets/` | Saved configuration and assets required for restoration |
 
-各コマンドの引数は `--help` で確認できます。
+You can inspect all flags with `--help`:
 
 ```bash
 uv run python examples/tutorial.py --help
@@ -45,147 +43,134 @@ uv run python examples/tutorial.py train --help
 uv run python examples/tutorial.py sample --help
 ```
 
-別のディレクトリから実行する場合は、このプロジェクトの `.venv/bin/python` と
-`examples/tutorial.py` を絶対パスで指定できます。`--fragments`、`--checkpoint`、`--output` の
-相対パスは、コマンドを起動したディレクトリから解決します。
+When running from outside the repository root, invoke `.venv/bin/python` and `examples/tutorial.py` using absolute paths. Relative paths passed to `--fragments`, `--checkpoint`, and `--output` are resolved from your current working directory.
 
-## 2. 分子スコアを目的に合わせる
+## 2. Adapt the Molecular Score to Your Objective
 
-最初に決めるのは、分子 (m) を評価する **スコア (S(m))** です。
-この例では値が大きいほど良い分子として扱います。
-既定の独自スコアは QED と「目標の重原子数への近さ」の加重平均です。
+First, choose the **score `S(m)`** used to evaluate each molecule `m`.
+In this tutorial, larger scores indicate better molecules.
+The default custom objective computes a weighted average of QED and proximity to a target heavy-atom count:
 
 ```text
 size_score(m) = exp(-0.5 * ((heavy_atoms(m) - target_atoms) / size_width)^2)
 S(m) = qed_weight * QED(m) + (1 - qed_weight) * size_score(m)
 ```
 
-| 引数 | 既定値 | 意味 |
+| Flag | Default | Meaning |
 | --- | --- | --- |
-| `--target-atoms` | `8` | 目標とする重原子数（水素以外の原子数） |
-| `--size-width` | `4` | 目標からのずれをどの程度許容するか。小さいほど厳しい |
-| `--qed-weight` | `0.5` | QED の重み。0〜1 で指定し、残りをサイズに配分する |
+| `--target-atoms` | `8` | Target heavy-atom count (non-hydrogen atoms) |
+| `--size-width` | `4` | Tolerance around the target atom count (smaller is stricter) |
+| `--qed-weight` | `0.5` | Weight on QED in `[0, 1]`; `1 - qed_weight` is assigned to `size_score` |
 
-例えば、重原子数 10 付近を重視する場合は次のようにします。
+For example, to prioritize molecules around 10 heavy atoms:
 
 ```bash
 uv run python examples/tutorial.py demo \
   --objective custom --target-atoms 10 --size-width 2 --qed-weight 0.3
 ```
 
-サンプル分子の採点結果と `objective_preview.csv` を見て、意図した分子が高得点になるか確認してください。
-このスコアは決定的で、常に有限の 0〜1 の値を返します。サイズと QED の組み合わせは説明用の例です。
-実際の目的に適した指標と重みは、研究側で検討する必要があります。
+Inspect the printed sample scores and `objective_preview.csv` to verify that the molecules you prefer receive higher scores.
+This example score is deterministic and finite within `[0, 1]`. Combining QED with atom count is purely illustrative; choosing metrics and weights appropriate for your research problem requires domain judgment.
 
-QED だけを使う場合は、組み込み objective を選べます。
+To optimize pure QED instead, select the built-in objective:
 
 ```bash
 uv run python examples/tutorial.py demo --objective QED
 ```
 
-独自の指標へ変えるときは `tutorial_objective.py` 内の採点式を編集します。
-SMILES を受け取って値を返す関数を `moldr.scoring.register_objective` で登録し、
-登録名を `scoring.objective` に設定するのが基本の接続方法です。
-この例は RDKit Mol を直接採点する関数も登録しています。
-`NaN` や無限大を返さず、「大きいほど良い」という向きをそろえてください。
-同じ分子に同じ値を返す関数として `deterministic=True` を指定しています。
-独自の式で値域を変更する場合は、スクリプト内の `environment.score_threshold=1.1` も
-目的に合う終了条件へ見直してください。大きな値を返す指標は、報酬のスケールにも影響します。
+To plug in your own metric, edit the scoring expression in `tutorial_objective.py`.
+Register a function mapping SMILES to float with `moldr.scoring.register_objective` and pass that registered name to `scoring.objective`.
+This example also registers `mol_function` to score RDKit `Mol` objects directly.
+Keep return values finite (never `NaN` or infinite) and oriented so higher values are better.
+Because the same molecule always yields the same value, it passes `deterministic=True`.
+If your custom metric uses a different numeric range, also update `environment.score_threshold=1.1` in `tutorial.py` to match your desired termination threshold, keeping in mind that score magnitude directly affects RL reward scaling.
 
-## 3. スコアと報酬を区別する
+## 3. Distinguish Molecular Score from RL Reward
 
-PPO が受け取る **報酬 (r)** は、分子スコアから環境が計算します。
-スコア関数を登録することと、各遷移の報酬の与え方を選ぶことは別の設定です。
+The **reward `r`** passed to PPO is computed by the environment from the molecular score.
+Registering a score function is independent from choosing how transitions turn scores into rewards:
 
-| 場面 | `--reward improvement` | `--reward sparse` |
+| Situation | `--reward improvement` | `--reward sparse` |
 | --- | --- | --- |
-| 最高スコアの再結合候補を採用し、継続 | `S(new) - S(previous)` | `0` |
-| 再結合後、環境の終了条件を満たす | 上記に `final_weight * S(new)` を加える | `final_weight * S(new)` |
-| 再結合候補がなく終了 | `final_weight * S(previous)` | `final_weight * S(previous)` |
-| steps の上限だけに到達 | 完了報酬は加えない | 完了報酬は加えない |
+| Adopt highest-scoring reassembly candidate and continue | `S(new) - S(previous)` | `0` |
+| Reassemble and satisfy an environment termination condition | Above + `final_weight * S(new)` | `final_weight * S(new)` |
+| No valid reassembly candidates remain (terminated) | `final_weight * S(previous)` | `final_weight * S(previous)` |
+| Step limit reached only (`truncated`) | No completion bonus added | No completion bonus added |
 
-例えば `S(previous)=0.4`, `S(new)=0.6`, `final_weight=1` のとき、通常の improvement 報酬は `0.2` です。
-その遷移で真に終了すれば `0.2 + 0.6 = 0.8`、時間制限による打ち切りだけなら `0.2` のままです。
-生成結果の `score` と `reward` が違っていても、この定義に沿った挙動です。
+For example, when `S(previous)=0.4`, `S(new)=0.6`, and `final_weight=1`, the step improvement reward is `0.2`.
+If that transition triggers true termination, the reward becomes `0.2 + 0.6 = 0.8`; if it is only truncated by the step limit, the reward remains `0.2`.
+Differences between `score` and `reward` in saved trajectories reflect this rule.
 
 ```bash
 uv run python examples/tutorial.py demo --reward improvement --final-weight 1
 uv run python examples/tutorial.py demo --reward sparse --final-weight 0.5
 ```
 
-legacy の既定は `sparse` で、スコアが前 step より下がったときにも終了します。
-`terminated` はスコア低下・スコア閾値・原子数超過・候補なしによる終了、`truncated` は steps の上限による打ち切りです。
-チュートリアルでは `score_threshold=1.1` として、0〜1 のスコアで閾値終了させない設定にしています。
-原子数は `atom_count > atom_limit` で終了を判定するため、最終分子が上限を超える場合があります。
-`sparse` で打ち切りだけのエピソードになると報酬はゼロです。途中のスコア変化も報酬にしたい場合は `--reward improvement` を指定します。
-`sparse` と `final_weight=0` を組み合わせると、終了時も含めて報酬が常にゼロになります。
-スコアを学習に反映するため、`sparse` の学習では完了報酬の重みを正にしてください。
+In `legacy` mode, the defaults are `sparse` reward and termination when score decreases.
+`terminated` indicates termination due to score decrease, score threshold, atom-limit exceeded, or zero candidates, whereas `truncated` indicates hitting `max_episode_steps`.
+The tutorial sets `score_threshold=1.1` so `[0, 1]` scores never trigger early threshold termination.
+Atom termination checks `atom_count > atom_limit`, so a final molecule may slightly exceed `atom_limit`.
+With `sparse` rewards, episodes that only end by truncation receive zero total reward. Use `--reward improvement` if you want intermediate score changes rewarded at each step.
+Combining `sparse` with `final_weight=0` makes rewards zero everywhere, including terminal steps—keep `final_weight > 0` when training with `sparse`.
 
-`--mode e2e` の既定報酬は `improvement` で、スコア低下では終了しません。
-E2E の A 段階は候補があれば報酬 `0`、B 段階の再結合で上の表に沿って報酬を計算します。
+With `--mode e2e` (**experimental**), the default reward is `improvement` and score-decrease termination is disabled. Phase A returns `0` whenever valid candidates exist, and Phase B applies the table above upon reassembly.
 
-## 4. 短い CPU 学習を実行する
+## 4. Run a Short CPU Training Job
 
-デモで確認した条件を `train` に渡します。
+Pass the scoring settings verified in the demo to `train`:
 
 ```bash
 uv run python examples/tutorial.py train --iterations 1 \
   --objective custom --target-atoms 10 --size-width 2 --qed-weight 0.3
 ```
 
-CPU、GPU 数 0、rollout worker 数 0、batch 64、minibatch 32、更新 1 epoch、policy hidden 幅 32 の設定です。
-worker 数が 0 でも、学習にはローカル Ray の起動が必要です。
-1 iteration は学習・保存・復元を確かめるための短い実行で、分子最適化の性能を評価するには不十分です。
+This runs a lightweight CPU configuration: 0 GPUs, 0 rollout workers, batch size 64, minibatch 32, 1 SGD epoch, and policy hidden width 32.
+Even with `num_workers=0`, training still starts local Ray.
+A single iteration is only a smoke check of training, checkpoint saving, and restoration—it is not sufficient for evaluating molecular optimization quality.
 
-終了時に表示された run ディレクトリを控えてください。例えば `outputs/tutorial/train_..._seed7` です。
-設定とアセットに加え、次のファイルが保存されます。
+Note the run directory printed at completion, e.g. `outputs/tutorial/train_..._seed7`.
+In addition to configuration and assets, training writes:
 
-| ファイル | 内容 |
+| File | Contents |
 | --- | --- |
-| `measurements.json` | 各 iteration の損失、時間など |
-| `summary.json` | 学習回数、重みの変化など |
-| `checkpoints/iteration_000001/` | 1 iteration 終了時の学習済みモデル |
-| `last_checkpoint.json` | 最後に保存した checkpoint の場所 |
-| `logs/` | 学習ログ |
+| `measurements.json` | Per-iteration losses, timings, and metrics |
+| `summary.json` | Training step summary and weight updates |
+| `checkpoints/iteration_000001/` | Trained policy checkpoint after iteration 1 |
+| `last_checkpoint.json` | Path to the most recent checkpoint |
+| `logs/` | Training logs |
 
-独自 objective の関数とパラメータは `assets/objective.pkl` に保存されます。
-サイズの目標や重みを関数に閉じ込めているため、後でソースを編集しても、保存済み run は学習時の採点定義を復元します。
-RDKit などのライブラリは同じ実行環境で利用する必要があります。
+Your custom objective function and captured parameters are saved into `assets/objective.pkl`.
+Because values like target atom count and weights are captured in the scoring closures, editing `tutorial_objective.py` later will not silently alter how an already-saved run scores molecules.
+Keep RDKit and matching dependencies available in the Python environment used for sampling.
 
-## 5. 別プロセスでモデルを復元して使う
+## 5. Restore and Sample the Saved Model in a Separate Process
 
-新しいターミナルから、学習時に表示された run のパスを指定します。
+From a fresh terminal, point `sample` at the run directory printed by `train`:
 
 ```bash
 uv run python examples/tutorial.py sample \
-  --checkpoint outputs/tutorial/train_実際の日時_seed7 --episodes 3
+  --checkpoint outputs/tutorial/train_ACTUAL_TIMESTAMP_seed7 --episodes 3
 ```
 
-`train_実際の日時_seed7` は実際のディレクトリ名へ置き換えてください。
-`sample` は保存された設定、fragment 表、Mol2Vec、独自 objective、policy の重みを読み込みます。
-独自 objective の再登録や、ネットワーク構造の手動再作成は不要です。
-同じ評価条件で、学習済み policy による生成を実行できます。
+Replace `train_ACTUAL_TIMESTAMP_seed7` with the actual directory name.
+`sample` reloads the saved configuration, fragment table, Mol2Vec model, custom objective, and policy weights automatically.
+You do not need to re-register the custom objective or reconstruct the policy network manually, and sampling evaluates with the saved environment configuration.
 
-出力先に `molecules.json` と `molecules.csv`（SMILES・スコア・報酬・終了理由など）、
-`evaluation.json`（平均スコア、有効分子率、多様性など）が保存されます。
-3 エピソードは接続確認用です。研究で比較する場合は、評価回数・seed・探索条件をそろえてランダム選択とも比較してください。
+Sampling writes `molecules.json` and `molecules.csv` (SMILES, score, reward, termination flags, etc.) alongside `evaluation.json` (mean score, validity rate, diversity, and related metrics).
+Sampling 3 episodes verifies restoration wiring; for research comparisons, match episode count, seeds, and search bounds against a random baseline.
 
-checkpoint のサブディレクトリだけでなく、**run ディレクトリ全体**を保持・移動してください。
-復元時は保存済みアセットを使うため、元の入力ファイルの場所が変わっても利用できます。
-学習後に fragment 表や観測次元を差し替えることはできません。
-`sample` は保存された `environment.mode` も復元します。既定の `train` で保存した run は legacy、
-`train --mode e2e` の run は E2E として復元され、互いに読み替えません。
-共通 CLI の manifest を持たない古い checkpoint は、対応する旧ローダーが必要です。
+Preserve or move the **entire run directory**, not just the `checkpoints/` subdirectory.
+Because restoration reads self-contained copies under `assets/`, moved runs continue working even if original input paths change.
+You cannot swap the fragment table or observation dimension after training.
+`sample` also restores `environment.mode` automatically: runs trained without `--mode e2e` restore as `legacy`, while `train --mode e2e` runs restore as `e2e` and cannot be mixed.
+Older checkpoints created without a shared-CLI manifest require their matching legacy loaders.
 
-## 6. 自分の分子・building block に置き換える
+## 6. Substitute Your Own Molecules and Building Blocks
 
-既定の 13 building blocks は、[quickstart.ipynb](../examples/quickstart.ipynb) の小さなサンプルから採掘したものです。
-`--fragments` は**再結合に使う building block の表**を受け取ります。
-元の分子データを自動で分解する引数ではありません。分解から試す場合は
-[README の Decomposition](../README.md#decomposition) の Python コードを使えます。
-構造を図で確認したい場合は Notebook の gSpan の例も利用できます。
+The default 13 building blocks were mined from the toy sample in [quickstart.ipynb](../examples/quickstart.ipynb).
+`--fragments` expects a **building-block table for reassembly**, not raw target molecules to decompose automatically. To mine building blocks from your own molecules first, follow the Python snippet in [README Decomposition](../README.md#decomposition), or inspect mined structures visually in the notebook.
 
-例えば `my_fragments.smi` を次の内容で用意します。
+For example, create `my_fragments.smi`:
 
 ```text
 CC
@@ -194,12 +179,14 @@ CN
 C1CCCCC1
 ```
 
+Then run:
+
 ```bash
 uv run python examples/tutorial.py demo \
   --fragments my_fragments.smi --base-smiles CCO --atom-limit 16 --max-steps 12
 ```
 
-CSV を使う場合は、先頭列がインデックス、その次の列が SMILES の形式にします。
+If using CSV, provide a leading index column followed by the `smiles` column:
 
 ```csv
 ,smiles
@@ -208,8 +195,8 @@ CSV を使う場合は、先頭列がインデックス、その次の列が SMI
 2,CN
 ```
 
-少数の分子で読み込みと採点を確かめてから、データを増やしてください。
-明示的な原子・結合の立体化学は現在の再結合実装では扱えず、環境が入力を拒否します。
-同じ条件で `train` を実行し、その新しい run を `sample --checkpoint` に渡すと、自分の building block を使った生成につながります。
+Verify loading and scoring on a small molecule set before scaling up.
+The current reassembly implementation does not handle explicit atomic or bond stereochemistry, and the environments reject inputs containing it.
+Once satisfied with the demo, run `train` with your updated settings and pass the resulting run directory to `sample --checkpoint`.
 
-より詳しい CLI・YAML 設定は [experiment_configuration.md](experiment_configuration.md) を参照してください。
+For complete CLI and YAML configuration options, see [experiment_configuration.md](experiment_configuration.md).
