@@ -172,9 +172,9 @@ def run_training(config, *, profile=False):
     import numpy as np
     import ray
     import torch
-    from ray.tune.logger import CSVLogger, JsonLogger, TBXLogger, UnifiedLogger
 
     from moldr.metrics import MoleculeMetrics, collect_metrics, metric_delta
+    from moldr.utils import TrainingLogger
 
     if config.profiling.trace and not profile:
         raise ValueError(
@@ -192,16 +192,6 @@ def run_training(config, *, profile=False):
     )
     (directory / "logs").mkdir()
     ppo = make_ppo_config(config).callbacks(MoleculeMetrics)
-    loggers = (
-        (JsonLogger, CSVLogger, TBXLogger)
-        if config.output.logger == "tensorboard"
-        else (JsonLogger, CSVLogger)
-    )
-    ppo.debugging(
-        logger_creator=lambda c: UnifiedLogger(
-            c, str(directory / "logs"), loggers=loggers
-        )
-    )
     wb = None
     if config.output.logger == "wandb":
         from ray.air.integrations.wandb import setup_wandb
@@ -213,8 +203,14 @@ def run_training(config, *, profile=False):
         )
     _init_ray(config)
     algo = None
+    result_logger = None
     records = []
     try:
+        result_logger = TrainingLogger(
+            ppo.to_dict(),
+            directory / "logs",
+            tensorboard=config.output.logger == "tensorboard",
+        )
         algo = ppo.build()
         if config.output.checkpoint:
             algo.restore(checkpoint_path(config.output.checkpoint))
@@ -246,6 +242,7 @@ def run_training(config, *, profile=False):
                 torch.cuda.synchronize()
             elapsed = time.perf_counter() - start
             wall_end = time.time()
+            result_logger.on_result(result)
             if (
                 profile
                 and result["num_env_steps_sampled_this_iter"]
@@ -349,6 +346,8 @@ def run_training(config, *, profile=False):
         print(json.dumps({"output": str(directory), **summary}), flush=True)
         return directory
     finally:
+        if result_logger is not None:
+            result_logger.close()
         if algo is not None:
             algo.stop()
         if wb is not None:

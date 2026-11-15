@@ -1,7 +1,7 @@
 """Count chemistry work independently from score requests and calculations."""
 
-from rdkit import Chem
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
+from rdkit import Chem
 
 
 class MoleculeMetrics(DefaultCallbacks):
@@ -56,7 +56,7 @@ def _worker_metrics(worker):
 
 
 def collect_metrics(algo):
-    results = algo.env_runner_group.foreach_worker(_worker_metrics)
+    results = algo.env_runner_group.foreach_env_runner(_worker_metrics)
     total = {
         "updates": 0,
         "valid_molecules": 0,

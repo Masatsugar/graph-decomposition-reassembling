@@ -179,6 +179,7 @@ def legacy_main(argv=None):
 
             # Add custom logger
             wb_run = None
+            local_logger = None
             if args.logger == "wandb":
                 wb_run = setup_wandb(
                     project=args.project_name,
@@ -187,17 +188,16 @@ def legacy_main(argv=None):
                     config={"task": target},
                 )
             else:
-                config.debugging(
-                    log_level="INFO",
-                    logger_creator=custom_log_creator(
-                        f"ray_results/PPO_MolEnvValueMax_{args.dataset}_{mining_method}",
-                        target,
-                    ),
-                )
+                config.debugging(log_level="INFO")
+                local_logger = custom_log_creator(
+                    f"ray_results/PPO_MolEnvValueMax_{args.dataset}_{mining_method}",
+                    target,
+                )(config.to_dict())
 
             # Create PPO algorithm instance
-            algo = config.build()
+            algo = None
             try:
+                algo = config.build()
                 algo_name = algo.__class__.__name__
 
                 # Save env_config separately as it contains the actual environment parameters
@@ -210,6 +210,8 @@ def legacy_main(argv=None):
                 # Training loop
                 for i in tqdm(range(1, args.epochs + 1)):
                     result = algo.train()
+                    if local_logger is not None:
+                        local_logger.on_result(result)
                     if args.logger == "wandb":
                         flatten_result = clean_for_wandb(result)
                         wb_run.log(flatten_result, step=i)
@@ -226,7 +228,10 @@ def legacy_main(argv=None):
                 )
                 print(f"Final checkpoint saved at: {final_checkpoint.checkpoint.path}")
             finally:
-                algo.stop()
+                if local_logger is not None:
+                    local_logger.close()
+                if algo is not None:
+                    algo.stop()
                 if wb_run is not None:
                     wb_run.finish()
 

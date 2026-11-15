@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=75"]
+requires = ["setuptools>=84.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,25 +7,29 @@ name = "graph-decomposition-reassembling"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10.13,<3.13"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "gensim==4.3.3",
     "guacamol==0.5.5",
-    "gymnasium==1.0.0",
+    "gymnasium==1.2.2",
     "numpy>=1.26.4,<2",
     "scipy==1.11.4",
     "pandas>=2.2.3,<3",
-    "pyarrow==17.0.0",
+    "pyarrow==23.0.1",
     "rdkit==2025.3.6",
     "joblib>=1.5.1",
     "networkx>=3.4.2",
-    "ray[rllib]==2.47.1",
-    "torch==2.7.1",
+    "ray[rllib]==2.56.0",
+    "torch==2.13.0",
     "tqdm>=4.67.1",
     "wandb>=0.21.0",
     "PyYAML>=6.0,<7",
     "matplotlib==3.9.2",
     "fast-gspan>=0.1.4,<0.2",
+    # Security floors also apply when installing without uv's lockfile.
+    "certifi>=2026.10.19",
+    "pillow>=13.0.0",
+    "filelock>=4.2.1",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +42,21 @@ dev = [
 # GuacaMol's obsolete rdkit-pypi package has no Python 3.12 wheels and
 # installs the same module as rdkit. Use the maintained distribution above.
 exclude-dependencies = ["rdkit-pypi"]
+constraint-dependencies = [
+    "setuptools>=84.1.0",
+    "opentelemetry-api>=1.45.2",
+]
+
+[tool.uv.sources]
+# Keep CUDA 12 support for existing GPU drivers; PyPI's Linux build uses CUDA 13.
+torch = [
+    { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
 
 [tool.setuptools.packages.find]
 where = ["."]
