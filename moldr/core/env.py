@@ -6,8 +6,8 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 from numpy import ndarray
 
-import gymnaysium as gym
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium.utils import seeding
 
 
 import torch.nn as nn
@@ -15,8 +15,6 @@ import torch.nn as nn
 import rdkit.Chem as Chem
 from rdkit import DataStructs
 from rdkit.Chem import Draw
-
-from ray.rllib.agents.ppo import PPOTrainer, ppo
 
 from moldr.chemutils import (
     get_mol,
@@ -134,6 +132,9 @@ def sim2(smiles):
 
 
 if __name__ == "__main__":
+    from ray.rllib.algorithms.ppo import PPOConfig
+    from tqdm import tqdm
+
     building_blocks_smiles = [
         "CC1CCC2=CC=CC=C2O1",
         "CC",
@@ -151,42 +152,29 @@ if __name__ == "__main__":
     high = np.array([np.finfo(np.float32).max for i in range(300)])
     observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
 
-    config = ppo.DEFAULT_CONFIG
-    config.update(
-        {
-            "env": MolEnv,
-            "ACTION_SPACE": gym.spaces.Discrete(len(building_blocks_smiles)),
-            "OBS_SPACE": observation_space,
-            "BUILDING_BLOCKS": building_blocks_smiles,
-            "SCORE_FUNCTION": sim2,
-            "MOL2VEC": "mi_collections/mol2vec/models/model_300dim.pkl",
-            "model": {
+    env_cfg = {
+        "ACTION_SPACE": gym.spaces.Discrete(len(building_blocks_smiles)),
+        "OBS_SPACE": observation_space,
+        "BUILDING_BLOCKS": building_blocks_smiles,
+        "SCORE_FUNCTION": sim2,
+        "MOL2VEC": "mi_collections/mol2vec/models/model_300dim.pkl",
+    }
+    config = (
+        PPOConfig()
+        .environment(MolEnv, env_config=env_cfg)
+        .framework("torch")
+        .training(
+            model={
                 "fcnet_hiddens": [64, 64],
                 "fcnet_activation": "relu",
                 "max_seq_len": 100,
-            },
-            "framework": "torch",
-            # Set up a separate evaluation worker set for the
-            # `trainer.evaluate()` call after training (see below).
-            "evaluation_num_workers": 1,
-            # Only for evaluation runs, render the env.
-            "evaluation_config": {
-                "render_env": False,
-            },
-        }
+            }
+        )
     )
-    #
-    env = MolEnv(env_config=config)
-    trainer = PPOTrainer(env=MolEnv, config={"env_config": config})
-
-    # Run it for n training iterations. A training iteration includes
-    # parallel sample collection by the environment workers as well as
-    # loss calculation on the collected batch and a model update.
-    from tqdm import tqdm
+    env = MolEnv(env_config=env_cfg)
+    algo = config.build()
 
     for _ in tqdm(range(1)):
-        print(trainer.train())
+        print(algo.train())
 
-    # # Evaluate the trained Trainer (and render each timestep to the shell's
-    # # output).
-    trainer.evaluate()
+    algo.evaluate()

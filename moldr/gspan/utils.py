@@ -1,6 +1,7 @@
 import os
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -12,17 +13,20 @@ import rdkit
 import rdkit.Chem as Chem
 
 from networkx.algorithms import isomorphism
+from rdkit.Chem.rdchem import KekulizeException
 from tqdm import tqdm
 
 from moldr.chemutils import (
     _set_edge_label,
     _set_node_label,
+    copy_edit_mol,
     get_clique_mol,
     get_mol,
     get_smiles,
     mol_from_graph,
+    sanitize,
 )
-from moldr.core.moltree import MolTree
+from moldr.core.moltree import MolTree, tree_decomp
 
 
 @dataclass
@@ -42,7 +46,7 @@ def preprocess_graphs(graphs, fname):
     if not fname.parent.exists():
         fname.parent.mkdir(parents=True, exist_ok=True)
 
-    tup_list = create_gspan_dataset_nx(graphs)
+    tup_list = create_gspan_dataset_nx(graphs, node_attrs="label")
     save_graph(tup_list, fname)
 
 
@@ -103,11 +107,7 @@ def save_graph(tuple_list, fpath: Path) -> None:
     :return:
     """
     with fpath.open(mode="w") as f:
-        for var_s in tuple_list:
-            for var in var_s:
-                f.write(str(var))
-                f.write(" ")
-            f.write("\n")
+        f.writelines(" ".join(map(str, var_s)) + " \n" for var_s in tuple_list)
         print(f"save to {fpath}")
 
 
@@ -129,6 +129,7 @@ def create_gspan_dataset_nx(
         >>> [('t', '#', '0'), ('v', 0, 0)]
     """
     tuple_list = []
+    s_end = ("t", "#", "-1")
     for idx, graph in enumerate(tqdm(nx_graphs)):
         node_dict = {k: v[node_attrs] for k, v in graph.nodes.items()}
         node_dict = OrderedDict(sorted(node_dict.items()))
@@ -160,34 +161,30 @@ def create_gspan_dataset(mols: List[rdkit.Chem.rdchem.Mol]) -> List[tuple]:
     :return:
     """
     tuple_list = []
+    append = tuple_list.append
+    s_end = ("t", "#", "-1")
     for idx, mol in enumerate(tqdm(mols)):
-        node_list = np.array([atom.GetSymbol() for atom in mol.GetAtoms()])
-        bond_types = np.array(
-            [
+        append(("t", "#", str(idx)))
+        for i, atom in enumerate(mol.GetAtoms()):
+            append(("v", i, atom.GetSymbol()))
+        for bond in mol.GetBonds():
+            append(
                 (
+                    "e",
                     bond.GetBeginAtomIdx(),
                     bond.GetEndAtomIdx(),
-                    bond.GetBondTypeAsDouble(),
+                    str(bond.GetBondTypeAsDouble()),
                 )
-                for bond in mol.GetBonds()
-            ]
-        )
-
-        adj = Chem.GetAdjacencyMatrix(mol)
-        adj[np.tril_indices(adj.shape[0])] = 0
-        edges_list = []
-        s_id = ("t", "#", str(idx))
-        s_end = ("t", "#", "-1")
-        tuple_list.extend([s_id])
-        for i, node_label in enumerate(node_list):
-            tuple_list.append(("v", i, node_label))
-
-        for left, right, edge_label in bond_types:
-            edges_list.append(("e", int(left), int(right), str(edge_label)))
-
-        tuple_list.extend(edges_list)
-    tuple_list.extend([s_end])
+            )
+    append(s_end)
     return tuple_list
+
+
+@lru_cache(maxsize=4096)
+def _clique_node_smiles(frag_smiles: str) -> str:
+    new_mol = Chem.MolFromSmiles(frag_smiles, sanitize=False)
+    new_mol = copy_edit_mol(new_mol).GetMol()
+    return get_smiles(sanitize(new_mol))
 
 
 def create_junction_tree_dataset(
@@ -199,38 +196,43 @@ def create_junction_tree_dataset(
     :return:
     """
     tuple_list = []
+    append = tuple_list.append
     cnt = 0
+    s_end = ("t", "#", "-1")
     smiles2id = defaultdict()
     for idx, mol in enumerate(tqdm(mols)):
-        smile = get_smiles(mol)
-        mt = MolTree(smile)
-        n_lab = defaultdict()
-        for i, node in enumerate(mt.nodes):
-            # node.smiles = node.smiles + str(":") + str(node.clique)
-            n_lab[i] = node.smiles
-            if node.smiles not in smiles2id:
-                smiles2id[node.smiles] = cnt
+        jt_mol = get_mol(get_smiles(mol))
+        cliques, edges = tree_decomp(jt_mol)
+        node_smiles = []
+        root = 0
+        for i, clique in enumerate(cliques):
+            try:
+                frag_smiles = Chem.MolFragmentToSmiles(
+                    jt_mol, clique, kekuleSmiles=True
+                )
+            except KekulizeException:
+                frag_smiles = Chem.MolFragmentToSmiles(
+                    jt_mol, clique, kekuleSmiles=False
+                )
+            node_smiles.append(_clique_node_smiles(frag_smiles))
+            if min(clique) == 0:
+                root = i
+        if root > 0:
+            node_smiles[0], node_smiles[root] = node_smiles[root], node_smiles[0]
+
+        for clique_smiles in node_smiles:
+            if clique_smiles not in smiles2id:
+                smiles2id[clique_smiles] = cnt
                 cnt += 1
 
-        # TODO: ADD EDGE LABEL, IONIZATION
-        edge_list = [1 for _ in range(len(mt.edges))]
-        node_list = [smiles2id[x.smiles] for x in mt.nodes]
+        append(("t", "#", str(idx)))
+        for i, clique_smiles in enumerate(node_smiles):
+            append(("v", i, smiles2id[clique_smiles]))
 
-        s_id = ("t", "#", str(idx))
-        s_end = ("t", "#", "-1")
-        tuple_list.extend([s_id])
-        for i, n_label in enumerate(node_list):
-            # print("v", i, n_label)
-            tuple_list.append(("v", i, n_label))
+        for left, right in edges:
+            append(("e", left, right, 1))
 
-        edges_list = []
-        for (l, r), e_label in zip(mt.edges, edge_list):
-            # print("e", l, r, edgelabel)
-            edges_list.append(("e", l, r, e_label))
-
-        tuple_list.extend(edges_list)
-
-    tuple_list.extend([s_end])
+    append(s_end)
 
     return tuple_list, smiles2id
 

@@ -30,28 +30,42 @@ def snapshot(base, fragment, **options):
 
 @pytest.mark.parametrize("case", json.loads(FIXTURE_PATH.read_text())["cases"])
 def test_neutral_candidates_and_order_match_original_main(case):
-    assert snapshot(get_mol(case["base"]), get_mol(case["fragment"])) == case["candidates"]
+    assert (
+        snapshot(get_mol(case["base"]), get_mol(case["fragment"])) == case["candidates"]
+    )
 
 
-@pytest.mark.parametrize("base,fragment", [
-    ("C[NH3+]", "CC"), ("[13CH3]CO", "CC"), ("c1cc[nH]c1", "CC"),
-    ("[NH2]C", "CO"), ("C1CC2CCC1C2", "C1CCC2CC1C2"),
-    ("[13CH2]1CCCCC1", "C1CCCCC1"), ("C1CC[NH2+]CC1", "C1CCCCC1"),
-])
+@pytest.mark.parametrize(
+    "base,fragment",
+    [
+        ("C[NH3+]", "CC"),
+        ("[13CH3]CO", "CC"),
+        ("c1cc[nH]c1", "CC"),
+        ("[NH2]C", "CO"),
+        ("C1CC2CCC1C2", "C1CCC2CC1C2"),
+        ("[13CH2]1CCCCC1", "C1CCCCC1"),
+        ("C1CC[NH2+]CC1", "C1CCCCC1"),
+    ],
+)
 def test_corrected_chemistry_matches_independent_reference(base, fragment):
     molecules = get_mol(base), get_mol(fragment)
     node, edge, final = reference_candidates(*molecules)
     assert snapshot(*molecules) == {"node": node, "edge": edge, "final": final}
 
 
-@pytest.mark.parametrize("storage,shared,scan", list(product(
-    ["int", "string"], [True, False], ["nonzero", "python"]
-)))
+@pytest.mark.parametrize(
+    "storage,shared,scan",
+    list(product(["int", "string"], [True, False], ["nonzero", "python"])),
+)
 def test_optimization_switches_preserve_candidate_order(storage, shared, scan):
     molecules = get_mol("N1CCCCC1"), get_mol("C1CCOCC1")
     node, edge, final = reference_candidates(*molecules)
-    assert snapshot(*molecules, map_storage=storage, shared_preparation=shared, bond_scan=scan) == {
-        "node": node, "edge": edge, "final": final,
+    assert snapshot(
+        *molecules, map_storage=storage, shared_preparation=shared, bond_scan=scan
+    ) == {
+        "node": node,
+        "edge": edge,
+        "final": final,
     }
 
 
@@ -68,7 +82,9 @@ def test_reassembly_does_not_mutate_input_properties():
     molecules[0].GetAtomWithIdx(0).SetIntProp("molAtomMapNumber", 42)
     before = [mol.ToBinary(Chem.PropertyPickleOptions.AllProps) for mol in molecules]
     snapshot(*molecules)
-    assert before == [mol.ToBinary(Chem.PropertyPickleOptions.AllProps) for mol in molecules]
+    assert before == [
+        mol.ToBinary(Chem.PropertyPickleOptions.AllProps) for mol in molecules
+    ]
 
 
 def test_graph_assignment_preserves_public_attribute_contract():
@@ -107,20 +123,28 @@ def test_unchanged_legacy_environment_uses_fast_candidates():
 
     model = Path(__file__).resolve().parents[1] / "models/model_300dim.pkl"
     if not model.is_file():
-        pytest.skip("Repository Mol2Vec asset is required for the environment smoke test")
+        pytest.skip(
+            "Repository Mol2Vec asset is required for the environment smoke test"
+        )
     scoring_calls = []
 
     def score(smiles):
         scoring_calls.append(smiles)
         return get_mol(smiles).GetNumAtoms() / 10.0
 
-    environment = MolEnvValueMax({
-        "ACTION_SPACE": gym.spaces.Discrete(2),
-        "OBS_SPACE": gym.spaces.Box(-np.inf, np.inf, (300,), dtype=np.float32),
-        "BUILDING_BLOCKS": ["CCO", "c1ccccc1"], "SCORE_FUNCTION": score,
-        "FINAL_WEIGHT": 1.0, "LENGTH": 10, "SCORE_THRESHOLD": 0.5,
-        "BASE_SMILES": "C", "MODEL_PATH": str(model),
-    })
+    environment = MolEnvValueMax(
+        {
+            "ACTION_SPACE": gym.spaces.Discrete(2),
+            "OBS_SPACE": gym.spaces.Box(-np.inf, np.inf, (300,), dtype=np.float32),
+            "BUILDING_BLOCKS": ["CCO", "c1ccccc1"],
+            "SCORE_FUNCTION": score,
+            "FINAL_WEIGHT": 1.0,
+            "LENGTH": 10,
+            "SCORE_THRESHOLD": 0.5,
+            "BASE_SMILES": "C",
+            "MODEL_PATH": str(model),
+        }
+    )
     observation, _ = environment.reset(seed=0)
     scoring_calls.clear()  # Count only the selected step, independently of reset scoring.
     assert observation.shape == (300,)

@@ -26,6 +26,21 @@ def get_smiles(mol: Mol) -> str:
     return Chem.MolToSmiles(mol, kekuleSmiles=True)
 
 
+def canonical_mol(mol: Mol) -> Mol:
+    """Return a sanitized copy with standard BondType.AROMATIC on aromatic bonds."""
+    copy = Chem.Mol(mol)
+    Chem.SanitizeMol(copy)
+    for bond in copy.GetBonds():
+        if bond.GetIsAromatic() and bond.GetBondType() != Chem.rdchem.BondType.AROMATIC:
+            bond.SetBondType(Chem.rdchem.BondType.AROMATIC)
+    return copy
+
+
+def canonical_smiles(mol: Mol) -> str:
+    """Return canonical aromatic SMILES regardless of Kekule/hybrid bond state."""
+    return Chem.MolToSmiles(canonical_mol(mol))
+
+
 def sanitize(mol):
     try:
         smiles = get_smiles(mol)
@@ -168,8 +183,13 @@ def mol_from_adj(
         raise ValueError("atom_templates must contain one atom per node.")
     for idx, symbol in enumerate(nodes):
         atom = Chem.Atom(symbol if atom_templates is None else atom_templates[idx])
-        if atom_templates is not None and atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED:
-            raise ValueError("Stereochemical input is unsupported for adjacency-based reassembly.")
+        if (
+            atom_templates is not None
+            and atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED
+        ):
+            raise ValueError(
+                "Stereochemical input is unsupported for adjacency-based reassembly."
+            )
         mol.AddAtom(atom)
     n_atom = len(nodes)
     if bond_scan == "nonzero":
@@ -197,7 +217,8 @@ def validate_reassembly_mol(mol: Mol) -> None:
     if mol is None or mol.GetNumAtoms() == 0:
         raise ValueError("Reassembly requires a valid, nonempty molecule.")
     has_stereo = any(
-        atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for atom in mol.GetAtoms()
+        atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED
+        for atom in mol.GetAtoms()
     ) or any(
         bond.GetStereo() != Chem.BondStereo.STEREONONE
         or bond.GetBondDir() != Chem.BondDir.NONE

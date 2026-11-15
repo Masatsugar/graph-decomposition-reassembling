@@ -19,15 +19,15 @@ from __future__ import print_function
 
 import math
 import os.path as op
+import pickle
 from collections import defaultdict
+from pathlib import Path
 
 import networkx as nx
 
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.Descriptors import MolLogP
-from rdkit.six import iteritems
-from rdkit.six.moves import cPickle
 
 _fscores = None
 
@@ -38,8 +38,11 @@ def readFragmentScores(name="fpscores"):
     global _fscores
     # generate the full path filename:
     if name == "fpscores":
-        name = "data/zinc/fpscores"
-    _fscores = cPickle.load(gzip.open("%s.pkl.gz" % name))
+        path = Path(__file__).resolve().parents[1] / "data" / "zinc" / "fpscores.pkl.gz"
+    else:
+        path = Path(f"{name}.pkl.gz")
+    with gzip.open(path, "rb") as handle:
+        _fscores = pickle.load(handle)
     outDict = {}
     for i in _fscores:
         for j in range(1, len(i)):
@@ -64,7 +67,7 @@ def calculateScore(m):
     fps = fp.GetNonzeroElements()
     score1 = 0.0
     nf = 0
-    for bitId, v in iteritems(fps):
+    for bitId, v in fps.items():
         nf += v
         sfp = bitId
         score1 += _fscores.get(sfp, -4) * v

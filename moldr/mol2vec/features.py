@@ -11,7 +11,7 @@ from gensim.models import word2vec
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from rdkit import Chem, RDLogger
+from rdkit import Chem, rdBase
 from rdkit.Chem import AllChem, PandasTools
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 
@@ -146,11 +146,10 @@ def mol2alt_sentence(mol, radius):
     """
     radii = list(range(int(radius) + 1))
     info = {}
-    RDLogger.DisableLog("rdApp.warning")
-    _ = AllChem.GetMorganFingerprint(
-        mol, radius, bitInfo=info
-    )  # info: dictionary identifier, atom_idx, radius
-    RDLogger.EnableLog("rdApp.warning")
+    with rdBase.BlockLogs():
+        _ = AllChem.GetMorganFingerprint(
+            mol, radius, bitInfo=info
+        )  # info: dictionary identifier, atom_idx, radius
 
     mol_atoms = [a.GetIdx() for a in mol.GetAtoms()]
     dict_atoms = {x: {r: None for r in radii} for x in mol_atoms}
@@ -431,34 +430,35 @@ def sentences2vec(sentences, model, unseen=None):
     -------
     np.array
     """
-    keys = set(model.wv.index_to_key)
-    vec = []
-    if unseen:
-        unseen_vec = model.wv.get_vector(unseen)
-
-    for sentence in sentences:
-        if unseen:
-            vec.append(
-                sum(
-                    [
-                        model.wv.get_vector(y)
-                        if y in set(sentence) & keys
-                        else unseen_vec
-                        for y in sentence
-                    ]
-                )
-            )
+    key_to_index = model.wv.key_to_index
+    vectors = model.wv.vectors
+    unseen_vec = model.wv.get_vector(unseen) if unseen else None
+    out = np.empty((len(sentences), model.wv.vector_size), dtype=vectors.dtype)
+    for i, sentence in enumerate(sentences):
+        if unseen_vec is not None:
+            it = iter(sentence)
+            first = next(it, None)
+            if first is None:
+                out[i].fill(0.0)
+            else:
+                acc = (
+                    vectors[key_to_index[first]]
+                    if first in key_to_index
+                    else unseen_vec
+                ).copy()
+                for y in it:
+                    acc += vectors[key_to_index[y]] if y in key_to_index else unseen_vec
+                out[i] = acc
         else:
-            vec.append(
-                sum(
-                    [
-                        model.wv.get_vector(y)
-                        for y in sentence
-                        if y in set(sentence) & keys
-                    ]
-                )
-            )
-    return np.array(vec)
+            matched = [vectors[key_to_index[y]] for y in sentence if y in key_to_index]
+            if not matched:
+                out[i].fill(0.0)
+            else:
+                acc = matched[0].copy()
+                for v in matched[1:]:
+                    acc += v
+                out[i] = acc
+    return out
 
 
 def featurize(in_file, out_file, model_path, r, uncommon=None):

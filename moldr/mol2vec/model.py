@@ -16,7 +16,7 @@ class Mol2Vec:
     def __init__(
         self,
         model_path=None,
-        radius=2,
+        radius=1,
         unseen="UNK",
         method="skip-gram",
         window=10,
@@ -95,7 +95,7 @@ class Mol2Vec:
 
     def mols_to_sdf(self, mols, filename):
         # Need to check prefix
-        writer = Chem.SDWriter(path)
+        writer = Chem.SDWriter(filename)
         for mol in mols:
             writer.write(mol)
         print(f"Saved sdf in {filename}.")
