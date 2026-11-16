@@ -19,6 +19,7 @@ from moldr.core.reassemble import (
     node_candidate_molecules,
     prepare_pair,
 )
+from moldr.core.reassemble_fast import prepare_local_pair
 
 
 @dataclass(frozen=True)
@@ -92,14 +93,33 @@ class CandidateGenerator:
 
     def generate(self, base_mol, fragment_mol):
         cfg = self.config
-        prepared = (
-            prepare_pair(base_mol, fragment_mol) if cfg["shared_preparation"] else None
+        local_pair = (
+            prepare_local_pair(base_mol, fragment_mol)
+            if cfg["shared_preparation"]
+            and cfg["bond_scan"] == "nonzero"
+            and cfg["candidate_representation"] == "mapless"
+            and cfg["dedup_key"] == "aromatic"
+            else None
         )
-        kwargs = {
-            "_prepared": prepared,
-            "shared_preparation": cfg["shared_preparation"],
-            "bond_scan": cfg["bond_scan"],
-        }
+        if local_pair is not None:
+            # Only construction changes. Keep validation, first-seen dedup,
+            # statistics and final sorting shared with the adjacency route.
+            enumerations = (local_pair.node_molecules(), local_pair.edge_molecules())
+        else:
+            prepared = (
+                prepare_pair(base_mol, fragment_mol)
+                if cfg["shared_preparation"]
+                else None
+            )
+            kwargs = {
+                "_prepared": prepared,
+                "shared_preparation": cfg["shared_preparation"],
+                "bond_scan": cfg["bond_scan"],
+            }
+            enumerations = (
+                node_candidate_molecules(base_mol, fragment_mol, **kwargs),
+                edge_candidate_molecules(base_mol, fragment_mol, **kwargs),
+            )
         direct = cfg["mol_transfer"] == "direct"
         stats = {key: 0 for key in self.stats}
 
@@ -108,17 +128,15 @@ class CandidateGenerator:
             and cfg["dedup_key"] == "aromatic"
         ):
             by_key = {}
-            for _, enumerate_molecules in (
-                ("node", node_candidate_molecules),
-                ("edge", edge_candidate_molecules),
-            ):
+            for molecules in enumerations:
                 kind_keys = set()
-                for mol in enumerate_molecules(base_mol, fragment_mol, **kwargs):
+                for mol in molecules:
                     stats["generated"] += 1
                     if mol is None:
                         stats["invalid"] += 1
                         continue
-                    self._remove_maps(mol)
+                    if local_pair is None:
+                        self._remove_maps(mol)
                     try:
                         Chem.SanitizeMol(mol)
                         for bond in mol.GetBonds():
@@ -152,12 +170,9 @@ class CandidateGenerator:
             return candidates
 
         raw = []
-        for _, enumerate_molecules in (
-            ("node", node_candidate_molecules),
-            ("edge", edge_candidate_molecules),
-        ):
+        for molecules in enumerations:
             by_smiles = {}
-            for mol in enumerate_molecules(base_mol, fragment_mol, **kwargs):
+            for mol in molecules:
                 stats["generated"] += 1
                 if mol is None:
                     stats["invalid"] += 1
