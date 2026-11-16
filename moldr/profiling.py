@@ -295,6 +295,7 @@ def install(*, include_rllib: bool = True) -> None:
         scoring = importlib.import_module("moldr.scoring")
         chemutils = importlib.import_module("moldr.chemutils")
         reassemble = importlib.import_module("moldr.core.reassemble")
+        reassemble_fast = importlib.import_module("moldr.core.reassemble_fast")
         molgraph = importlib.import_module("moldr.core.molgraph")
         mol2vec = importlib.import_module("moldr.mol2vec.model")
         proposer = importlib.import_module("moldr.generative.proposer")
@@ -370,6 +371,17 @@ def install(*, include_rllib: bool = True) -> None:
         _patch_aliases(
             reassemble, "prepare_pair", [chemistry], "prepare_pair", "chemistry"
         )
+        _patch_aliases(
+            reassemble_fast,
+            "prepare_local_pair",
+            [chemistry],
+            "prepare_local_pair",
+            "chemistry",
+        )
+        # Time actual candidate construction, not the creation of the lazy
+        # node_molecules/edge_molecules generators. Keep the original builder's
+        # scopes below for ablations and unsupported-bond fallback calls.
+        _patch(reassemble_fast.LocalPair, "_build", "LocalPair._build", "chemistry")
         for function in ("merge_mol_from_node", "merge_mol_from_edge"):
             _patch(reassemble, function, function, "chemistry")
         _patch(reassemble, "_reconstruct", "reconstruct_molecule", "chemistry")
