@@ -224,6 +224,7 @@ def test_ppo_training_settings_forwarded_without_build(config):
 
 
 def test_chemistry_scoring_and_cache_reuse_config_forwarded(config):
+    config.chemistry.backend = "cpp"
     config.chemistry.map_storage = "string"
     config.chemistry.shared_preparation = False
     config.chemistry.bond_scan = "python"
@@ -235,6 +236,7 @@ def test_chemistry_scoring_and_cache_reuse_config_forwarded(config):
     config.representation.reuse_embeddings = False
     env_config = make_env_config(config)
     assert env_config["CHEMISTRY"] == {
+        "backend": "cpp",
         "map_storage": "string",
         "shared_preparation": False,
         "bond_scan": "python",

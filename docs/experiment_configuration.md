@@ -28,7 +28,7 @@ assets without starting training.
 | --- | --- |
 | `environment` | `mode` (`e2e` or `legacy`), `base_smiles`, `atom_limit`, `max_episode_steps`, `reward`, `score_threshold`, `final_weight`, `max_attach`, `terminate_on_score_decrease` |
 | `fragments` | `source` (`fixed` or `vae`), `path` or inline `smiles`, `proposer_dir`, `pool_size`, `recond_every` |
-| `chemistry` | `map_storage`, `shared_preparation`, `bond_scan`, `candidate_representation`, `dedup_key`, `mol_transfer` |
+| `chemistry` | `backend`, `map_storage`, `shared_preparation`, `bond_scan`, `candidate_representation`, `dedup_key`, `mol_transfer` |
 | `scoring` | registered `objective`, `input_mode` (`smiles` or `mol`), `cache_size` |
 | `representation` | `name` (`mol2vec` or `mpnn`), `trainable`, `model_path`, `obs_dim`, `radius`, `layers`, `hidden`, `output`, graph capacities, atom chunking, checkpointing, cache sizes, `reuse_embeddings` |
 | `selection` | `mode` (`actor` or `actor_value`), `context` (`rich` or `classic`), `candidate_value`, `auxiliary_loss_coeff`, `alpha`, `temperature` |
@@ -56,6 +56,45 @@ deduplicated by canonical aromatic SMILES so Kekulé resonance forms do not crea
 duplicate actions and valid fused-ring products are retained. Alternative flags
 such as `mapped` / `kekule` / `smiles` remain configurable. Direct transfer
 (`mol_transfer=direct`) requires `candidate_representation=mapless`.
+
+### Experimental C++ candidate generation
+
+The default backend is `python`. To try `--set chemistry.backend=cpp` on
+Linux, build the extension in the checkout with the same Python interpreter
+that runs the experiment. Use a C++17 compiler and the conda-forge headers
+from `librdkit-dev=2025.03.6` and `libboost-headers=1.85.0`. Set
+`SDK_PREFIX` to the directory containing their `include/` tree. The build
+links against the project's installed RDKit wheel.
+
+```sh
+.venv/bin/python scripts/build_native_reassembly.py \
+  --rdkit-include "$SDK_PREFIX/include/rdkit" --boost-include "$SDK_PREFIX/include"
+.venv/bin/python -m pytest -q tests/test_native_reassembly.py
+.venv/bin/python -m scripts.benchmark_native_reassembly
+```
+
+Both legacy and E2E runs accept the setting. Each default-path call sends one
+base molecule and one fragment to C++ and returns the sorted candidates and
+generation statistics. Special bond types and chemistry ablations that select
+a different construction or transfer path use the existing Python implementation.
+
+To measure the effect on PPO, run the paired benchmark from the same checkout.
+It trains fresh policies with both backends for each seed, reverses their order
+for the second seed, and records elapsed time for sampling, learner updates and
+the full training iteration. The defaults are eight rollout workers, 1,024
+environment steps per iteration, four SGD epochs, and four measured iterations
+after one warm-up. The GuacaMol fragment pool is sampled from the full catalog
+with 128 options per block-selection decision. Startup times and per-iteration
+records are included in the JSON output.
+
+```sh
+env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
+  .venv/bin/python -m scripts.benchmark_ppo_reassembly --num-gpus 0 \
+  --output outputs/native-reassembly/ppo.json
+env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
+  .venv/bin/python -m scripts.benchmark_ppo_reassembly --num-gpus 1 \
+  --output outputs/native-reassembly/ppo-gpu.json
+```
 
 ## Scoring and representation defaults
 

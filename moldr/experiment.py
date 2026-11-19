@@ -47,6 +47,7 @@ class ChemistryConfig:
     candidate_representation: str = "mapless"
     dedup_key: str = "aromatic"
     mol_transfer: str = "direct"
+    backend: str = "python"
 
 
 @dataclass
@@ -167,6 +168,7 @@ class ExperimentConfig:
             "fragments.source": {"fixed", "vae"},
             "fragments.recond_every": {"never", "episode", "step"},
             "chemistry.map_storage": {"int", "string"},
+            "chemistry.backend": {"python", "cpp"},
             "chemistry.bond_scan": {"nonzero", "python"},
             "chemistry.candidate_representation": {"mapped", "mapless"},
             "chemistry.dedup_key": {"kekule", "aromatic"},
