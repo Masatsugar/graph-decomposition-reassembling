@@ -13,6 +13,7 @@ from moldr.chemutils import (
     get_mol,
     get_smiles,
     mol_with_atom_index,
+    validate_reassembly_mol,
 )
 from moldr.core.reassemble import (
     edge_candidate_molecules,
@@ -38,6 +39,7 @@ class CandidateGenerator:
     """
 
     DEFAULTS: ClassVar[dict] = {
+        "backend": "python",
         "map_storage": "int",
         "shared_preparation": True,
         "bond_scan": "nonzero",
@@ -61,6 +63,7 @@ class CandidateGenerator:
             raise ValueError(f"Unknown chemistry keys: {sorted(unknown)}")
         self.config = {**self.DEFAULTS, **values}
         options = {
+            "backend": {"python", "cpp"},
             "map_storage": {"int", "string"},
             "bond_scan": {"nonzero", "python"},
             "candidate_representation": {"mapped", "mapless"},
@@ -93,13 +96,43 @@ class CandidateGenerator:
 
     def generate(self, base_mol, fragment_mol):
         cfg = self.config
-        local_pair = (
-            prepare_local_pair(base_mol, fragment_mol)
-            if cfg["shared_preparation"]
+        use_local_builder = (
+            cfg["shared_preparation"]
             and cfg["bond_scan"] == "nonzero"
             and cfg["candidate_representation"] == "mapless"
             and cfg["dedup_key"] == "aromatic"
-            else None
+        )
+        if (
+            cfg.get("backend", "python") == "cpp"
+            and use_local_builder
+            and cfg["mol_transfer"] == "direct"
+        ):
+            try:
+                from moldr.core._native_reassembly import generate as native_generate
+            except ModuleNotFoundError as exc:
+                if exc.name != "moldr.core._native_reassembly":
+                    raise
+                raise ImportError(
+                    "Build the optional C++ reassembly extension before using "
+                    "chemistry.backend=cpp (see docs/experiment_configuration.md)."
+                ) from exc
+
+            if base_mol is None or fragment_mol is None:
+                # Boost.Python cannot pass None to a ROMol reference. Keep the
+                # Python builder's input validation order for this case.
+                validate_reassembly_mol(base_mol)
+                validate_reassembly_mol(fragment_mol)
+            result = native_generate(base_mol, fragment_mol)
+            if result is not None:
+                entries, self.stats = result
+                return [Candidate(smiles, mol) for smiles, mol in entries]
+            # Special bond orders require adjacency conversion. Ring queries in
+            # that builder can populate computed properties on its inputs.
+            base_mol, fragment_mol = Chem.Mol(base_mol), Chem.Mol(fragment_mol)
+            use_local_builder = False
+
+        local_pair = (
+            prepare_local_pair(base_mol, fragment_mol) if use_local_builder else None
         )
         if local_pair is not None:
             # Only construction changes. Keep validation, first-seen dedup,
