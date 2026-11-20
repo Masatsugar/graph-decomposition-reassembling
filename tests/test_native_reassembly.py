@@ -63,6 +63,52 @@ def test_native_rejects_invalid_inputs(base):
         )
 
 
+def test_native_checks_invalid_base_before_missing_fragment():
+    base = get_mol("F/C=C/F")
+    with pytest.raises(ValueError, match="Stereochemical input is unsupported"):
+        CandidateGenerator(backend="cpp").generate(base, None)
+
+
+@pytest.mark.parametrize("bond_smiles", ["N->[Cu]", "N<-[Cu]", "C~C", "C$C"])
+@pytest.mark.parametrize("special_is_base", [True, False])
+def test_native_defers_special_bonds_to_adjacency(bond_smiles, special_is_base):
+    from moldr.core import _native_reassembly
+
+    special, ring = get_mol(bond_smiles), get_mol("C1CCCCC1")
+    base, fragment = (special, ring) if special_is_base else (ring, special)
+    assert _native_reassembly.generate(base, fragment) is None
+    python, native = CandidateGenerator(), CandidateGenerator(backend="cpp")
+    expected = python.generate(Chem.Mol(base), Chem.Mol(fragment))
+    assert candidate_state(native.generate(base, fragment)) == candidate_state(expected)
+    assert native.stats == python.stats
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"shared_preparation": False},
+        {"bond_scan": "python"},
+        {"dedup_key": "kekule"},
+        {"mol_transfer": "smiles"},
+        {"candidate_representation": "mapped", "mol_transfer": "smiles"},
+    ],
+)
+def test_cpp_config_uses_python_for_alternate_chemistry(monkeypatch, options):
+    from moldr.core import _native_reassembly
+
+    def unexpected_native(*args):
+        pytest.fail("Alternate chemistry used the C++ candidate builder")
+
+    monkeypatch.setattr(_native_reassembly, "generate", unexpected_native)
+    base, fragment = get_mol("C1CCCCC1"), get_mol("CO")
+    python = CandidateGenerator(**options)
+    cpp = CandidateGenerator(backend="cpp", **options)
+    assert candidate_state(cpp.generate(base, fragment)) == candidate_state(
+        python.generate(base, fragment)
+    )
+    assert cpp.stats == python.stats
+
+
 def test_native_drives_same_e2e_attachment():
     from moldr.e2e.env_v2 import MolEnvE2EV2
 

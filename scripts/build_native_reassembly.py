@@ -71,6 +71,23 @@ def main():
             str(output),
         ]
         subprocess.run(cmd, check=True)
+        probe = """\
+import sys
+from rdkit import Chem
+
+sys.path.insert(0, sys.argv[1])
+from _native_reassembly import generate
+
+entries, _ = generate(Chem.MolFromSmiles('C'), Chem.MolFromSmiles('CC'))
+if len(entries) != 1 or Chem.MolToSmiles(entries[0][1]) != 'CC':
+    raise RuntimeError('Unexpected C++ reassembly smoke-test result')
+"""
+        try:
+            subprocess.run([sys.executable, "-c", probe, temp], check=True)
+        except subprocess.CalledProcessError:
+            parser.exit(
+                1, "The linked C++ extension failed its import or smoke test.\n"
+            )
         output.replace(module)
     print(module)
 

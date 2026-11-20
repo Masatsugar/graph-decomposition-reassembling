@@ -65,6 +65,8 @@ that runs the experiment. Use a C++17 compiler and the conda-forge headers
 from `librdkit-dev=2025.03.6` and `libboost-headers=1.85.0`. Set
 `SDK_PREFIX` to the directory containing their `include/` tree. The build
 links against the project's installed RDKit wheel.
+The helper loads the new extension and generates a candidate before replacing
+any existing build. Build it again after moving or replacing the Python environment.
 
 ```sh
 .venv/bin/python scripts/build_native_reassembly.py \
@@ -77,6 +79,9 @@ Both legacy and E2E runs accept the setting. Each default-path call sends one
 base molecule and one fragment to C++ and returns the sorted candidates and
 generation statistics. Special bond types and chemistry ablations that select
 a different construction or transfer path use the existing Python implementation.
+The adjacency builder applies its usual bond-order conversion to special bonds.
+For example, it converts dative bonds to single bonds and skips unsupported
+numeric bond orders when reconstructing candidates.
 
 To measure the effect on PPO, run the paired benchmark from the same checkout.
 It trains fresh policies with both backends for each seed, reverses their order

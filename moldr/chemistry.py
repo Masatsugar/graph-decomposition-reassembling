@@ -13,6 +13,7 @@ from moldr.chemutils import (
     get_mol,
     get_smiles,
     mol_with_atom_index,
+    validate_reassembly_mol,
 )
 from moldr.core.reassemble import (
     edge_candidate_molecules,
@@ -117,7 +118,10 @@ class CandidateGenerator:
                 ) from exc
 
             if base_mol is None or fragment_mol is None:
-                raise ValueError("Reassembly requires a valid, nonempty molecule.")
+                # Boost.Python cannot pass None to a ROMol reference. Keep the
+                # Python builder's input validation order for this case.
+                validate_reassembly_mol(base_mol)
+                validate_reassembly_mol(fragment_mol)
             result = native_generate(base_mol, fragment_mol)
             if result is not None:
                 entries, self.stats = result
